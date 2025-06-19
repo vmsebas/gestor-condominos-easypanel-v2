@@ -1,13 +1,16 @@
-# Build stage
-FROM node:18-alpine AS builder
+# Single stage build - more efficient for space
+FROM node:18-alpine
+
+# Set production environment early
+ENV NODE_ENV=production
 
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies without Python/build tools first
-RUN npm ci --silent
+# Install ALL dependencies (dev + prod) for build
+RUN npm ci --omit=optional
 
 # Copy source code
 COPY . .
@@ -15,32 +18,28 @@ COPY . .
 # Build the application
 RUN npm run build
 
-# Production stage
-FROM node:18-alpine
+# Remove dev dependencies after build
+RUN npm prune --production
 
-WORKDIR /app
+# Clean npm cache
+RUN npm cache clean --force
 
-# Install production dependencies only
-COPY package*.json ./
-RUN npm ci --production --silent && npm cache clean --force
-
-# Copy built frontend from builder
-COPY --from=builder /app/dist ./dist
-
-# Copy server files
-COPY --from=builder /app/server ./server
-
-# Copy migration files (needed for runtime)
-COPY --from=builder /app/src/db/migrations ./src/db/migrations
+# Remove source files, keep only built files and server
+RUN rm -rf src/ && \
+    rm -rf .git/ && \
+    rm -rf documentos/ && \
+    rm -rf test-*.html && \
+    rm -rf *.md && \
+    rm -rf tsconfig*.json && \
+    rm -rf vite.config.ts && \
+    rm -rf postcss.config.js && \
+    rm -rf tailwind.config.ts
 
 # Create uploads directory
 RUN mkdir -p /app/uploads
 
 # Expose port
 EXPOSE 3002
-
-# Set production environment
-ENV NODE_ENV=production
 
 # Start the production server
 CMD ["node", "server/production-server.cjs"]
