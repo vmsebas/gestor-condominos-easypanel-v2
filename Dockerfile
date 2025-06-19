@@ -1,16 +1,13 @@
 # Build stage
 FROM node:18-alpine AS builder
 
-# Install build dependencies
-RUN apk add --no-cache python3 make g++
-
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# Install all dependencies (including devDependencies for build)
-RUN npm ci
+# Install dependencies without Python/build tools first
+RUN npm ci --silent
 
 # Copy source code
 COPY . .
@@ -25,7 +22,7 @@ WORKDIR /app
 
 # Install production dependencies only
 COPY package*.json ./
-RUN npm ci --production && npm cache clean --force
+RUN npm ci --production --silent && npm cache clean --force
 
 # Copy built frontend from builder
 COPY --from=builder /app/dist ./dist
