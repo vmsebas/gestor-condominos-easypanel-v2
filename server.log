@@ -1,0 +1,192 @@
+🚀 Debug server running on http://localhost:3004
+📡 API available at http://localhost:3004/api
+==========================================
+Testing database connection...
+✅ Database connected successfully
+Current time: 2025-06-12T14:42:22.735Z
+Database version: PostgreSQL 17.5 on aarch64-unknown-linux-gnu, comp...
+📋 Available tables: arrears, attendance_sheets, attendees, buildings, convocatorias, financial_periods, fractions, letter_templates, meeting_members, member_annual_fees, member_votes, members, minute_agenda_items, minutes, sent_letters, transaction_categories, transactions, voting_results
+==========================================
+✅ Server ready for requests
+2025-06-12T14:42:36.809Z - GET /api/minutes
+📝 Minutes endpoint called (mock)
+2025-06-12T14:42:52.630Z - GET /members
+❓ Unknown route called: GET /members
+2025-06-12T14:42:52.632Z - GET /financial-summary/undefined
+❓ Unknown route called: GET /financial-summary/undefined
+2025-06-12T14:42:52.634Z - GET /db-test
+❓ Unknown route called: GET /db-test
+2025-06-12T14:42:53.778Z - GET /members
+❓ Unknown route called: GET /members
+2025-06-12T14:42:53.779Z - GET /financial-summary/undefined
+❓ Unknown route called: GET /financial-summary/undefined
+2025-06-12T14:42:53.781Z - GET /db-test
+❓ Unknown route called: GET /db-test
+2025-06-12T14:42:54.543Z - GET /minutes
+❓ Unknown route called: GET /minutes
+2025-06-12T14:42:55.549Z - GET /minutes
+❓ Unknown route called: GET /minutes
+2025-06-12T14:43:02.720Z - GET /members
+❓ Unknown route called: GET /members
+2025-06-12T14:43:02.722Z - GET /financial-summary/undefined
+❓ Unknown route called: GET /financial-summary/undefined
+2025-06-12T14:43:02.723Z - GET /db-test
+❓ Unknown route called: GET /db-test
+2025-06-12T14:43:03.745Z - GET /members
+❓ Unknown route called: GET /members
+2025-06-12T14:43:03.747Z - GET /financial-summary/undefined
+❓ Unknown route called: GET /financial-summary/undefined
+2025-06-12T14:43:03.750Z - GET /db-test
+❓ Unknown route called: GET /db-test
+2025-06-12T14:43:05.094Z - GET /minutes
+❓ Unknown route called: GET /minutes
+2025-06-12T14:43:06.118Z - GET /minutes
+❓ Unknown route called: GET /minutes
+2025-06-12T14:57:46.135Z - GET /members
+❓ Unknown route called: GET /members
+2025-06-12T14:57:46.136Z - GET /financial-summary/undefined
+❓ Unknown route called: GET /financial-summary/undefined
+2025-06-12T14:57:46.137Z - GET /db-test
+❓ Unknown route called: GET /db-test
+2025-06-12T14:57:47.149Z - GET /members
+❓ Unknown route called: GET /members
+2025-06-12T14:57:47.150Z - GET /financial-summary/undefined
+❓ Unknown route called: GET /financial-summary/undefined
+2025-06-12T14:57:47.153Z - GET /db-test
+❓ Unknown route called: GET /db-test
+2025-06-12T14:57:47.738Z - GET /minutes
+❓ Unknown route called: GET /minutes
+2025-06-12T14:57:48.754Z - GET /minutes
+❓ Unknown route called: GET /minutes
+2025-06-12T14:59:21.258Z - GET /api/convocatorias
+📋 Convocatorias endpoint called
+Query params: {}
+Executing query: SELECT c.id, c.building_id, c.building_name, c.building_address, c.postal_code, c.assembly_number, c.assembly_type, c.date as meeting_date, c.time, c.location, c.second_call_enabled, c.second_call_time, c.second_call_date, c.administrator, c.secretary, c.legal_reference, c.minutes_created, c.created_at, c.updated_at, c.city, c.agenda_items FROM convocatorias c WHERE 1=1 ORDER BY c.date DESC
+✅ Found 3 convocatorias
+Convocatoria 38290ab1-3b3a-4020-9280-0c9003deeac6 has 2 agenda items
+Convocatoria 651707f1-3658-49f4-b625-2c33f657a749 has 2 agenda items
+Convocatoria bedf6d4d-40c9-430b-97af-c7f1af2b1aee has 7 agenda items
+Sample convocatoria: {
+  id: '38290ab1-3b3a-4020-9280-0c9003deeac6',
+  building_name: 'Condomino Buraca 1',
+  assembly_type: 'extraordinary',
+  meeting_date: 2025-05-28T23:00:00.000Z,
+  agenda_items_count: 2
+}
+2025-06-12T14:59:26.548Z - GET /minutes
+❓ Unknown route called: GET /minutes
+2025-06-12T14:59:27.553Z - GET /minutes
+❓ Unknown route called: GET /minutes
+2025-06-12T15:20:30.202Z - GET /minutes
+❓ Unknown route called: GET /minutes
+2025-06-12T15:20:31.210Z - GET /minutes
+❓ Unknown route called: GET /minutes
+2025-06-12T15:20:37.883Z - GET /minutes
+❓ Unknown route called: GET /minutes
+2025-06-12T15:26:32.247Z - GET /members
+❓ Unknown route called: GET /members
+2025-06-12T15:26:32.251Z - GET /financial-summary/undefined
+❓ Unknown route called: GET /financial-summary/undefined
+2025-06-12T15:26:32.254Z - GET /db-test
+❓ Unknown route called: GET /db-test
+2025-06-12T15:26:33.273Z - GET /members
+❓ Unknown route called: GET /members
+2025-06-12T15:26:33.273Z - GET /financial-summary/undefined
+❓ Unknown route called: GET /financial-summary/undefined
+2025-06-12T15:26:33.277Z - GET /db-test
+❓ Unknown route called: GET /db-test
+2025-06-12T15:26:35.286Z - GET /db-test
+❓ Unknown route called: GET /db-test
+2025-06-12T15:26:35.884Z - GET /members
+❓ Unknown route called: GET /members
+2025-06-12T15:26:35.887Z - GET /financial-summary/undefined
+❓ Unknown route called: GET /financial-summary/undefined
+2025-06-12T15:26:35.896Z - GET /db-test
+❓ Unknown route called: GET /db-test
+2025-06-12T15:26:36.897Z - GET /members
+❓ Unknown route called: GET /members
+2025-06-12T15:26:36.898Z - GET /financial-summary/undefined
+❓ Unknown route called: GET /financial-summary/undefined
+2025-06-12T15:26:36.921Z - GET /db-test
+❓ Unknown route called: GET /db-test
+2025-06-12T15:26:38.925Z - GET /db-test
+❓ Unknown route called: GET /db-test
+2025-06-12T15:26:39.291Z - GET /db-test
+❓ Unknown route called: GET /db-test
+2025-06-12T15:26:40.261Z - GET /api/convocatorias
+📋 Convocatorias endpoint called
+Query params: {}
+Executing query: SELECT c.id, c.building_id, c.building_name, c.building_address, c.postal_code, c.assembly_number, c.assembly_type, c.date as meeting_date, c.time, c.location, c.second_call_enabled, c.second_call_time, c.second_call_date, c.administrator, c.secretary, c.legal_reference, c.minutes_created, c.created_at, c.updated_at, c.city, c.agenda_items FROM convocatorias c WHERE 1=1 ORDER BY c.date DESC
+✅ Found 3 convocatorias
+Convocatoria 38290ab1-3b3a-4020-9280-0c9003deeac6 has 2 agenda items
+Convocatoria 651707f1-3658-49f4-b625-2c33f657a749 has 2 agenda items
+Convocatoria bedf6d4d-40c9-430b-97af-c7f1af2b1aee has 7 agenda items
+Sample convocatoria: {
+  id: '38290ab1-3b3a-4020-9280-0c9003deeac6',
+  building_name: 'Condomino Buraca 1',
+  assembly_type: 'extraordinary',
+  meeting_date: 2025-05-28T23:00:00.000Z,
+  agenda_items_count: 2
+}
+2025-06-12T15:26:45.986Z - GET /minutes
+❓ Unknown route called: GET /minutes
+2025-06-12T15:26:47.000Z - GET /minutes
+❓ Unknown route called: GET /minutes
+2025-06-12T15:35:58.038Z - GET /minutes
+❓ Unknown route called: GET /minutes
+2025-06-12T15:35:59.087Z - GET /minutes
+❓ Unknown route called: GET /minutes
+2025-06-12T15:37:45.786Z - GET /members
+❓ Unknown route called: GET /members
+2025-06-12T15:37:45.792Z - GET /financial-summary/undefined
+❓ Unknown route called: GET /financial-summary/undefined
+2025-06-12T15:37:45.795Z - GET /db-test
+❓ Unknown route called: GET /db-test
+2025-06-12T15:37:46.803Z - GET /members
+❓ Unknown route called: GET /members
+2025-06-12T15:37:46.804Z - GET /financial-summary/undefined
+❓ Unknown route called: GET /financial-summary/undefined
+2025-06-12T15:37:46.806Z - GET /db-test
+❓ Unknown route called: GET /db-test
+2025-06-12T15:37:48.814Z - GET /db-test
+❓ Unknown route called: GET /db-test
+2025-06-12T15:37:52.819Z - GET /db-test
+❓ Unknown route called: GET /db-test
+2025-06-12T15:37:53.100Z - GET /minutes
+❓ Unknown route called: GET /minutes
+2025-06-12T15:37:54.107Z - GET /minutes
+❓ Unknown route called: GET /minutes
+2025-06-12T15:38:33.001Z - GET /financial-summary/undefined
+❓ Unknown route called: GET /financial-summary/undefined
+2025-06-12T15:38:33.002Z - GET /members
+❓ Unknown route called: GET /members
+2025-06-12T15:38:33.003Z - GET /db-test
+❓ Unknown route called: GET /db-test
+2025-06-12T15:38:34.011Z - GET /financial-summary/undefined
+❓ Unknown route called: GET /financial-summary/undefined
+2025-06-12T15:38:34.014Z - GET /members
+❓ Unknown route called: GET /members
+2025-06-12T15:38:34.014Z - GET /db-test
+❓ Unknown route called: GET /db-test
+2025-06-12T15:38:36.023Z - GET /db-test
+❓ Unknown route called: GET /db-test
+2025-06-12T15:38:39.682Z - GET /minutes
+❓ Unknown route called: GET /minutes
+2025-06-12T15:38:40.688Z - GET /minutes
+❓ Unknown route called: GET /minutes
+2025-06-12T15:47:24.898Z - GET /minutes
+❓ Unknown route called: GET /minutes
+2025-06-12T15:47:25.914Z - GET /minutes
+❓ Unknown route called: GET /minutes
+2025-06-12T15:47:50.525Z - GET /minutes
+❓ Unknown route called: GET /minutes
+2025-06-12T15:47:51.910Z - GET /minutes
+❓ Unknown route called: GET /minutes
+2025-06-12T15:48:08.278Z - GET /minutes
+❓ Unknown route called: GET /minutes
+2025-06-12T15:48:09.283Z - GET /minutes
+❓ Unknown route called: GET /minutes
+2025-06-12T15:48:15.419Z - GET /minutes
+❓ Unknown route called: GET /minutes
+2025-06-12T15:48:16.426Z - GET /minutes
+❓ Unknown route called: GET /minutes

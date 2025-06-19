@@ -1,0 +1,304 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Tema Claro - Colores cálidos profesionales */
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 25 95% 53%;        /* Dorado elegante */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;     /* Gris muy claro */
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 350 89% 60%;        /* Coral suave */
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 25 95% 53%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* Modo Oscuro - Colores suaves para los ojos */
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 6%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 6%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 47 96% 56%;        /* Amarillo dorado */
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 350 89% 65%;        /* Coral más claro */
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 47 96% 56%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Animaciones personalizadas para modo oscuro */
+@layer components {
+  .theme-transition {
+    @apply transition-colors duration-300 ease-in-out;
+  }
+
+  .glass-effect {
+    @apply backdrop-blur-sm bg-white/80 dark:bg-gray-900/80 border border-white/20 dark:border-gray-800/20;
+  }
+
+  .shadow-glow {
+    @apply shadow-lg shadow-primary/10 dark:shadow-primary/20;
+  }
+
+  .workflow-step-active {
+    @apply bg-primary text-primary-foreground shadow-glow;
+  }
+
+  .workflow-step-completed {
+    @apply bg-green-500 text-white;
+  }
+
+  .workflow-step-pending {
+    @apply bg-muted text-muted-foreground;
+  }
+
+  .legal-alert-warning {
+    @apply bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200;
+  }
+
+  .legal-alert-info {
+    @apply bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200;
+  }
+
+  .legal-alert-error {
+    @apply bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200;
+  }
+
+  .dashboard-card {
+    @apply glass-effect rounded-lg p-6 shadow-glow theme-transition;
+  }
+
+  .dashboard-metric {
+    @apply text-2xl font-bold text-primary dark:text-primary;
+  }
+
+  .workflow-navigation {
+    @apply fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-t border-border p-4;
+  }
+
+  .mode-toggle {
+    @apply theme-transition hover:bg-accent hover:text-accent-foreground;
+  }
+
+  /* Scrollbar personalizado */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-muted rounded-lg;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-primary/50 rounded-lg hover:bg-primary/70;
+  }
+
+  /* Efectos de hover mejorados */
+  .hover-lift {
+    @apply transition-transform duration-200 ease-in-out hover:scale-105 hover:shadow-lg;
+  }
+
+  .hover-glow {
+    @apply transition-shadow duration-200 ease-in-out hover:shadow-primary/20 hover:shadow-lg;
+  }
+
+  /* Estados de formulario */
+  .form-field-valid {
+    @apply border-green-500 focus:ring-green-500;
+  }
+
+  .form-field-invalid {
+    @apply border-red-500 focus:ring-red-500;
+  }
+
+  .form-field-warning {
+    @apply border-yellow-500 focus:ring-yellow-500;
+  }
+}
+
+/* Animaciones específicas para workflows */
+@keyframes workflow-progress {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: var(--progress-width);
+  }
+}
+
+.workflow-progress-bar {
+  animation: workflow-progress 0.5s ease-out;
+}
+
+/* Efectos para notificaciones */
+@keyframes notification-slide-in {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.notification-enter {
+  animation: notification-slide-in 0.3s ease-out;
+}
+
+/* Efectos para modales */
+@keyframes modal-backdrop-fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-content-scale-in {
+  0% {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.modal-backdrop {
+  animation: modal-backdrop-fade-in 0.2s ease-out;
+}
+
+.modal-content {
+  animation: modal-content-scale-in 0.2s ease-out;
+}
+
+/* Efectos para dashboard */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+.dashboard-widget {
+  @apply dashboard-card hover-lift;
+  min-height: 200px;
+}
+
+.dashboard-widget-header {
+  @apply flex items-center justify-between mb-4 pb-2 border-b border-border;
+}
+
+.dashboard-widget-title {
+  @apply text-lg font-semibold text-foreground;
+}
+
+.dashboard-widget-content {
+  @apply flex-1;
+}
+
+/* Estados específicos para gestión de condominios */
+.convocatoria-draft {
+  @apply bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-700;
+}
+
+.convocatoria-sent {
+  @apply bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700;
+}
+
+.convocatoria-held {
+  @apply bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700;
+}
+
+.transaction-income {
+  @apply text-green-600 dark:text-green-400;
+}
+
+.transaction-expense {
+  @apply text-red-600 dark:text-red-400;
+}
+
+.member-active {
+  @apply bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300;
+}
+
+.member-inactive {
+  @apply bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400;
+}
+
+/* Responsive design mejorado */
+@media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .workflow-navigation {
+    padding: 1rem;
+  }
+
+  .dashboard-widget {
+    min-height: 150px;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  body {
+    color: black !important;
+    background: white !important;
+  }
+
+  .dashboard-card {
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    background: white !important;
+  }
+}

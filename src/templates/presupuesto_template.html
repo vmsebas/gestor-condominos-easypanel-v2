@@ -1,0 +1,41 @@
+<div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px;">
+  <div style="text-align: right; margin-bottom: 20px;">
+    <div>{{building.name}}</div>
+    <div>{{building.address}}</div>
+    <div>Lisboa, {{date.today}}</div>
+  </div>
+
+  <div style="margin-bottom: 30px;">
+    <div><strong>Estimado/a Sr./Sra. {{member.name}}</strong></div>
+    <div>Fracção: {{member.fraction}}</div>
+    <div>Permilagem: {{member.permillage}}‰</div>
+  </div>
+
+  <div style="margin-bottom: 20px;">
+    <div><strong>Assunto: Aprovação do Orçamento para o Exercício 2025 – Assembleia n.º {{assembly.number}}/{{date.today | year}}</strong></div>
+  </div>
+
+  <div style="margin-bottom: 30px;">
+    <div>Por meio da presente, informamos que na assembleia geral de condóminos n.º {{assembly.number}}/{{date.today | year}}, celebrada no dia {{assembly.date}}, com a ordem do dia "{{assembly.agenda}}", foi aprovado por maioria o novo orçamento do condomínio, segundo consta na ata n.º {{assembly.number}}/{{date.today | year}}.</div>
+    
+    <div style="margin-top: 15px;">De acordo com o decidido, a quota correspondente à sua fracção foi estabelecida em <strong>{{payment.newQuota}}€</strong> ({{payment.period}}) em função da sua permilagem.</div>
+    
+    <div style="margin-top: 15px;">Para sua comodidade, o pagamento poderá ser realizado de forma anual ou em quotas mensais de <strong>{{payment.monthlyQuota}}€</strong>, com início a partir de {{payment.startDate}}. O pagamento deverá ser efectuado até ao dia {{payment.dueDate}} mediante transferência bancária para a conta:</div>
+    
+    <div style="margin-left: 20px; margin-top: 15px;"><strong>IBAN: {{payment.iban}}</strong></div>
+    
+    <div style="margin-top: 15px;">Detalhe do orçamento aprovado:</div>
+    <ul>
+      <li>Orçamento operativo: {{payment.operativeBudgetQuota}}€</li>
+      <li>Fundo de reserva: {{payment.reserveFundQuota}}€</li>
+      <li><strong>Total anual: {{payment.newQuota}}€</strong></li>
+    </ul>
+  </div>
+
+  <div style="margin-top: 40px;">
+    <div>Ficamos à sua disposição para qualquer consulta ou esclarecimento adicional.</div>
+    <div style="margin-top: 15px;">Receba um cordial cumprimento,</div>
+    <div style="margin-top: 15px;"><strong>A Administração do Condomínio</strong></div>
+    <div>{{building.name}}</div>
+  </div>
+</div>
