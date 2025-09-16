@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useBuilding } from '@/hooks/useBuilding';
-import communicationService from '@/utils/db/communicationService';
+import communicationService from '@/services/api/communications';
 import { CommunicationMessage, CommunicationTemplate, CommunicationCampaign, CommunicationStats } from '@/types/communicationTypes';
 import { formatDate, formatCurrency } from '@/utils/formatters';
 import { useNotifications } from '@/components/common/NotificationProvider';
@@ -72,9 +72,9 @@ const CommunicationsHub: React.FC<CommunicationsHubProps> = ({ className }) => {
     try {
       setIsLoading(true);
       const [statsData, messagesData, templatesData] = await Promise.all([
-        communicationService.getStats(currentBuilding.id),
-        communicationService.getRecentMessages(currentBuilding.id, 10),
-        communicationService.getTemplates(currentBuilding.id)
+        communicationsAPI.getStats(currentBuilding.id),
+        communicationsAPI.getRecentMessages(currentBuilding.id, 10),
+        communicationsAPI.getTemplates(currentBuilding.id)
       ]);
       
       setStats(statsData);
@@ -516,7 +516,7 @@ const CommunicationsHub: React.FC<CommunicationsHubProps> = ({ className }) => {
             templates={templates}
             onSend={async (message) => {
               try {
-                await communicationService.sendMessage(message);
+                await communicationsAPI.sendMessage(message);
                 setShowComposer(false);
                 loadData();
                 success('Mensagem enviada com sucesso');

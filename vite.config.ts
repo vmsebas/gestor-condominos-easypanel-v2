@@ -21,6 +21,11 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
+    // HMR configurado para desarrollo local - NO usar dominios externos
+    hmr: {
+      port: 5173,
+      host: 'localhost',
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:3002',
@@ -56,12 +61,6 @@ export default defineConfig({
           'form-vendor': ['react-hook-form', '@hookform/resolvers', 'zod'],
           'animation-vendor': ['framer-motion'],
           'icons': ['lucide-react'],
-          
-          // Feature chunks
-          'dashboard': ['src/pages/Dashboard.tsx', 'src/components/dashboard/EnhancedDashboard.tsx'],
-          'documents': ['src/components/documents'],
-          'finance': ['src/pages/Finanzas.tsx', 'src/components/finance'],
-          'communications': ['src/pages/Comunicaciones.tsx', 'src/components/communications'],
         },
       },
     },

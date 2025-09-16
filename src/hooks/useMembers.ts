@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useBuilding } from './useBuilding';
-import { useNotifications, useCache } from '@/store/useStore';
-import membersService from '@/utils/db/membersService';
-import { Member } from '@/types/memberTypes';
+import { useNotifications } from '@/store/useStore';
+import { membersAPI, MembersResponse } from '@/services/api/members';
+import type { Member } from '@/types/database';
+import { debounce } from 'lodash';
 
 /**
  * Hook para gestão de membros
@@ -10,42 +11,69 @@ import { Member } from '@/types/memberTypes';
 export const useMembers = (buildingId?: string) => {
   const { currentBuilding } = useBuilding();
   const { addNotification } = useNotifications();
-  const { cache, updateMembersCache, isCacheValid } = useCache();
   
   const [members, setMembers] = useState<Member[]>([]);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    pageSize: 20,
+    totalCount: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPrevPage: false
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [filterOptions, setFilterOptions] = useState({
-    isOwner: undefined as boolean | undefined,
-    isResident: undefined as boolean | undefined,
-    hasEmail: undefined as boolean | undefined
+    isActive: undefined as boolean | undefined,
+    hasEmail: undefined as boolean | undefined,
+    role: undefined as string | undefined
   });
+  const [sortBy, setSortBy] = useState<'name' | 'apartment' | 'monthly_fee'>('apartment');
+  const [sortDesc, setSortDesc] = useState(false);
   
   const targetBuildingId = buildingId || currentBuilding?.id;
   
-  // Carregar membros na inicialização ou mudança de edificio
+  // Debounce search term
+  const debouncedSetSearchTerm = useCallback(
+    debounce((value: string) => {
+      setDebouncedSearchTerm(value);
+      setPagination(prev => ({ ...prev, page: 1 }));
+    }, 500),
+    []
+  );
+  
+  // Carregar membros quando mudam os parâmetros
   useEffect(() => {
     if (targetBuildingId) {
       loadMembers();
     }
-  }, [targetBuildingId]);
+  }, [targetBuildingId, pagination.page, sortBy, sortDesc, debouncedSearchTerm, filterOptions.isActive]);
   
-  const loadMembers = async (force = false) => {
+  // Update debounced search term when search term changes
+  useEffect(() => {
+    debouncedSetSearchTerm(searchTerm);
+  }, [searchTerm, debouncedSetSearchTerm]);
+  
+  const loadMembers = async () => {
     if (!targetBuildingId) return;
     
     try {
-      // Verificar cache primeiro
-      if (!force && isCacheValid('members') && cache.members.length > 0) {
-        setMembers(cache.members);
-        return;
-      }
-      
       setIsLoading(true);
-      const membersList = await membersService.getAllMembers(targetBuildingId);
+      const response = await membersAPI.getAll(targetBuildingId, {
+        search: debouncedSearchTerm,
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+        orderBy: sortBy,
+        orderDesc: sortDesc,
+        isActive: filterOptions.isActive
+      });
       
-      setMembers(membersList);
-      updateMembersCache(membersList);
+      setMembers(response.members || []);
+      if (response.pagination) {
+        setPagination(response.pagination);
+      }
     } catch (error) {
       console.error('Erro ao carregar membros:', error);
       addNotification({
@@ -62,57 +90,41 @@ export const useMembers = (buildingId?: string) => {
   const refreshMembers = async () => {
     try {
       setIsRefreshing(true);
-      await loadMembers(true); // Force reload
+      await loadMembers();
     } finally {
       setIsRefreshing(false);
     }
+  };
+  
+  const changePage = (newPage: number) => {
+    setPagination(prev => ({ ...prev, page: newPage }));
+  };
+  
+  const changePageSize = (newPageSize: number) => {
+    setPagination(prev => ({ ...prev, page: 1, pageSize: newPageSize }));
+  };
+  
+  const changeSortBy = (newSortBy: typeof sortBy) => {
+    setSortBy(newSortBy);
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+  
+  const toggleSortOrder = () => {
+    setSortDesc(!sortDesc);
+    setPagination(prev => ({ ...prev, page: 1 }));
   };
   
   const createMember = async (memberData: Partial<Member>): Promise<Member | null> => {
     try {
       setIsLoading(true);
       
-      // Validar fracção única
-      if (memberData.fraction && targetBuildingId) {
-        const exists = await membersService.fractionExists(
-          memberData.fraction,
-          targetBuildingId
-        );
-        
-        if (exists) {
-          addNotification({
-            type: 'error',
-            title: 'Fracção duplicada',
-            message: `A fracção ${memberData.fraction} já existe neste edifício`,
-            read: false
-          });
-          return null;
-        }
-      }
-      
-      // Validar email único
-      if (memberData.email) {
-        const emailExists = await membersService.emailExists(memberData.email);
-        if (emailExists) {
-          addNotification({
-            type: 'error',
-            title: 'Email duplicado',
-            message: 'Este email já está em uso por outro membro',
-            read: false
-          });
-          return null;
-        }
-      }
-      
-      const newMember = await membersService.createMember({
+      const newMember = await membersAPI.create({
         ...memberData,
-        buildingId: targetBuildingId
+        building_id: targetBuildingId
       });
       
-      // Atualizar lista local
-      const updatedMembers = [...members, newMember];
-      setMembers(updatedMembers);
-      updateMembersCache(updatedMembers);
+      // Recarregar lista
+      await loadMembers();
       
       addNotification({
         type: 'success',
@@ -123,12 +135,12 @@ export const useMembers = (buildingId?: string) => {
       });
       
       return newMember;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao criar membro:', error);
       addNotification({
         type: 'error',
         title: 'Erro',
-        message: 'Erro ao adicionar membro',
+        message: error.response?.data?.message || 'Erro ao adicionar membro',
         read: false
       });
       return null;
@@ -141,47 +153,13 @@ export const useMembers = (buildingId?: string) => {
     try {
       setIsLoading(true);
       
-      // Validar fracção única (excluindo o membro atual)
-      if (memberData.fraction && targetBuildingId) {
-        const exists = await membersService.fractionExists(
-          memberData.fraction,
-          targetBuildingId,
-          id
-        );
-        
-        if (exists) {
-          addNotification({
-            type: 'error',
-            title: 'Fracção duplicada',
-            message: `A fracção ${memberData.fraction} já existe neste edifício`,
-            read: false
-          });
-          return null;
-        }
-      }
-      
-      // Validar email único (excluindo o membro atual)
-      if (memberData.email) {
-        const emailExists = await membersService.emailExists(memberData.email, id);
-        if (emailExists) {
-          addNotification({
-            type: 'error',
-            title: 'Email duplicado',
-            message: 'Este email já está em uso por outro membro',
-            read: false
-          });
-          return null;
-        }
-      }
-      
-      const updatedMember = await membersService.updateMember(id, memberData);
+      const updatedMember = await membersAPI.update(id, memberData);
       
       // Atualizar lista local
       const updatedMembers = members.map(member =>
         member.id === id ? updatedMember : member
       );
       setMembers(updatedMembers);
-      updateMembersCache(updatedMembers);
       
       addNotification({
         type: 'success',
@@ -192,12 +170,12 @@ export const useMembers = (buildingId?: string) => {
       });
       
       return updatedMember;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao atualizar membro:', error);
       addNotification({
         type: 'error',
         title: 'Erro',
-        message: 'Erro ao atualizar membro',
+        message: error.response?.data?.message || 'Erro ao atualizar membro',
         read: false
       });
       return null;
@@ -211,38 +189,26 @@ export const useMembers = (buildingId?: string) => {
       setIsLoading(true);
       
       const member = members.find(m => m.id === id);
-      const success = await membersService.deleteMember(id);
+      await membersAPI.delete(id);
       
-      if (success) {
-        // Atualizar lista local
-        const updatedMembers = members.filter(m => m.id !== id);
-        setMembers(updatedMembers);
-        updateMembersCache(updatedMembers);
-        
-        addNotification({
-          type: 'success',
-          title: 'Membro removido',
-          message: `${member?.name || 'Membro'} foi removido com sucesso`,
-          read: false,
-          autoClose: 3000
-        });
-        
-        return true;
-      } else {
-        addNotification({
-          type: 'error',
-          title: 'Erro',
-          message: 'Não foi possível remover o membro',
-          read: false
-        });
-        return false;
-      }
-    } catch (error) {
+      // Recarregar lista
+      await loadMembers();
+      
+      addNotification({
+        type: 'success',
+        title: 'Membro removido',
+        message: `${member?.name || 'Membro'} foi removido com sucesso`,
+        read: false,
+        autoClose: 3000
+      });
+      
+      return true;
+    } catch (error: any) {
       console.error('Erro ao eliminar membro:', error);
       addNotification({
         type: 'error',
         title: 'Erro',
-        message: 'Erro ao eliminar membro',
+        message: error.response?.data?.message || 'Erro ao eliminar membro',
         read: false
       });
       return false;
@@ -251,67 +217,33 @@ export const useMembers = (buildingId?: string) => {
     }
   };
   
-  const searchMembers = async (term: string) => {
-    try {
-      setSearchTerm(term);
-      
-      if (term.trim() === '' || !targetBuildingId) {
-        await loadMembers();
-        return;
-      }
-      
-      setIsLoading(true);
-      const searchResults = await membersService.searchMembers(term, targetBuildingId);
-      setMembers(searchResults);
-    } catch (error) {
-      console.error('Erro ao procurar membros:', error);
-      addNotification({
-        type: 'error',
-        title: 'Erro',
-        message: 'Erro ao procurar membros',
-        read: false
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  const searchMembers = (term: string) => {
+    setSearchTerm(term);
+    // O debounce e a mudança de página serão feitos automaticamente
   };
   
-  // Filtros locais
+  // Filtros locais (apenas para os filtros que não são suportados pelo backend)
   const filteredMembers = members.filter(member => {
-    // Filtro de texto
-    const matchesSearch = !searchTerm || 
-      member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.fraction.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (member.email && member.email.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    // Filtros booleanos
-    const matchesOwner = filterOptions.isOwner === undefined || 
-      member.isOwner === filterOptions.isOwner;
-    
-    const matchesResident = filterOptions.isResident === undefined || 
-      member.isResident === filterOptions.isResident;
-    
+    // isActive já é filtrado no backend, então só aplicamos filtros locais
     const matchesEmail = filterOptions.hasEmail === undefined ||
       (filterOptions.hasEmail ? !!member.email : !member.email);
+      
+    const matchesRole = filterOptions.role === undefined ||
+      member.role === filterOptions.role;
     
-    return matchesSearch && matchesOwner && matchesResident && matchesEmail;
-  });
-  
-  // Ordenação
-  const sortedMembers = [...filteredMembers].sort((a, b) => {
-    // Primeiro por fracção, depois por nome
-    const fractionCompare = a.fraction.localeCompare(b.fraction, 'pt', { numeric: true });
-    if (fractionCompare !== 0) return fractionCompare;
-    return a.name.localeCompare(b.name, 'pt');
+    return matchesEmail && matchesRole;
   });
   
   return {
-    members: sortedMembers,
+    members: filteredMembers,
     allMembers: members,
     isLoading,
     isRefreshing,
     searchTerm,
     filterOptions,
+    sortBy,
+    sortDesc,
+    pagination,
     loadMembers,
     refreshMembers,
     createMember,
@@ -320,9 +252,13 @@ export const useMembers = (buildingId?: string) => {
     searchMembers,
     setSearchTerm,
     setFilterOptions,
+    setSortBy: changeSortBy,
+    toggleSortOrder,
+    changePage,
+    changePageSize,
     isEmpty: members.length === 0,
-    filteredCount: sortedMembers.length,
-    totalCount: members.length
+    filteredCount: filteredMembers.length,
+    totalCount: pagination.totalCount
   };
 };
 
@@ -343,7 +279,7 @@ export const useMember = (memberId: string) => {
   const loadMember = async () => {
     try {
       setIsLoading(true);
-      const memberData = await membersService.getMemberById(memberId);
+      const memberData = await membersAPI.getById(memberId);
       setMember(memberData);
     } catch (error) {
       console.error('Erro ao carregar membro:', error);
@@ -388,8 +324,9 @@ export const useMembersStats = (buildingId?: string) => {
     
     try {
       setIsLoading(true);
-      const statsData = await membersService.getMembersStats(targetBuildingId);
-      setStats(statsData);
+      // Por enquanto, obter stats da resposta de getAll
+      const response = await membersAPI.getAll(targetBuildingId, { pageSize: 1 });
+      setStats(response.stats);
     } catch (error) {
       console.error('Erro ao carregar estatísticas de membros:', error);
       addNotification({

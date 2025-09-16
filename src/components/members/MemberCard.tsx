@@ -30,7 +30,7 @@ import {
   Calculator
 } from 'lucide-react';
 
-import EditMemberForm from './EditMemberForm';
+import MemberFormDialog from './MemberFormDialog';
 import { DeleteConfirmDialog } from '@/components/common/ConfirmDialog';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
@@ -257,15 +257,12 @@ const MemberCard: React.FC<MemberCardProps> = ({
       </Card>
 
       {/* Dialog de Edição */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <EditMemberForm
-            member={member}
-            onSuccess={handleEditSuccess}
-            onCancel={() => setShowEditDialog(false)}
-          />
-        </DialogContent>
-      </Dialog>
+      <MemberFormDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        member={member}
+        onSuccess={handleEditSuccess}
+      />
 
       {/* Dialog de Visualização */}
       <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>

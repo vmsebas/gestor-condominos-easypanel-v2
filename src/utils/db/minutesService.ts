@@ -1,11 +1,12 @@
-import { 
-  executeQuery, 
-  executeQuerySingle, 
-  executeMutation,
-  executeTransaction,
-  buildInsertQuery,
-  buildUpdateQuery
-} from './dbService';
+// Removed dbService imports - should use API instead
+// import { 
+//   executeQuery, 
+//   executeQuerySingle, 
+//   executeMutation,
+//   executeTransaction,
+//   buildInsertQuery,
+//   buildUpdateQuery
+// } from './dbService';
 import { Minutes, AgendaItem, Attendee } from '@/types/minutesTypes';
 
 // Obtener todas las actas

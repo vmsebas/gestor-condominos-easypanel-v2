@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import ActaWorkflow from '@/components/actas/ActaWorkflow';
 import { ScrollText, Plus, Calendar, Users, FileText, Clock, CheckCircle, Loader2, Home, Eye, Download, Edit2, Trash2, MoreVertical } from 'lucide-react';
-import { useActas, useBuildings } from '@/hooks/useNeonData';
+import { useActas } from '@/hooks/useNeonDataWithAuth';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import {
@@ -21,27 +21,28 @@ import {
 const Actas: React.FC = () => {
   const [showWorkflow, setShowWorkflow] = useState(false);
   
-  // Obtener buildings para obtener el buildingId
-  const { data: buildings } = useBuildings();
-  const buildingId = buildings?.[0]?.id;
-  
-  const { data: actasData, isLoading, error } = useActas(buildingId);
+  const { data: actasData, isLoading, error } = useActas();
   
   // Transform API data to match our UI needs
-  const actas = actasData?.map(acta => ({
-    id: acta.id,
-    type: acta.assembly_type === 'ordinary' ? 'ordinaria' : 'extraordinaria',
-    title: `Assembleia ${acta.assembly_type === 'ordinary' ? 'Ordinária' : 'Extraordinária'} - ${acta.building_name || 'Condomino Buraca 1'}`,
-    date: acta.meeting_date.split('T')[0], // Extract date part
-    time: acta.meeting_time,
-    location: acta.location || 'Por determinar',
-    status: acta.status === 'approved' ? 'signed' : acta.status === 'completed' ? 'signed' : 'draft',
-    attendees: 0, // This would come from attendees data if available
-    totalOwners: 20, // This would come from building data
-    minute_number: acta.minute_number,
-    createdAt: acta.created_at,
-    convocatoria_id: acta.convocatoria_id
-  })) || [];
+  const actas = actasData?.map(acta => {
+    const dateString = acta.meeting_date || acta.date;
+    const formattedDate = dateString ? dateString.split('T')[0] : '';
+    
+    return {
+      id: acta.id,
+      type: acta.assembly_type === 'ordinary' ? 'ordinaria' : 'extraordinaria',
+      title: `Assembleia ${acta.assembly_type === 'ordinary' ? 'Ordinária' : 'Extraordinária'} - ${acta.building_name || 'Condomino Buraca 1'}`,
+      date: formattedDate,
+      time: acta.meeting_time || acta.time || '18:00',
+      location: acta.location || 'Por determinar',
+      status: acta.status === 'approved' ? 'signed' : acta.status === 'completed' ? 'signed' : 'draft',
+      attendees: 0, // This would come from attendees data if available
+      totalOwners: 20, // This would come from building data
+      minute_number: acta.minute_number || acta.assembly_number,
+      createdAt: acta.created_at,
+      convocatoria_id: acta.convocatoria_id
+    };
+  }) || [];
 
   const handleWorkflowComplete = (data: any) => {
     console.log('Acta completada:', data);
@@ -63,8 +64,7 @@ const Actas: React.FC = () => {
   };
 
   const handleViewDetails = (acta: any) => {
-    console.log('Ver detalhes da acta:', acta);
-    // TODO: Implementar visualização de detalhes
+    window.location.href = `/actas/${acta.id}`;
   };
 
   const handleGeneratePDF = (acta: any) => {

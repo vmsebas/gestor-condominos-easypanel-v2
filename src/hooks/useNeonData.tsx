@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import api, { getActas, getMembers, getBuildings, getTransactions, getFinancialSummary, getSentLetters, createConvocatoria, createMinute, createMember, updateMember, deleteMember, createBuilding, updateBuilding, deleteBuilding, createTransaction, updateTransaction, deleteTransaction, updateConvocatoria, deleteConvocatoria, updateMinute, deleteMinute, getDashboardStats, getMaintenanceTasks, getMaintenanceProviders, getMaintenanceAlerts, createMaintenanceTask } from '@/lib/api';
+import api, { getActas, getMembers, getBuildings, getTransactions, getFinancialSummary, getSentLetters, getConvocatorias, createConvocatoria, createMinute, createMember, updateMember, deleteMember, createBuilding, updateBuilding, deleteBuilding, createTransaction, updateTransaction, deleteTransaction, updateConvocatoria, deleteConvocatoria, updateMinute, deleteMinute, getDashboardStats, getMaintenanceTasks, getMaintenanceProviders, getMaintenanceAlerts, createMaintenanceTask } from '@/lib/api';
 import { apiCache, cacheUtils } from '@/lib/cache';
 
 // Helper function to format file size
@@ -11,7 +11,7 @@ function formatFileSize(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
-// Hook para obter dados reais da base de dados Neon
+// Hook para obter dados da base de dados local
 export function useBuildings() {
   return useQuery({
     queryKey: ['buildings'],
@@ -33,6 +33,13 @@ export function useMembers(buildingId?: string) {
       return result.data || [];
     },
     staleTime: 5 * 60 * 1000,
+    enabled: true, // Always try to fetch, let auth middleware handle it
+    onError: (error: any) => {
+      // Don't throw on 401s, let the app handle authentication
+      if (error?.response?.status === 401) {
+        return [];
+      }
+    }
   });
 }
 
@@ -40,47 +47,9 @@ export function useConvocatorias(buildingId?: string) {
   return useQuery({
     queryKey: ['convocatorias', buildingId],
     queryFn: async () => {
-      try {
-        const params = new URLSearchParams();
-        if (buildingId) {
-          params.append('buildingId', buildingId);
-        }
-        
-        const response = await fetch(`/api/convocatorias?${params.toString()}`);
-        console.log('Convocatorias API Response:', response.status, response.statusText);
-        
-        const responseData = await response.json().catch((e) => {
-          console.error('Failed to parse JSON response:', e);
-          return {};
-        });
-        
-        console.log('Convocatorias Response Data:', responseData);
-        
-        if (!response.ok) {
-          console.error('API Error Response:', {
-            status: response.status,
-            statusText: response.statusText,
-            url: response.url,
-            responseData
-          });
-          
-          const errorMessage = responseData?.error || 
-                             responseData?.message || 
-                             `HTTP ${response.status}: ${response.statusText}`;
-          throw new Error(`Error al cargar las convocatorias: ${errorMessage}`);
-        }
-        
-        if (!responseData.success) {
-          console.error('API Error - Unsuccessful response:', responseData);
-          throw new Error(responseData.error || 'La respuesta del servidor no fue exitosa');
-        }
-        
-        // Transformar los datos al formato esperado por el frontend
-        return responseData.data || [];
-      } catch (error) {
-        console.error('Error in useConvocatorias:', error);
-        throw error; // Re-throw para que React Query lo maneje
-      }
+      const result = await getConvocatorias(buildingId || '');
+      if (!result.success) throw new Error(result.error || 'Failed to fetch convocatorias');
+      return result.data || [];
     },
     staleTime: 5 * 60 * 1000,
     retry: 1, // Reintentar una vez en caso de error
@@ -369,7 +338,7 @@ export function useDeleteActa() {
   });
 }
 
-// Hook para verificar conexão com Neon
+// Hook para verificar conexão com base de dados local
 export function useDatabaseConnection() {
   return useQuery({
     queryKey: ['database-connection'],

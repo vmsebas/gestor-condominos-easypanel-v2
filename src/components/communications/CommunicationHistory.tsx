@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useBuilding } from '@/hooks/useBuilding';
-import communicationService from '@/utils/db/communicationService';
+import communicationService from '@/services/api/communications';
 import { CommunicationMessage, CommunicationType, CommunicationCategory, CommunicationStatus } from '@/types/communicationTypes';
 import { formatDate } from '@/utils/formatters';
 
@@ -77,7 +77,7 @@ const CommunicationHistory: React.FC<CommunicationHistoryProps> = ({ className }
 
     try {
       setIsLoading(true);
-      const data = await communicationService.getMessages(currentBuilding.id, currentPage, messagesPerPage);
+      const data = await communicationsAPI.getMessages(currentBuilding.id, currentPage, messagesPerPage);
       setMessages(data);
     } catch (error) {
       console.error('Erro ao carregar histórico:', error);
@@ -90,7 +90,7 @@ const CommunicationHistory: React.FC<CommunicationHistoryProps> = ({ className }
     if (!deletingMessage) return;
 
     try {
-      await communicationService.deleteMessage(deletingMessage.id);
+      await communicationsAPI.deleteMessage(deletingMessage.id);
       setDeletingMessage(null);
       loadMessages();
     } catch (error) {

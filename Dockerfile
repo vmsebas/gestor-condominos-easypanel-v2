@@ -1,45 +1,31 @@
-# Single stage build - more efficient for space
 FROM node:18-alpine
 
-# Set production environment early
-ENV NODE_ENV=production
+# Set development environment for build stage
+ENV NODE_ENV=development
 
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# Install ALL dependencies (dev + prod) for build
-RUN npm ci --omit=optional
+# Install all dependencies including devDependencies
+# Force npm to install everything needed for the build
+RUN npm install
 
-# Copy source code
+# Copy everything
 COPY . .
 
-# Build the application
+# Build the frontend
 RUN npm run build
 
-# Remove dev dependencies after build
-RUN npm prune --production
-
-# Clean npm cache
-RUN npm cache clean --force
-
-# Remove source files, keep only built files and server
-RUN rm -rf src/ && \
-    rm -rf .git/ && \
-    rm -rf documentos/ && \
-    rm -rf test-*.html && \
-    rm -rf *.md && \
-    rm -rf tsconfig*.json && \
-    rm -rf vite.config.ts && \
-    rm -rf postcss.config.js && \
-    rm -rf tailwind.config.ts
+# Set production environment after build
+ENV NODE_ENV=production
 
 # Create uploads directory
 RUN mkdir -p /app/uploads
 
-# Expose port
-EXPOSE 3002
+# Expose ports
+EXPOSE 3002 5173
 
-# Start the production server
-CMD ["node", "server/production-server.cjs"]
+# Start both servers
+CMD ["/bin/sh", "./start-docker.sh"]

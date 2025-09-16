@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import buildingsService from '@/utils/db/buildingsService';
-import { Building } from '@/types/buildingTypes';
-import { formatCurrency } from '@/utils/formatters';
-import { useNotifications } from '@/components/common/NotificationProvider';
+import { buildingsAPI } from '@/services/api/buildings';
+import { Building } from '@/types/database';
+import { formatCurrency } from '@/lib/utils';
+import { toast } from 'sonner';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,6 +37,7 @@ import {
 import LoadingSpinner, { ListSkeleton } from '@/components/common/LoadingSpinner';
 import { EmptyList } from '@/components/common/EmptyState';
 import { DeleteConfirmDialog } from '@/components/common/ConfirmDialog';
+import { DataTablePagination } from '@/components/ui/data-table-pagination';
 import BuildingForm from './forms/BuildingForm';
 import BuildingDetails from './BuildingDetails';
 
@@ -51,7 +52,6 @@ const BuildingsManager: React.FC<BuildingsManagerProps> = ({
   selectedBuildingId,
   className
 }) => {
-  const { success, error } = useNotifications();
   
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -60,6 +60,14 @@ const BuildingsManager: React.FC<BuildingsManagerProps> = ({
   const [editingBuilding, setEditingBuilding] = useState<Building | null>(null);
   const [viewingBuilding, setViewingBuilding] = useState<Building | null>(null);
   const [deletingBuilding, setDeletingBuilding] = useState<Building | null>(null);
+  
+  // Estado de paginação
+  const [pagination, setPagination] = useState({
+    page: 1,
+    pageSize: 10,
+    totalItems: 0,
+    totalPages: 1
+  });
 
   // Carregar edifícios
   useEffect(() => {
@@ -69,26 +77,58 @@ const BuildingsManager: React.FC<BuildingsManagerProps> = ({
   const loadBuildings = async () => {
     try {
       setIsLoading(true);
-      const data = await buildingsService.getBuildings();
-      setBuildings(data);
+      const response = await buildingsAPI.getAll();
+      // La API devuelve { data: Building[], pagination: {...} }
+      setBuildings(response.data || []);
+      
+      // Actualizar información de paginación si existe
+      if (response.pagination) {
+        setPagination(response.pagination);
+      } else {
+        // Si no hay paginación, actualizar con los valores por defecto
+        setPagination(prev => ({
+          ...prev,
+          totalItems: response.data?.length || 0,
+          totalPages: Math.ceil((response.data?.length || 0) / prev.pageSize)
+        }));
+      }
     } catch (err) {
       console.error('Erro ao carregar edifícios:', err);
-      error('Erro ao carregar lista de edifícios');
+      toast.error('Erro ao carregar lista de edifícios');
+      setBuildings([]); // Asegurar que siempre sea un array
     } finally {
       setIsLoading(false);
     }
   };
+  
+  // Funciones de paginación
+  const changePage = (newPage: number) => {
+    setPagination(prev => ({ ...prev, page: newPage }));
+    // Si la API soporta paginación, recargar con los parámetros
+    // loadBuildings(newPage, pagination.pageSize);
+  };
+  
+  const changePageSize = (newPageSize: number) => {
+    setPagination(prev => ({
+      ...prev,
+      pageSize: newPageSize,
+      page: 1, // Reset a la primera página cuando cambia el tamaño
+      totalPages: Math.ceil(prev.totalItems / newPageSize)
+    }));
+    // Si la API soporta paginación, recargar con los parámetros
+    // loadBuildings(1, newPageSize);
+  };
 
   const handleCreateBuilding = async (buildingData: Partial<Building>) => {
     try {
-      const newBuilding = await buildingsService.createBuilding(buildingData);
+      const newBuilding = await buildingsAPI.create(buildingData);
       
       setBuildings(prev => [...prev, newBuilding]);
       setShowAddDialog(false);
-      success(`Edifício "${newBuilding.name}" criado com sucesso`);
+      toast.success(`Edifício "${newBuilding.name}" criado com sucesso`);
     } catch (err) {
       console.error('Erro ao criar edifício:', err);
-      error('Erro ao criar edifício');
+      toast.error('Erro ao criar edifício');
     }
   };
 
@@ -96,14 +136,14 @@ const BuildingsManager: React.FC<BuildingsManagerProps> = ({
     if (!editingBuilding) return;
     
     try {
-      const updatedBuilding = await buildingsService.updateBuilding(editingBuilding.id, buildingData);
+      const updatedBuilding = await buildingsAPI.update(editingBuilding.id, buildingData);
       
       setBuildings(prev => prev.map(b => b.id === editingBuilding.id ? updatedBuilding : b));
       setEditingBuilding(null);
-      success(`Edifício atualizado com sucesso`);
+      toast.success(`Edifício atualizado com sucesso`);
     } catch (err) {
       console.error('Erro ao atualizar edifício:', err);
-      error('Erro ao atualizar edifício');
+      toast.error('Erro ao atualizar edifício');
     }
   };
 
@@ -111,29 +151,29 @@ const BuildingsManager: React.FC<BuildingsManagerProps> = ({
     if (!deletingBuilding) return;
 
     try {
-      await buildingsService.deleteBuilding(deletingBuilding.id);
+      await buildingsAPI.delete(deletingBuilding.id);
       
       setBuildings(prev => prev.filter(b => b.id !== deletingBuilding.id));
       setDeletingBuilding(null);
-      success(`Edifício "${deletingBuilding.name}" eliminado`);
+      toast.success(`Edifício "${deletingBuilding.name}" eliminado`);
     } catch (err) {
       console.error('Erro ao eliminar edifício:', err);
-      error('Erro ao eliminar edifício');
+      toast.error('Erro ao eliminar edifício');
     }
   };
 
   const setFavoriteBuilding = async (buildingId: string, isFavorite: boolean) => {
     try {
-      await buildingsService.updateBuilding(buildingId, { isFavorite });
+      await buildingsAPI.update(buildingId, { isFavorite });
       
       setBuildings(prev => prev.map(b => 
         b.id === buildingId ? { ...b, isFavorite } : { ...b, isFavorite: false }
       ));
       
-      success(isFavorite ? 'Edifício marcado como favorito' : 'Favorito removido');
+      toast.success(isFavorite ? 'Edifício marcado como favorito' : 'Favorito removido');
     } catch (err) {
       console.error('Erro ao definir favorito:', err);
-      error('Erro ao definir edifício favorito');
+      toast.error('Erro ao definir edifício favorito');
     }
   };
 
@@ -177,13 +217,13 @@ const BuildingsManager: React.FC<BuildingsManagerProps> = ({
               <div className="flex items-center space-x-4 text-sm">
                 <div className="flex items-center space-x-1">
                   <Users className="h-3 w-3 text-muted-foreground" />
-                  <span>{building.totalUnits || 0} frações</span>
+                  <span>{building.number_of_units || 0} frações</span>
                 </div>
                 
-                {building.baseQuota && (
+                {building.default_monthly_fee && (
                   <div className="flex items-center space-x-1">
                     <Euro className="h-3 w-3 text-muted-foreground" />
-                    <span>{formatCurrency(building.baseQuota)}/mês</span>
+                    <span>{formatCurrency(parseFloat(building.default_monthly_fee))}/mês</span>
                   </div>
                 )}
               </div>
@@ -415,6 +455,23 @@ const BuildingsManager: React.FC<BuildingsManagerProps> = ({
             </div>
           </TabsContent>
         </Tabs>
+      )}
+      
+      {/* Paginação */}
+      {buildings.length > 0 && (
+        <Card>
+          <CardContent className="p-4">
+            <DataTablePagination
+              page={pagination.page}
+              pageSize={pagination.pageSize}
+              totalItems={pagination.totalItems}
+              totalPages={pagination.totalPages}
+              onPageChange={changePage}
+              onPageSizeChange={changePageSize}
+              pageSizeOptions={[10, 20, 30, 50]}
+            />
+          </CardContent>
+        </Card>
       )}
 
       {/* Dialog de Novo Edifício */}

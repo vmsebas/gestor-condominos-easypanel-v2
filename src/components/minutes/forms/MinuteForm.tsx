@@ -3,7 +3,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useBuilding } from '@/hooks/useBuilding';
-import membersService from '@/utils/db/membersService';
+import membersService from '@/services/api/members';
 import { Minute, AgendaItem, VotingResult } from '@/types/minutesTypes';
 import { Member } from '@/types/memberTypes';
 import { formatDate } from '@/utils/formatters';
@@ -120,7 +120,7 @@ const MinuteForm: React.FC<MinuteFormProps> = ({
 
       try {
         setIsLoadingMembers(true);
-        const data = await membersService.getMembers(currentBuilding.id);
+        const data = await membersAPI.getAll(currentBuilding.id);
         setMembers(data);
       } catch (error) {
         console.error('Erro ao carregar membros:', error);

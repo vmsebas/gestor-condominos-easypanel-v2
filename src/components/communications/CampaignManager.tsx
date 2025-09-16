@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useBuilding } from '@/hooks/useBuilding';
-import communicationService from '@/utils/db/communicationService';
-import membersService from '@/utils/db/membersService';
+import communicationService from '@/services/api/communications';
+import membersService from '@/services/api/members';
 import { CommunicationCampaign, CommunicationTemplate, CommunicationType, CommunicationCategory } from '@/types/communicationTypes';
 import { Member } from '@/types/memberTypes';
 import { formatDate, formatCurrency } from '@/utils/formatters';
@@ -104,8 +104,8 @@ const CampaignManager: React.FC<CampaignManagerProps> = ({ templates, onClose, c
     try {
       setIsLoading(true);
       const [campaignsData, membersData] = await Promise.all([
-        communicationService.getCampaigns(currentBuilding.id),
-        membersService.getMembers(currentBuilding.id)
+        communicationsAPI.getCampaigns(currentBuilding.id),
+        membersAPI.getAll(currentBuilding.id)
       ]);
       
       setCampaigns(campaignsData);
@@ -200,7 +200,7 @@ const CampaignManager: React.FC<CampaignManagerProps> = ({ templates, onClose, c
         status: 'draft'
       };
 
-      await communicationService.createCampaign(campaignData);
+      await communicationsAPI.createCampaign(campaignData);
       setShowEditor(false);
       loadData();
     } catch (error) {
@@ -213,7 +213,7 @@ const CampaignManager: React.FC<CampaignManagerProps> = ({ templates, onClose, c
   const handleLaunch = async (campaignId: string) => {
     try {
       setIsLaunching(true);
-      await communicationService.launchCampaign(campaignId);
+      await communicationsAPI.launchCampaign(campaignId);
       loadData();
     } catch (error) {
       console.error('Erro ao lançar campanha:', error);
@@ -226,7 +226,7 @@ const CampaignManager: React.FC<CampaignManagerProps> = ({ templates, onClose, c
     if (!deletingCampaign) return;
 
     try {
-      await communicationService.deleteCampaign(deletingCampaign.id);
+      await communicationsAPI.deleteCampaign(deletingCampaign.id);
       setDeletingCampaign(null);
       loadData();
     } catch (error) {

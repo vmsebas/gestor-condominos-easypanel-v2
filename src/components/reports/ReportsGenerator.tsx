@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useBuilding } from '@/hooks/useBuilding';
-import reportsService from '@/utils/db/reportsService';
+import reportsService from '@/services/api/reports';
 import { ReportConfig, GeneratedReport, ReportType, ReportFilter, ReportFormat } from '@/types/reportTypes';
 import { formatDate } from '@/utils/formatters';
 
@@ -104,8 +104,8 @@ const ReportsGenerator: React.FC<ReportsGeneratorProps> = ({ className }) => {
     try {
       setIsLoading(true);
       const [configsData, reportsData] = await Promise.all([
-        reportsService.getReportConfigs(currentBuilding.id),
-        reportsService.getReports(currentBuilding.id)
+        reportsAPI.getReportConfigs(currentBuilding.id),
+        reportsAPI.getReports(currentBuilding.id)
       ]);
       
       setConfigs(configsData);
@@ -201,9 +201,9 @@ const ReportsGenerator: React.FC<ReportsGeneratorProps> = ({ className }) => {
       };
 
       if (editingConfig) {
-        await reportsService.updateReportConfig(editingConfig.id, configData);
+        await reportsAPI.updateReportConfig(editingConfig.id, configData);
       } else {
-        await reportsService.createReportConfig(configData);
+        await reportsAPI.createReportConfig(configData);
       }
       
       setShowConfigEditor(false);
@@ -227,7 +227,7 @@ const ReportsGenerator: React.FC<ReportsGeneratorProps> = ({ className }) => {
         endDate: new Date().toISOString().split('T')[0]
       };
 
-      await reportsService.generateReport(type, reportFilters);
+      await reportsAPI.generateReport(type, reportFilters);
       loadData();
     } catch (error) {
       console.error('Erro ao gerar relatório:', error);
@@ -240,7 +240,7 @@ const ReportsGenerator: React.FC<ReportsGeneratorProps> = ({ className }) => {
     if (!deletingConfig) return;
 
     try {
-      await reportsService.deleteReportConfig(deletingConfig.id);
+      await reportsAPI.deleteReportConfig(deletingConfig.id);
       setDeletingConfig(null);
       loadData();
     } catch (error) {

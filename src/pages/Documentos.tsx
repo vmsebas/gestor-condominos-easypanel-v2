@@ -285,7 +285,7 @@ const DocumentsPage: React.FC = () => {
     });
     
     // Use the real file path served by the backend
-    const downloadUrl = `http://localhost:3002${doc.file_path}`;
+    const downloadUrl = `${doc.file_path}`;
     
     // Create download link
     const link = document.createElement('a');
@@ -302,7 +302,7 @@ const DocumentsPage: React.FC = () => {
     console.log('A abrir pré-visualização:', doc.name);
     
     // Use the real file path served by the backend
-    const previewUrl = `http://localhost:3002${doc.file_path}`;
+    const previewUrl = `${doc.file_path}`;
     
     // Para PDFs e imagens, abrir em nova janela
     if (['pdf'].includes(doc.file_extension.toLowerCase())) {

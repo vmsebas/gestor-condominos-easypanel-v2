@@ -3,8 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import FinancialDashboard from '@/components/finanzas/FinancialDashboard';
+import FinancialDashboard from '@/components/finance/displays/FinancialDashboard';
 import TransactionManagementDialog from '@/components/transactions/TransactionManagementDialog';
+import ArrearsOverview from '@/components/finance/ArrearsOverview';
 import { useFinancialSummary, useTransactions } from '@/hooks/useNeonData';
 import { Calculator, Plus, TrendingUp, Euro, PieChart, BarChart, FileText, CreditCard, Edit3, Eye, MoreVertical } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -17,7 +18,7 @@ const Finanzas: React.FC = () => {
   const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
   const [transactionDialogMode, setTransactionDialogMode] = useState<'edit' | 'view'>('view');
   
-  // Dados financeiros reais da base de dados Neon
+  // Dados financeiros da base de dados local
   const { data: financialSummary, isLoading: financialLoading, error: financialError } = useFinancialSummary();
   const { data: transactions, isLoading: transactionsLoading, error: transactionsError } = useTransactions();
   
@@ -70,7 +71,7 @@ const Finanzas: React.FC = () => {
       {(financialLoading || transactionsLoading) && (
         <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
           <p className="text-blue-800 dark:text-blue-200 text-sm">
-            ⏳ A carregar dados financeiros da base de dados Neon...
+            ⏳ A carregar dados financeiros da base de dados local...
           </p>
         </div>
       )}
@@ -86,7 +87,7 @@ const Finanzas: React.FC = () => {
       {financialSummary && (
         <div className="mb-4 p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg">
           <p className="text-green-800 dark:text-green-200 text-sm">
-            ✅ Dados financeiros carregados da base de dados Neon
+            ✅ Dados financeiros carregados da base de dados local
           </p>
         </div>
       )}
@@ -111,15 +112,16 @@ const Finanzas: React.FC = () => {
       </div>
 
       <Tabs defaultValue="dashboard" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="transactions">Movimentos</TabsTrigger>
+          <TabsTrigger value="arrears">Morosidade</TabsTrigger>
           <TabsTrigger value="budget">Orçamento</TabsTrigger>
           <TabsTrigger value="reports">Relatórios</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard">
-          <FinancialDashboard data={financialData} />
+          <FinancialDashboard />
         </TabsContent>
 
         <TabsContent value="transactions">
@@ -204,6 +206,10 @@ const Finanzas: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="arrears">
+          <ArrearsOverview />
         </TabsContent>
 
         <TabsContent value="budget">

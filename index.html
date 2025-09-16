@@ -1,12 +1,33 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" class="dark">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Gestor Condominios - Modo Oscuro</title>
+    <style>
+      /* Prevenir FOUC (Flash of Unstyled Content) en Safari */
+      body {
+        visibility: hidden;
+        opacity: 0;
+        background-color: #0a0a0a;
+      }
+      body.loaded {
+        visibility: visible;
+        opacity: 1;
+        transition: opacity 0.3s ease-in-out;
+      }
+    </style>
+    <script>
+      // Marcar el body como cargado después del DOM
+      document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+          document.body.classList.add('loaded');
+        }, 100);
+      });
+    </script>
   </head>
-  <body>
+  <body class="dark">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

@@ -1,10 +1,11 @@
-import { 
-  executeQuery, 
-  executeQuerySingle, 
-  executeMutation,
-  buildInsertQuery,
-  buildUpdateQuery
-} from './dbService';
+// Removed dbService imports - should use API instead
+// import { 
+//   executeQuery, 
+//   executeQuerySingle, 
+//   executeMutation,
+//   buildInsertQuery,
+//   buildUpdateQuery
+// } from './dbService';
 import { Building } from '@/types/buildingTypes';
 
 // Obtener todos los edificios

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useBuilding } from '@/hooks/useBuilding';
-import minutesService from '@/utils/db/minutesService';
+import minutesService from '@/services/api/minutes';
 import { Minute } from '@/types/minutesTypes';
 import { formatDate } from '@/utils/formatters';
 import { useNotifications } from '@/components/common/NotificationProvider';
@@ -71,7 +71,7 @@ const MinutesManager: React.FC<MinutesManagerProps> = ({ className }) => {
 
     try {
       setIsLoading(true);
-      const data = await minutesService.getMinutes(currentBuilding.id);
+      const data = await minutesAPI.getMinutes(currentBuilding.id);
       setMinutes(data);
     } catch (err) {
       console.error('Erro ao carregar atas:', err);
@@ -83,7 +83,7 @@ const MinutesManager: React.FC<MinutesManagerProps> = ({ className }) => {
 
   const handleCreateMinute = async (minuteData: Partial<Minute>) => {
     try {
-      const newMinute = await minutesService.createMinute({
+      const newMinute = await minutesAPI.createMinute({
         ...minuteData,
         buildingId: currentBuilding?.id
       });
@@ -101,7 +101,7 @@ const MinutesManager: React.FC<MinutesManagerProps> = ({ className }) => {
     if (!editingMinute) return;
     
     try {
-      const updatedMinute = await minutesService.updateMinute(editingMinute.id, minuteData);
+      const updatedMinute = await minutesAPI.updateMinute(editingMinute.id, minuteData);
       
       setMinutes(prev => prev.map(m => m.id === editingMinute.id ? updatedMinute : m));
       setEditingMinute(null);
@@ -116,7 +116,7 @@ const MinutesManager: React.FC<MinutesManagerProps> = ({ className }) => {
     if (!deletingMinute) return;
 
     try {
-      await minutesService.deleteMinute(deletingMinute.id);
+      await minutesAPI.deleteMinute(deletingMinute.id);
       
       setMinutes(prev => prev.filter(m => m.id !== deletingMinute.id));
       setDeletingMinute(null);
@@ -129,7 +129,7 @@ const MinutesManager: React.FC<MinutesManagerProps> = ({ className }) => {
 
   const changeStatus = async (minuteId: string, newStatus: string) => {
     try {
-      const updatedMinute = await minutesService.updateMinute(minuteId, { status: newStatus });
+      const updatedMinute = await minutesAPI.updateMinute(minuteId, { status: newStatus });
       
       setMinutes(prev => prev.map(m => m.id === minuteId ? updatedMinute : m));
       

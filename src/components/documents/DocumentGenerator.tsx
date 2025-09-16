@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useBuilding } from '@/hooks/useBuilding';
-import documentService from '@/utils/db/documentService';
+import documentService from '@/services/api/documents';
 import { DocumentTemplate, DocumentType, GeneratedDocument } from '@/types/documentTypes';
 import { formatDate } from '@/utils/formatters';
 import { useNotifications } from '@/components/common/NotificationProvider';
@@ -64,8 +64,8 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({ className }) => {
     try {
       setIsLoading(true);
       const [templatesData, documentsData] = await Promise.all([
-        documentService.getTemplates(currentBuilding.id),
-        documentService.getDocuments(currentBuilding.id)
+        documentsAPI.getTemplates(currentBuilding.id),
+        documentsAPI.getDocuments(currentBuilding.id)
       ]);
       
       setTemplates(templatesData);
@@ -80,7 +80,7 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({ className }) => {
 
   const generateDocument = async (templateId: string, data: any) => {
     try {
-      const document = await documentService.generateDocument(templateId, data);
+      const document = await documentsAPI.generateDocument(templateId, data);
       setDocuments(prev => [document, ...prev]);
       success('Documento gerado com sucesso');
       return document;
@@ -93,7 +93,7 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({ className }) => {
 
   const downloadDocument = async (documentId: string) => {
     try {
-      const blob = await documentService.downloadDocument(documentId);
+      const blob = await documentsAPI.downloadDocument(documentId);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

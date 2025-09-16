@@ -2,6 +2,42 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⚠️ IMPORTANT: Code Cleanup and Fixes (July 21, 2025)
+
+### Files Removed (Redundant/Unused):
+- ❌ `server/debug-server.cjs` - 1,548 lines of duplicate code
+- ❌ `server/production-server.cjs` - 1,592 lines of duplicate code  
+- ❌ `server/simple-server.cjs` - Unused test server
+- ❌ `server/test-server.cjs/ts` - Unused test servers
+- ❌ `lib/database.ts` - 313 lines of unused custom QueryBuilder
+- ❌ `src/utils/db/dbService.ts` - Unused database service
+- ❌ `gestor-condominios-clean/` - 475MB duplicate project folder
+- ❌ `backups/` - Old backup files
+- ❌ Various `.sql` files in root directory
+
+### ✅ CORRECT Files to Use:
+- **Server**: `server/app.cjs` (119 lines - the main server)
+- **Database**: `server/config/database.cjs` + Knex.js
+- **Routes**: Modular routes in `server/routes/*.cjs`
+- **Repositories**: Pattern in `server/repositories/*.cjs`
+
+### Database Status:
+- **27 tables** total
+- **With data**: buildings (2), members (9), users (2), convocatorias (3), transactions (4), minutes (3)
+- **Sample data added**: tasks (5 records), documents (5 records)
+- **Connection**: Uses PostgreSQL via `host.docker.internal:5432`
+- **Admin user**: admin@example.com now has correct building_id
+
+### Fixes Applied (July 21, 2025):
+1. **Database Connection**: Fixed authentication by updating DATABASE_URL in docker-compose.yml
+2. **Actas visibility**: Updated admin user's building_id to match existing minutes data
+3. **Tasks API error**: Changed `assigned_to` → `assignee_id` and `users` → `members` table
+4. **Documents API error**: 
+   - Removed all references to non-existent `deleted_at` column
+   - Changed `m.full_name` → `m.name` (members table uses 'name' column)
+5. **Frontend build errors**: Commented out imports from removed `dbService.ts`
+6. **Dark theme**: Set dark theme as default to prevent "black pages" issue
+
 ## Development Commands
 
 ### Running the Application
@@ -230,7 +266,7 @@ Key entities include:
 - Project successfully closed via automated script
 - Git repository initialized with existing GitHub remote - GitHub connection established
 - All changes committed and tagged
-- Successfully pushed to GitHub - GitHub repository not configured
+- ⚠️ Push failed: Error de autenticación o conectividad - GitHub repository not configured
 
 ### Repository Status:
 - ✅ **GitHub**: [https://github.com/vmsebas/gestor-condominos-easypanel-v2](https://github.com/vmsebas/gestor-condominos-easypanel-v2)

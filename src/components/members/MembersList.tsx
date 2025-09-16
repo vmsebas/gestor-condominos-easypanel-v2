@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Member } from '@/types/memberTypes';
+import type { Member } from '@/types/database';
 import { useMembers } from '@/hooks/useMembers';
 import { useBuilding } from '@/hooks/useBuilding';
 
@@ -27,14 +27,16 @@ import {
   RefreshCw,
   Download,
   UserPlus,
-  SlidersHorizontal
+  SlidersHorizontal,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 import MemberCard from './MemberCard';
 import { EmptyMembers, EmptySearch, DataError } from '@/components/common/EmptyState';
 import LoadingSpinner, { ListSkeleton } from '@/components/common/LoadingSpinner';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import AddMemberForm from './AddMemberForm';
+import MemberFormDialog from './MemberFormDialog';
 
 interface MembersListProps {
   onMemberSelect?: (member: Member) => void;
@@ -61,26 +63,21 @@ const MembersList: React.FC<MembersListProps> = ({
     refreshMembers,
     isEmpty,
     filteredCount,
-    totalCount
+    totalCount,
+    pagination,
+    changePage,
+    changePageSize,
+    setSortBy,
+    sortBy: currentSortBy,
+    sortDesc,
+    toggleSortOrder
   } = useMembers();
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [sortBy, setSortBy] = useState<'name' | 'fraction' | 'quota'>('fraction');
 
-  // Ordenar membros
-  const sortedMembers = [...members].sort((a, b) => {
-    switch (sortBy) {
-      case 'name':
-        return a.name.localeCompare(b.name, 'pt');
-      case 'fraction':
-        return a.fraction.localeCompare(b.fraction, 'pt', { numeric: true });
-      case 'quota':
-        return (b.monthlyQuota || 0) - (a.monthlyQuota || 0);
-      default:
-        return 0;
-    }
-  });
+  // Membros já vêm ordenados do backend
+  const sortedMembers = members;
 
   const handleAddSuccess = (member: Member) => {
     setShowAddDialog(false);
@@ -208,27 +205,15 @@ const MembersList: React.FC<MembersListProps> = ({
                   <DropdownMenuSeparator />
                   
                   <DropdownMenuCheckboxItem
-                    checked={filterOptions.isOwner === true}
+                    checked={filterOptions.isActive === true}
                     onCheckedChange={(checked) => 
                       setFilterOptions(prev => ({ 
                         ...prev, 
-                        isOwner: checked ? true : undefined 
+                        isActive: checked ? true : undefined 
                       }))
                     }
                   >
-                    Apenas Proprietários
-                  </DropdownMenuCheckboxItem>
-                  
-                  <DropdownMenuCheckboxItem
-                    checked={filterOptions.isResident === true}
-                    onCheckedChange={(checked) => 
-                      setFilterOptions(prev => ({ 
-                        ...prev, 
-                        isResident: checked ? true : undefined 
-                      }))
-                    }
-                  >
-                    Apenas Residentes
+                    Apenas Ativos
                   </DropdownMenuCheckboxItem>
                   
                   <DropdownMenuCheckboxItem
@@ -254,16 +239,26 @@ const MembersList: React.FC<MembersListProps> = ({
               </DropdownMenu>
 
               {/* Ordenação */}
-              <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+              <Select value={currentSortBy} onValueChange={(value: any) => setSortBy(value)}>
                 <SelectTrigger className="w-40">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="fraction">Por Fracção</SelectItem>
+                  <SelectItem value="apartment">Por Apartamento</SelectItem>
                   <SelectItem value="name">Por Nome</SelectItem>
-                  <SelectItem value="quota">Por Quota</SelectItem>
+                  <SelectItem value="monthly_fee">Por Quota</SelectItem>
                 </SelectContent>
               </Select>
+              
+              {/* Ordem */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={toggleSortOrder}
+                title={sortDesc ? "Ordem decrescente" : "Ordem crescente"}
+              >
+                {sortDesc ? '↓' : '↑'}
+              </Button>
 
               {/* Modo de Visualização */}
               <div className="flex border rounded-md">
@@ -298,12 +293,8 @@ const MembersList: React.FC<MembersListProps> = ({
                 </Badge>
               )}
               
-              {filterOptions.isOwner && (
-                <Badge variant="outline">Proprietários</Badge>
-              )}
-              
-              {filterOptions.isResident && (
-                <Badge variant="outline">Residentes</Badge>
+              {filterOptions.isActive && (
+                <Badge variant="outline">Ativos</Badge>
               )}
               
               {filterOptions.hasEmail && (
@@ -335,35 +326,116 @@ const MembersList: React.FC<MembersListProps> = ({
             onClearSearch={clearFilters}
           />
         ) : (
-          <div className={
-            viewMode === 'grid' 
-              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'
-              : 'space-y-3'
-          }>
-            {sortedMembers.map((member) => (
-              <MemberCard
-                key={member.id}
-                member={member}
-                onView={onMemberSelect}
-                showActions={showActions}
-                compact={viewMode === 'list' || compact}
-                className="cursor-pointer"
-                onClick={() => onMemberSelect?.(member)}
-              />
-            ))}
-          </div>
+          <>
+            <div className={
+              viewMode === 'grid' 
+                ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'
+                : 'space-y-3'
+            }>
+              {sortedMembers.map((member) => (
+                <MemberCard
+                  key={member.id}
+                  member={member}
+                  onView={onMemberSelect}
+                  showActions={showActions}
+                  compact={viewMode === 'list' || compact}
+                  className="cursor-pointer"
+                  onClick={() => onMemberSelect?.(member)}
+                />
+              ))}
+            </div>
+
+            {/* Controles de Paginação */}
+            {pagination.totalPages > 1 && (
+              <Card className="mt-6">
+                <CardContent className="p-4">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">
+                        Mostrando {((pagination.page - 1) * pagination.pageSize) + 1} - {Math.min(pagination.page * pagination.pageSize, pagination.totalCount)} de {pagination.totalCount} membros
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => changePage(pagination.page - 1)}
+                        disabled={!pagination.hasPrevPage}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        Anterior
+                      </Button>
+                      
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                          let pageNum;
+                          if (pagination.totalPages <= 5) {
+                            pageNum = i + 1;
+                          } else if (pagination.page <= 3) {
+                            pageNum = i + 1;
+                          } else if (pagination.page >= pagination.totalPages - 2) {
+                            pageNum = pagination.totalPages - 4 + i;
+                          } else {
+                            pageNum = pagination.page - 2 + i;
+                          }
+                          
+                          return (
+                            <Button
+                              key={pageNum}
+                              variant={pageNum === pagination.page ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => changePage(pageNum)}
+                              className="w-8 h-8 p-0"
+                            >
+                              {pageNum}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => changePage(pagination.page + 1)}
+                        disabled={!pagination.hasNextPage}
+                      >
+                        Próximo
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">Itens por página:</span>
+                      <Select 
+                        value={pagination.pageSize.toString()} 
+                        onValueChange={(value) => changePageSize(parseInt(value))}
+                      >
+                        <SelectTrigger className="w-20">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="10">10</SelectItem>
+                          <SelectItem value="20">20</SelectItem>
+                          <SelectItem value="50">50</SelectItem>
+                          <SelectItem value="100">100</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </>
         )}
       </div>
 
       {/* Dialog de Adicionar Membro */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <AddMemberForm
-            onSuccess={handleAddSuccess}
-            onCancel={() => setShowAddDialog(false)}
-          />
-        </DialogContent>
-      </Dialog>
+      <MemberFormDialog
+        open={showAddDialog}
+        onOpenChange={setShowAddDialog}
+        onSuccess={handleAddSuccess}
+      />
     </div>
   );
 };

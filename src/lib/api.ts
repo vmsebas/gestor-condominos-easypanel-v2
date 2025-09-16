@@ -1,14 +1,10 @@
-import axios from 'axios';
+import apiClient from './auth-api';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+// Use the authenticated axios client from auth-api.ts
+const api = apiClient;
 
-// Create axios instance with default config
-const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+// Export api for other modules
+export { api };
 
 // Buildings
 export const getBuildings = async () => {
@@ -149,7 +145,7 @@ export const updateArrear = async (id: string, data: any) => {
 // Minutes
 export const getMinutes = async (buildingId?: string) => {
   const params = buildingId ? { buildingId } : {};
-  const response = await api.get('/actas', { params });
+  const response = await api.get('/minutes', { params });
   return response.data;
 };
 

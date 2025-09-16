@@ -680,7 +680,7 @@ const MemberProfile: React.FC = () => {
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => window.open(`http://localhost:3002${document.file_path}`, '_blank')}
+                          onClick={() => window.open(`${document.file_path}`, '_blank')}
                         >
                           <Eye className="h-4 w-4 mr-2" />
                           Ver
@@ -690,7 +690,7 @@ const MemberProfile: React.FC = () => {
                           size="sm"
                           onClick={() => {
                             const link = document.createElement('a');
-                            link.href = `http://localhost:3002${document.file_path}`;
+                            link.href = `${document.file_path}`;
                             link.download = document.original_name;
                             link.click();
                           }}

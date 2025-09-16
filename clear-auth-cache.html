@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limpiar Caché de Autenticación</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background-color: #dc2626;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background-color: #b91c1c;
+        }
+        .success {
+            color: #059669;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .info {
+            background-color: #eff6ff;
+            border: 1px solid #bfdbfe;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 Limpiar Caché de Autenticación</h1>
+        
+        <p>Si la aplicación está parpadeando o tienes problemas de autenticación, usa estos botones para limpiar el caché:</p>
+        
+        <button onclick="clearAuthCache()">Limpiar Caché de Autenticación</button>
+        <button onclick="clearAllCache()">Limpiar TODO el LocalStorage</button>
+        
+        <div id="message"></div>
+        
+        <div class="info">
+            <h3>📋 Instrucciones:</h3>
+            <ol>
+                <li>Abre este archivo en el navegador: <code>file:///Users/mini-server/server/apps/gestor-condominos/gestor-condominos-easypanel-v2/clear-auth-cache.html</code></li>
+                <li>Haz clic en "Limpiar Caché de Autenticación"</li>
+                <li>Vuelve a la aplicación: <a href="http://localhost:5173" target="_blank">http://localhost:5173</a></li>
+                <li>Inicia sesión nuevamente con las credenciales</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        function clearAuthCache() {
+            try {
+                // Limpiar solo los datos de autenticación
+                localStorage.removeItem('auth-storage');
+                localStorage.removeItem('gestor-theme');
+                
+                // Limpiar cookies de sesión
+                document.cookie.split(";").forEach(function(c) { 
+                    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+                });
+                
+                showMessage('✅ Caché de autenticación limpiado correctamente!');
+            } catch (error) {
+                showMessage('❌ Error al limpiar caché: ' + error.message, 'error');
+            }
+        }
+        
+        function clearAllCache() {
+            try {
+                // Limpiar todo el localStorage
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                // Limpiar todas las cookies
+                document.cookie.split(";").forEach(function(c) { 
+                    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+                });
+                
+                showMessage('✅ Todo el caché ha sido limpiado!');
+            } catch (error) {
+                showMessage('❌ Error al limpiar caché: ' + error.message, 'error');
+            }
+        }
+        
+        function showMessage(text, type = 'success') {
+            const messageDiv = document.getElementById('message');
+            messageDiv.className = type === 'success' ? 'success' : 'error';
+            messageDiv.textContent = text;
+        }
+    </script>
+</body>
+</html>

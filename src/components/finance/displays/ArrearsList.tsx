@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useBuilding } from '@/hooks/useBuilding';
-import financeService from '@/utils/db/financeService';
+import financeService from '@/services/api/finance';
 import { Arrear } from '@/types/finance/financeTypes';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import { useNotifications } from '@/components/common/NotificationProvider';
@@ -71,7 +71,7 @@ const ArrearsList: React.FC<ArrearsListProps> = ({
 
     try {
       setIsLoading(true);
-      const data = await financeService.getArrears(currentBuilding.id);
+      const data = await financeAPI.getArrears(currentBuilding.id);
       setArrears(data);
     } catch (err) {
       console.error('Erro ao carregar morosidade:', err);
@@ -83,7 +83,7 @@ const ArrearsList: React.FC<ArrearsListProps> = ({
 
   const handleCreateArrear = async (arrearData: Partial<Arrear>) => {
     try {
-      const newArrear = await financeService.createArrear({
+      const newArrear = await financeAPI.createArrear({
         ...arrearData,
         buildingId: currentBuilding?.id
       });
@@ -101,7 +101,7 @@ const ArrearsList: React.FC<ArrearsListProps> = ({
     if (!editingArrear) return;
     
     try {
-      const updatedArrear = await financeService.updateArrear(editingArrear.id, arrearData);
+      const updatedArrear = await financeAPI.updateArrear(editingArrear.id, arrearData);
       
       setArrears(prev => prev.map(a => a.id === editingArrear.id ? updatedArrear : a));
       setEditingArrear(null);
@@ -116,7 +116,7 @@ const ArrearsList: React.FC<ArrearsListProps> = ({
     if (!deletingArrear) return;
 
     try {
-      await financeService.deleteArrear(deletingArrear.id);
+      await financeAPI.deleteArrear(deletingArrear.id);
       
       setArrears(prev => prev.filter(a => a.id !== deletingArrear.id));
       setDeletingArrear(null);
@@ -129,7 +129,7 @@ const ArrearsList: React.FC<ArrearsListProps> = ({
 
   const markAsResolved = async (arrearId: string) => {
     try {
-      const updatedArrear = await financeService.updateArrear(arrearId, { status: 'resolved' });
+      const updatedArrear = await financeAPI.updateArrear(arrearId, { status: 'resolved' });
       
       setArrears(prev => prev.map(a => a.id === arrearId ? updatedArrear : a));
       success('Morosidade marcada como resolvida');

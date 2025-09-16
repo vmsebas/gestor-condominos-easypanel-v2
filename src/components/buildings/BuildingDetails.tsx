@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Building } from '@/types/buildingTypes';
 import { formatCurrency, formatDate } from '@/utils/formatters';
-import membersService from '@/utils/db/membersService';
-import financeService from '@/utils/db/financeService';
+import { membersAPI } from '@/services/api/members';
+import { financeAPI } from '@/services/api/finance';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,7 @@ import {
   Car,
   Trees,
   Waves,
-  Elevator,
+  ArrowUpDown,
   Star,
   Edit,
   FileText,
@@ -65,7 +65,8 @@ const BuildingDetails: React.FC<BuildingDetailsProps> = ({
         setIsLoadingStats(true);
         
         // Carregar membros
-        const members = await membersService.getMembers(building.id);
+        const response = await membersAPI.getAll(building.id);
+        const members = Array.isArray(response) ? response : (response?.data || []);
         const owners = members.filter(m => m.type === 'owner');
         const residents = members.filter(m => m.type === 'resident');
         
@@ -99,7 +100,7 @@ const BuildingDetails: React.FC<BuildingDetailsProps> = ({
 
   const getFeatureIcon = (feature: string) => {
     switch (feature) {
-      case 'elevator': return <Elevator className="h-4 w-4" />;
+      case 'elevator': return <ArrowUpDown className="h-4 w-4" />;
       case 'garage': return <Car className="h-4 w-4" />;
       case 'garden': return <Trees className="h-4 w-4" />;
       case 'pool': return <Waves className="h-4 w-4" />;

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Frontend Gestor Condominios</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .endpoint {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #333;
+            border-radius: 5px;
+            background: #2a2a2a;
+        }
+        .success { border-color: #4CAF50; }
+        .error { border-color: #f44336; }
+        .data { 
+            margin-top: 10px; 
+            padding: 10px;
+            background: #333;
+            border-radius: 3px;
+            font-size: 12px;
+            overflow-x: auto;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        button:hover { background: #0056b3; }
+        h2 { color: #4CAF50; }
+        .status { font-weight: bold; }
+        .count { color: #FFC107; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Test Completo - Gestor Condominios</h1>
+    <button onclick="runAllTests()">Ejecutar Todas las Pruebas</button>
+    <button onclick="checkDataIntegrity()">Verificar Integridad de Datos</button>
+    
+    <div id="results"></div>
+
+    <script>
+        const BASE_URL = 'http://localhost:3002';
+        let accessToken = '';
+
+        async function login() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@example.com',
+                        password: 'Admin123!'
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success && data.data?.accessToken) {
+                    accessToken = data.data.accessToken;
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error('Login error:', error);
+                return false;
+            }
+        }
+
+        async function testEndpoint(endpoint, method = 'GET', body = null) {
+            const options = {
+                method,
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                }
+            };
+            
+            if (body) options.body = JSON.stringify(body);
+            
+            try {
+                const response = await fetch(`${BASE_URL}${endpoint}`, options);
+                const data = await response.json();
+                return { status: response.status, data, error: null };
+            } catch (error) {
+                return { status: 0, data: null, error: error.message };
+            }
+        }
+
+        async function runAllTests() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<h2>🚀 Ejecutando pruebas...</h2>';
+            
+            // Login first
+            const loginSuccess = await login();
+            if (!loginSuccess) {
+                results.innerHTML += '<div class="endpoint error">❌ Login falló</div>';
+                return;
+            }
+            
+            results.innerHTML += '<div class="endpoint success">✅ Login exitoso</div>';
+            
+            // Test all endpoints
+            const endpoints = [
+                { path: '/api/buildings', name: 'Edificios' },
+                { path: '/api/members', name: 'Miembros' },
+                { path: '/api/convocatorias', name: 'Convocatorias' },
+                { path: '/api/minutes', name: 'Actas' },
+                { path: '/api/tasks', name: 'Tareas' },
+                { path: '/api/documents', name: 'Documentos' },
+                { path: '/api/transactions', name: 'Transacciones' },
+                { path: '/api/financial-summary/fb0d83d3-fe04-47cb-ba48-f95538a2a7fc', name: 'Resumen Financiero' },
+                { path: '/api/communications', name: 'Comunicaciones' },
+                { path: '/api/letters', name: 'Cartas' },
+                { path: '/api/arrears', name: 'Morosidad' },
+                { path: '/api/financial-periods', name: 'Períodos Financieros' },
+                { path: '/api/document-categories', name: 'Categorías Documentos' },
+                { path: '/api/transaction-categories', name: 'Categorías Transacciones' }
+            ];
+            
+            for (const endpoint of endpoints) {
+                const result = await testEndpoint(endpoint.path);
+                
+                let html = `<div class="endpoint ${result.status === 200 ? 'success' : 'error'}">`;
+                html += `<span class="status">${result.status === 200 ? '✅' : '❌'}</span> `;
+                html += `<strong>${endpoint.name}</strong> - ${endpoint.path} - `;
+                html += `<span class="status">Status: ${result.status}</span>`;
+                
+                if (result.data) {
+                    if (result.data.data) {
+                        if (Array.isArray(result.data.data)) {
+                            html += ` - <span class="count">Registros: ${result.data.data.length}</span>`;
+                            if (result.data.data.length > 0) {
+                                html += `<div class="data">Ejemplo: ${JSON.stringify(result.data.data[0], null, 2)}</div>`;
+                            }
+                        } else if (result.data.data.members) {
+                            html += ` - <span class="count">Miembros: ${result.data.data.members.length}</span>`;
+                        } else {
+                            html += `<div class="data">${JSON.stringify(result.data.data, null, 2)}</div>`;
+                        }
+                    } else {
+                        html += `<div class="data">Error: ${JSON.stringify(result.data, null, 2)}</div>`;
+                    }
+                }
+                
+                html += '</div>';
+                results.innerHTML += html;
+            }
+        }
+
+        async function checkDataIntegrity() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<h2>🔍 Verificando integridad de datos...</h2>';
+            
+            if (!accessToken) {
+                const loginSuccess = await login();
+                if (!loginSuccess) {
+                    results.innerHTML += '<div class="endpoint error">❌ Login falló</div>';
+                    return;
+                }
+            }
+            
+            // Check buildings
+            const buildings = await testEndpoint('/api/buildings');
+            if (buildings.data?.data) {
+                results.innerHTML += '<h3>📍 Edificios</h3>';
+                for (const building of buildings.data.data) {
+                    results.innerHTML += `<div class="endpoint success">
+                        <strong>${building.name}</strong><br>
+                        ID: ${building.id}<br>
+                        Unidades: ${building.total_units || 0}<br>
+                        Dirección: ${building.address}
+                    </div>`;
+                    
+                    // Check members for each building
+                    const members = await testEndpoint(`/api/members?buildingId=${building.id}`);
+                    if (members.data?.data?.members) {
+                        results.innerHTML += `<div class="data">
+                            Miembros en ${building.name}: ${members.data.data.members.length}
+                            ${building.total_units === 0 && members.data.data.members.length > 0 ? 
+                                '<span style="color: #ff9800"> ⚠️ Edificio con 0 unidades pero tiene miembros</span>' : ''}
+                        </div>`;
+                    }
+                }
+            }
+            
+            // Check for data inconsistencies
+            results.innerHTML += '<h3>⚠️ Verificación de Inconsistencias</h3>';
+            
+            // Check members without contact info
+            const allMembers = await testEndpoint('/api/members');
+            if (allMembers.data?.data?.members) {
+                const membersWithoutContact = allMembers.data.data.members.filter(m => !m.email && !m.phone);
+                if (membersWithoutContact.length > 0) {
+                    results.innerHTML += `<div class="endpoint error">
+                        ❌ ${membersWithoutContact.length} miembros sin datos de contacto:
+                        <div class="data">${membersWithoutContact.map(m => m.name).join(', ')}</div>
+                    </div>`;
+                }
+            }
+            
+            // Check transactions without categories
+            const transactions = await testEndpoint('/api/transactions');
+            if (transactions.data?.data) {
+                const transWithoutCategory = transactions.data.data.filter(t => !t.category_id);
+                if (transWithoutCategory.length > 0) {
+                    results.innerHTML += `<div class="endpoint error">
+                        ❌ ${transWithoutCategory.length} transacciones sin categoría
+                    </div>`;
+                }
+            }
+        }
+
+        // Auto-run tests on load
+        window.onload = () => {
+            runAllTests();
+        };
+    </script>
+</body>
+</html>

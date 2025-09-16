@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useBuilding } from '@/hooks/useBuilding';
-import financeService from '@/utils/db/financeService';
+import financeService from '@/services/api/finance';
 import { TransactionCategory } from '@/types/finance/financeTypes';
 import { useNotifications } from '@/components/common/NotificationProvider';
 
@@ -68,7 +68,7 @@ const CategoriesList: React.FC<CategoriesListProps> = ({
 
     try {
       setIsLoading(true);
-      const data = await financeService.getCategories(currentBuilding.id);
+      const data = await financeAPI.getCategories(currentBuilding.id);
       setCategories(data);
     } catch (err) {
       console.error('Erro ao carregar categorias:', err);
@@ -80,7 +80,7 @@ const CategoriesList: React.FC<CategoriesListProps> = ({
 
   const handleCreateCategory = async (categoryData: Partial<TransactionCategory>) => {
     try {
-      const newCategory = await financeService.createCategory({
+      const newCategory = await financeAPI.createCategory({
         ...categoryData,
         buildingId: currentBuilding?.id
       });
@@ -99,7 +99,7 @@ const CategoriesList: React.FC<CategoriesListProps> = ({
 
     try {
       // Aqui implementaríamos a eliminação no serviço
-      // await financeService.deleteCategory(deletingCategory.id);
+      // await financeAPI.deleteCategory(deletingCategory.id);
       
       setCategories(prev => prev.filter(c => c.id !== deletingCategory.id));
       setDeletingCategory(null);

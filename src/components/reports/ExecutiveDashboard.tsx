@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useBuilding } from '@/hooks/useBuilding';
-import reportsService from '@/utils/db/reportsService';
+import reportsService from '@/services/api/reports';
 import { FinancialAnalytics, MemberAnalytics, CommunicationAnalytics, KPIData } from '@/types/reportTypes';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 
@@ -62,9 +62,9 @@ const ExecutiveDashboard: React.FC<ExecutiveDashboardProps> = ({ className }) =>
       const startDate = getStartDate(dateRange);
 
       const [financial, member, communication] = await Promise.all([
-        reportsService.getFinancialAnalytics(currentBuilding.id, startDate, endDate),
-        reportsService.getMemberAnalytics(currentBuilding.id),
-        reportsService.getCommunicationAnalytics(currentBuilding.id)
+        reportsAPI.getFinancialAnalytics(currentBuilding.id, startDate, endDate),
+        reportsAPI.getMemberAnalytics(currentBuilding.id),
+        reportsAPI.getCommunicationAnalytics(currentBuilding.id)
       ]);
 
       setFinancialData(financial);

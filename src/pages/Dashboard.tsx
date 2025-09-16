@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { useMembers, useFinancialSummary, useDatabaseConnection, useDashboardStats, useDashboardActivities } from '@/hooks/useNeonData';
+import { useMembers, useFinancialSummary } from '@/hooks/useNeonDataWithAuth';
+import { useDatabaseConnection, useDashboardStats, useDashboardActivities } from '@/hooks/useNeonData';
 import { 
   LayoutDashboard, 
   FileText, 
@@ -56,7 +57,7 @@ const Dashboard: React.FC = () => {
   }
 
   // Vista clásica (código original)
-  // Dados reais da base de dados Neon
+  // Dados da base de dados local
   const { data: members, isLoading: membersLoading } = useMembers();
   const { data: financialSummary, isLoading: financialLoading } = useFinancialSummary();
   const { data: dbConnection } = useDatabaseConnection();
@@ -124,7 +125,7 @@ const Dashboard: React.FC = () => {
         </p>
         {dbConnection && (
           <div className="mt-2 text-xs text-green-600 dark:text-green-400">
-            ✓ Ligado à base de dados Neon: {dbConnection.tables?.length || 0} tabelas encontradas
+            ✓ Ligado à base de dados local: {dbConnection.tables?.length || 0} tabelas encontradas
           </div>
         )}
         {!dbConnection && !membersLoading && (

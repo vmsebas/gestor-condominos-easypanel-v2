@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useBuilding } from '@/hooks/useBuilding';
-import communicationService from '@/utils/db/communicationService';
+import communicationService from '@/services/api/communications';
 import { AutomationRule, AutomationCondition, AutomationAction, CommunicationType, CommunicationCategory } from '@/types/communicationTypes';
 import { formatDate } from '@/utils/formatters';
 
@@ -82,7 +82,7 @@ const AutomationManager: React.FC<AutomationManagerProps> = ({ onClose, classNam
 
     try {
       setIsLoading(true);
-      const data = await communicationService.getAutomationRules(currentBuilding.id);
+      const data = await communicationsAPI.getAutomationRules(currentBuilding.id);
       setRules(data);
     } catch (error) {
       console.error('Erro ao carregar regras:', error);
@@ -139,7 +139,7 @@ const AutomationManager: React.FC<AutomationManagerProps> = ({ onClose, classNam
         }
       };
 
-      await communicationService.createAutomationRule(ruleData);
+      await communicationsAPI.createAutomationRule(ruleData);
       setShowEditor(false);
       loadRules();
     } catch (error) {
@@ -151,7 +151,7 @@ const AutomationManager: React.FC<AutomationManagerProps> = ({ onClose, classNam
 
   const handleToggleRule = async (ruleId: string) => {
     try {
-      await communicationService.toggleAutomationRule(ruleId);
+      await communicationsAPI.toggleAutomationRule(ruleId);
       loadRules();
     } catch (error) {
       console.error('Erro ao alterar estado da regra:', error);
@@ -162,7 +162,7 @@ const AutomationManager: React.FC<AutomationManagerProps> = ({ onClose, classNam
     if (!deletingRule) return;
 
     try {
-      await communicationService.deleteAutomationRule(deletingRule.id);
+      await communicationsAPI.deleteAutomationRule(deletingRule.id);
       setDeletingRule(null);
       loadRules();
     } catch (error) {

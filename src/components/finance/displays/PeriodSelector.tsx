@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useBuilding } from '@/hooks/useBuilding';
-import financeService from '@/utils/db/financeService';
+import financeService from '@/services/api/finance';
 import { FinancialPeriod } from '@/types/finance/financeTypes';
 import { formatDate, formatCurrency } from '@/utils/formatters';
 import { useNotifications } from '@/components/common/NotificationProvider';
@@ -58,7 +58,7 @@ const PeriodSelector: React.FC<PeriodSelectorProps> = ({
 
     try {
       setIsLoading(true);
-      const data = await financeService.getFinancialPeriods(currentBuilding.id);
+      const data = await financeAPI.getFinancialPeriods(currentBuilding.id);
       setPeriods(data);
       
       // Selecionar período ativo se não há um selecionado
@@ -77,7 +77,7 @@ const PeriodSelector: React.FC<PeriodSelectorProps> = ({
   const handleCreatePeriod = async (periodData: Partial<FinancialPeriod>) => {
     try {
       // Implementar criação no serviço
-      // const newPeriod = await financeService.createFinancialPeriod(periodData);
+      // const newPeriod = await financeAPI.createFinancialPeriod(periodData);
       
       const newPeriod: FinancialPeriod = {
         id: `period-${Date.now()}`,
@@ -105,7 +105,7 @@ const PeriodSelector: React.FC<PeriodSelectorProps> = ({
       setActivatingPeriod(periodId);
       
       // Implementar ativação no serviço
-      // await financeService.activateFinancialPeriod(periodId);
+      // await financeAPI.activateFinancialPeriod(periodId);
       
       // Atualizar localmente
       setPeriods(prev => prev.map(p => ({

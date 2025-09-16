@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useBuilding } from '@/hooks/useBuilding';
-import membersService from '@/utils/db/membersService';
+import membersService from '@/services/api/members';
 import { CommunicationTemplate, CommunicationType, CommunicationPriority, CommunicationCategory, DEFAULT_TEMPLATES } from '@/types/communicationTypes';
 import { Member } from '@/types/memberTypes';
 
@@ -77,7 +77,7 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
 
       try {
         setIsLoadingMembers(true);
-        const data = await membersService.getMembers(currentBuilding.id);
+        const data = await membersAPI.getAll(currentBuilding.id);
         setMembers(data);
       } catch (error) {
         console.error('Erro ao carregar membros:', error);

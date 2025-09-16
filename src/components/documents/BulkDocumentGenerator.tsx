@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useBuilding } from '@/hooks/useBuilding';
-import membersService from '@/utils/db/membersService';
-import financeService from '@/utils/db/financeService';
+import membersService from '@/services/api/members';
+import financeService from '@/services/api/finance';
 import { DocumentTemplate, BulkDocumentRequest, DocumentType } from '@/types/documentTypes';
 import { Member } from '@/types/memberTypes';
 import { Arrear } from '@/types/finance/financeTypes';
@@ -76,8 +76,8 @@ const BulkDocumentGenerator: React.FC<BulkDocumentGeneratorProps> = ({
     try {
       setIsLoading(true);
       const [membersData, arrearsData] = await Promise.all([
-        membersService.getMembers(currentBuilding.id),
-        financeService.getArrears(currentBuilding.id)
+        membersAPI.getAll(currentBuilding.id),
+        financeAPI.getArrears(currentBuilding.id)
       ]);
       
       setMembers(membersData);

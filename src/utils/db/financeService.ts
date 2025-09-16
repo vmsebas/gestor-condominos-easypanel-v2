@@ -1,11 +1,12 @@
-import { 
-  executeQuery, 
-  executeQuerySingle, 
-  executeMutation,
-  executeTransaction,
-  buildInsertQuery,
-  buildUpdateQuery
-} from './dbService';
+// Removed dbService imports - should use API instead
+// import { 
+//   executeQuery, 
+//   executeQuerySingle, 
+//   executeMutation,
+//   executeTransaction,
+//   buildInsertQuery,
+//   buildUpdateQuery
+// } from './dbService';
 import { 
   Transaction, 
   TransactionCategory, 

@@ -165,7 +165,7 @@ const TransactionManagementDialog: React.FC<TransactionManagementDialogProps> = 
   };
 
   const isLoading = updateTransactionMutation.isPending || deleteTransactionMutation.isPending;
-  const assignedMember = members?.find(m => m.id === formData.member_id);
+  const assignedMember = Array.isArray(members) ? members.find(m => m.id === formData.member_id) : null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -340,7 +340,7 @@ const TransactionManagementDialog: React.FC<TransactionManagementDialogProps> = 
                     <SelectItem value="">
                       <span className="text-muted-foreground">Nenhum membro</span>
                     </SelectItem>
-                    {members?.map((member) => (
+                    {Array.isArray(members?.data) ? members.data.map((member) => (
                       <SelectItem key={member.id} value={member.id}>
                         <div className="flex items-center space-x-2">
                           <User className="h-4 w-4" />
@@ -348,7 +348,7 @@ const TransactionManagementDialog: React.FC<TransactionManagementDialogProps> = 
                           <span className="text-muted-foreground">({member.apartment})</span>
                         </div>
                       </SelectItem>
-                    ))}
+                    )) : null}
                   </SelectContent>
                 </Select>
               </div>

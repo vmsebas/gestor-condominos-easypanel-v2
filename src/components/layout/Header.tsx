@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
   DropdownMenu,
@@ -11,6 +12,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/components/theme/ThemeProvider';
+import { useAuthStore } from '@/store/authStore';
+import { useAuth } from '@/hooks/useAuth';
 import { 
   Sun, 
   Moon, 
@@ -27,7 +30,10 @@ import {
 
 const Header: React.FC = () => {
   const { setTheme, theme } = useTheme();
-  const [isOnline] = React.useState(true); // Simulated connection status
+  const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const { logout } = useAuth();
+  const [isOnline] = React.useState(navigator.onLine);
 
   const getThemeIcon = () => {
     switch (theme) {
@@ -127,31 +133,36 @@ const Header: React.FC = () => {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-8 w-8 rounded-full">
               <Avatar className="h-8 w-8">
-                <AvatarImage src="/placeholder-avatar.jpg" alt="Usuario" />
-                <AvatarFallback>AD</AvatarFallback>
+                <AvatarImage src="/placeholder-avatar.jpg" alt={user?.name || 'Usuario'} />
+                <AvatarFallback>
+                  {user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
+                </AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56" align="end" forceMount>
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">Administrador</p>
+                <p className="text-sm font-medium leading-none">{user?.name || 'Usuario'}</p>
                 <p className="text-xs leading-none text-muted-foreground">
-                  admin@edificio.com
+                  {user?.email || 'email@ejemplo.com'}
                 </p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/profile')}>
               <User className="mr-2 h-4 w-4" />
               <span>Perfil</span>
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/settings')}>
               <Settings className="mr-2 h-4 w-4" />
               <span>Configuración</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-600 dark:text-red-400">
+            <DropdownMenuItem 
+              className="text-red-600 dark:text-red-400"
+              onClick={() => logout()}
+            >
               <LogOut className="mr-2 h-4 w-4" />
               <span>Cerrar sesión</span>
             </DropdownMenuItem>

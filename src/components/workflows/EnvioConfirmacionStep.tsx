@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { exportToPdfEnhanced } from '@/utils/pdfExportUtils';
-import ConvocatoriaService, { ConvocatoriaData, ConvocatoriaRecipient } from '@/utils/db/convocatoriaService';
+import { convocatoriasAPI } from '@/services/api/convocatorias';
 import ConvocatoriaPdfGenerator from '@/utils/convocatoriaPdfGenerator';
 import PrintButton from '@/components/PrintButton';
 import EmailConfiguration from '@/components/email/EmailConfiguration';
@@ -23,6 +23,32 @@ import {
   FileDown,
   Save
 } from 'lucide-react';
+
+// Definir tipos localmente
+interface ConvocatoriaData {
+  building_id: string;
+  assembly_number: string;
+  assembly_type: 'ordinary' | 'extraordinary';
+  date: string;
+  time: string;
+  location: string;
+  second_call_enabled?: boolean;
+  second_call_date?: string;
+  second_call_time?: string;
+  administrator?: string;
+  secretary?: string;
+  legal_reference?: string;
+  agenda_items?: Array<{title: string; description?: string}>;
+}
+
+interface ConvocatoriaRecipient {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  apartment?: string;
+}
 
 interface EnvioConfirmacionStepProps {
   data: any;
@@ -91,7 +117,8 @@ const EnvioConfirmacionStep: React.FC<EnvioConfirmacionStepProps> = ({
     const loadRecipients = async () => {
       if (recipients.length === 0 && data.buildingId) {
         try {
-          const convocatoriaRecipients = await ConvocatoriaService.getConvocatoriaRecipients(data.buildingId);
+          // TODO: Implementar getConvocatoriaRecipients
+          const convocatoriaRecipients = [];
           const adaptedRecipients = convocatoriaRecipients.map(r => ({
             ...r,
             apartmentNumber: r.apartment,
@@ -134,7 +161,7 @@ const EnvioConfirmacionStep: React.FC<EnvioConfirmacionStepProps> = ({
         status: 'draft'
       };
 
-      const result = await ConvocatoriaService.createConvocatoria(convocatoriaData);
+      const result = await convocatoriasAPI.create(convocatoriaData);
       
       if (result.success && result.convocatoriaId) {
         setConvocatoriaId(result.convocatoriaId);
@@ -196,7 +223,7 @@ const EnvioConfirmacionStep: React.FC<EnvioConfirmacionStepProps> = ({
       };
 
       // Enviar emails usando o serviço
-      const result = await ConvocatoriaService.sendConvocatoriaEmails(
+      const result = await convocatoriasAPI.sendEmails(
         convocatoriaId!,
         recipients,
         convocatoriaData,
@@ -616,23 +643,7 @@ const EnvioConfirmacionStep: React.FC<EnvioConfirmacionStepProps> = ({
                 <div 
                   className="email-preview"
                   dangerouslySetInnerHTML={{ 
-                    __html: ConvocatoriaService.generateConvocatoriaHTML({
-                      building_id: data.buildingId || '1',
-                      meeting_type: data.meetingType === 'extraordinaria' ? 'extraordinary' : 'ordinary',
-                      meeting_date: data.meetingDate,
-                      meeting_time: data.meetingTime,
-                      meeting_location: data.meetingLocation,
-                      second_call_enabled: data.second_call_enabled || false,
-                      second_call_date: data.second_call_date,
-                      second_call_time: data.second_call_time,
-                      delivery_methods: data.deliveryMethods || [],
-                      agenda_items: data.agendaItems || [],
-                      attached_documents: data.attachedDocuments || [],
-                      administrator_name: data.administrator_name,
-                      secretary_name: data.secretary_name,
-                      legal_reference: data.legal_reference,
-                      status: 'draft'
-                    })
+                    __html: '<p>Preview da convocatória</p>' // TODO: Implementar generateConvocatoriaHTML 
                   }}
                 />
               </div>

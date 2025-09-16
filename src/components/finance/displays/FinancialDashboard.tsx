@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useBuilding } from '@/hooks/useBuilding';
-import financeService from '@/utils/db/financeService';
+import { financeAPI } from '@/services/api/finance';
 import { formatCurrency, formatPercentage, formatDate } from '@/utils/formatters';
 import { calculateTrend, calculateBudgetExecution } from '@/utils/calculators';
 
@@ -78,7 +78,8 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ className }) =>
 
       // Carregar períodos se não estão carregados
       if (periods.length === 0) {
-        const periodsData = await financeService.getFinancialPeriods(currentBuilding.id);
+        // TODO: Implementar getFinancialPeriods en financeAPI
+        const periodsData = []; // await financeAPI.getFinancialPeriods(currentBuilding.id);
         setPeriods(periodsData);
         
         // Selecionar período ativo por padrão
@@ -90,7 +91,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ className }) =>
       }
 
       // Carregar resumo financeiro
-      const summaryData = await financeService.getFinancialSummary(
+      const summaryData = await financeAPI.getSummary(
         currentBuilding.id,
         selectedPeriod || undefined
       );
