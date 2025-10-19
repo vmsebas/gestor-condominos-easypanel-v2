@@ -371,7 +371,15 @@ class DocumentService {
   // Access Control Helpers
   applyAccessFilters(filters, user) {
     const accessFilters = { ...filters };
-    
+
+    if (!user) {
+      accessFilters.is_confidential = false;
+      if (!accessFilters.building_id && DEFAULT_BUILDING_ID) {
+        accessFilters.building_id = DEFAULT_BUILDING_ID;
+      }
+      return accessFilters;
+    }
+
     // Super admins can see everything
     if (user.role === 'super_admin') {
       return accessFilters;
@@ -398,9 +406,10 @@ class DocumentService {
   }
 
   canAccessDocument(document, user) {
+    if (!user) return false;
     // Super admins can access everything
     if (user.role === 'super_admin') return true;
-    
+
     // Check building access
     if (document.building_id !== user.buildingId) return false;
     
@@ -424,9 +433,10 @@ class DocumentService {
   }
 
   canEditDocument(document, user) {
+    if (!user) return false;
     // Super admins can edit everything
     if (user.role === 'super_admin') return true;
-    
+
     // Must be in same building
     if (document.building_id !== user.buildingId) return false;
     
@@ -445,6 +455,7 @@ class DocumentService {
   }
 
   canShareDocument(document, user) {
+    if (!user) return false;
     // Super admins and admins can share
     if (['super_admin', 'admin'].includes(user.role)) return true;
     
@@ -458,12 +469,16 @@ class DocumentService {
   }
 
   canManageBuilding(buildingId, user) {
+    if (!user) return false;
     if (user.role === 'super_admin') return true;
     if (['admin', 'manager'].includes(user.role) && user.buildingId === buildingId) return true;
     return false;
   }
 
   canAccessBuilding(buildingId, user) {
+    if (!user) {
+      return !buildingId || buildingId === DEFAULT_BUILDING_ID;
+    }
     if (user.role === 'super_admin') return true;
     return user.buildingId === buildingId;
   }

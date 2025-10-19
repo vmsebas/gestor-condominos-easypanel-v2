@@ -1,13 +1,14 @@
 const express = require('express');
 const documentController = require('../controllers/documentController.cjs');
-const { authenticate, authorize } = require('../middleware/auth.cjs');
+const { authorize, optionalAuth } = require('../middleware/auth.cjs');
 const { validate, schemas } = require('../middleware/validation.cjs');
 const { uploadMemory } = require('../middleware/upload.cjs');
 
 const router = express.Router();
 
-// ⚠️ AUTENTICACIÓN TEMPORALMENTE DESHABILITADA PARA DEBUGGING
-// router.use(authenticate);
+// Permitir que las peticiones sin token funcionen en modo debug, pero
+// seguir poblando req.user cuando haya credenciales válidas
+router.use(optionalAuth);
 
 // Document CRUD
 router.get('/', 
@@ -21,21 +22,21 @@ router.get('/:id',
 );
 
 router.post('/upload',
-  authorize(['super_admin', 'admin', 'manager', 'member']),
+  authorize('super_admin', 'admin', 'manager', 'member'),
   uploadMemory.single('file'),
   validate(schemas.document.upload, 'body'),
   documentController.upload
 );
 
 router.put('/:id',
-  authorize(['super_admin', 'admin', 'manager']),
+  authorize('super_admin', 'admin', 'manager'),
   validate(schemas.common.idParam, 'params'),
   validate(schemas.document.update, 'body'),
   documentController.update
 );
 
 router.delete('/:id',
-  authorize(['super_admin', 'admin', 'manager']),
+  authorize('super_admin', 'admin', 'manager'),
   validate(schemas.common.idParam, 'params'),
   documentController.delete
 );
@@ -48,7 +49,7 @@ router.get('/:id/download',
 
 // Version control
 router.post('/:id/versions',
-  authorize(['super_admin', 'admin', 'manager']),
+  authorize('super_admin', 'admin', 'manager'),
   uploadMemory.single('file'),
   validate(schemas.common.idParam, 'params'),
   validate(schemas.document.version, 'body'),
@@ -62,20 +63,20 @@ router.get('/:id/versions',
 
 // Document sharing
 router.post('/:id/share',
-  authorize(['super_admin', 'admin', 'manager']),
+  authorize('super_admin', 'admin', 'manager'),
   validate(schemas.common.idParam, 'params'),
   validate(schemas.document.share, 'body'),
   documentController.shareDocument
 );
 
 router.get('/:id/shares',
-  authorize(['super_admin', 'admin', 'manager']),
+  authorize('super_admin', 'admin', 'manager'),
   validate(schemas.common.idParam, 'params'),
   documentController.getShares
 );
 
 router.delete('/:id/shares/:shareId',
-  authorize(['super_admin', 'admin', 'manager']),
+  authorize('super_admin', 'admin', 'manager'),
   validate(schemas.common.idParam, 'params'),
   documentController.removeShare
 );
@@ -87,21 +88,21 @@ router.get('/categories/:buildingId',
 );
 
 router.post('/categories/:buildingId',
-  authorize(['super_admin', 'admin', 'manager']),
+  authorize('super_admin', 'admin', 'manager'),
   validate(schemas.common.uuidParam('buildingId'), 'params'),
   validate(schemas.document.category, 'body'),
   documentController.createCategory
 );
 
 router.put('/categories/:categoryId',
-  authorize(['super_admin', 'admin', 'manager']),
+  authorize('super_admin', 'admin', 'manager'),
   validate(schemas.common.idParam('categoryId'), 'params'),
   validate(schemas.document.category, 'body'),
   documentController.updateCategory
 );
 
 router.delete('/categories/:categoryId',
-  authorize(['super_admin', 'admin']),
+  authorize('super_admin', 'admin'),
   validate(schemas.common.idParam('categoryId'), 'params'),
   documentController.deleteCategory
 );
