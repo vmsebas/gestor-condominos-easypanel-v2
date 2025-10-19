@@ -67,7 +67,7 @@ const documentFileFilter = (req, file, cb) => {
   if (allowedMimes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error(`File type ${file.mimetype} not allowed`), false);
+    cb(new Error(`Tipo de ficheiro ${file.mimetype} não permitido`), false);
   }
 };
 
@@ -78,7 +78,7 @@ const imageFileFilter = (req, file, cb) => {
   if (allowedMimes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Only image files (JPEG, PNG, GIF, WebP) are allowed'), false);
+    cb(new Error('Apenas ficheiros de imagem (JPEG, PNG, GIF, WebP) são permitidos'), false);
   }
 };
 

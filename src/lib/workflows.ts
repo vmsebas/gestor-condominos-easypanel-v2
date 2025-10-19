@@ -185,8 +185,8 @@ export const CONVOCATORIA_WORKFLOW: WorkflowDefinition = {
 
 export const ACTA_WORKFLOW: WorkflowDefinition = {
   id: 'celebracion-acta',
-  name: 'Celebración de Junta y Redacción de Acta',
-  description: 'Gestión completa de la reunión y generación automática del acta oficial',
+  name: 'Celebração de Assembleia e Redação de Acta',
+  description: 'Gestão completa da reunião e geração automática da acta oficial',
   category: 'acta',
   icon: 'FileSignature',
   estimatedTotalTime: 120,
@@ -194,76 +194,76 @@ export const ACTA_WORKFLOW: WorkflowDefinition = {
     framework: 'LPH',
     applicableArticles: ['Art. 19 LPH', 'Art. 20 LPH'],
     complianceNotes: [
-      'Registro obligatorio de asistentes',
-      'Verificación de quórum legal',
-      'Acta debe ser firmada por Presidente y Secretario'
+      'Registo obrigatório de participantes',
+      'Verificação de quórum legal',
+      'Acta deve ser assinada pelo Presidente e Secretário'
     ]
   },
   steps: [
     {
       id: 'preparacion-reunion',
-      title: 'Preparación de la Reunión',
-      description: 'Configurar sala, documentos y material necesario',
+      title: 'Preparação da Reunião',
+      description: 'Configurar sala, documentos e material necessário',
       component: 'PreparacionReunionStep',
       estimatedTime: 15
     },
     {
       id: 'control-asistencia',
-      title: 'Control de Asistencia',
-      description: 'Registro de asistentes, representaciones y poderes',
+      title: 'Controlo de Presenças',
+      description: 'Registo de participantes, representações e procurações',
       component: 'ControlAsistenciaStep',
       estimatedTime: 20,
       validation: [
-        { field: 'attendees', type: 'required', message: 'Debe registrar los asistentes' }
+        { field: 'attendees', type: 'required', message: 'Deve registar os participantes' }
       ]
     },
     {
       id: 'verificacion-quorum',
-      title: 'Verificación de Quórum',
-      description: 'Cálculo automático del quórum según coeficientes de participación',
+      title: 'Verificação de Quórum',
+      description: 'Cálculo automático do quórum segundo coeficientes de participação',
       component: 'VerificacionQuorumStep',
       estimatedTime: 5,
       legalRequirement: {
         article: 'Art. 16 LPH',
-        description: 'Primera convocatoria: >50% coeficientes. Segunda: >25%',
+        description: 'Primeira convocatória: >50% coeficientes. Segunda: >25%',
         mandatory: true
       }
     },
     {
       id: 'desarrollo-reunion',
-      title: 'Desarrollo de la Reunión',
-      description: 'Tratamiento punto por punto del orden del día',
+      title: 'Desenvolvimento da Reunião',
+      description: 'Tratamento ponto por ponto da ordem do dia',
       component: 'DesarrolloReunionStep',
       estimatedTime: 60
     },
     {
       id: 'votaciones',
-      title: 'Registro de Votaciones',
-      description: 'Captura de votos, cálculo de mayorías y aprobación de acuerdos',
+      title: 'Registo de Votações',
+      description: 'Captura de votos, cálculo de maiorias e aprovação de acordos',
       component: 'VotacionesStep',
       estimatedTime: 15,
       legalRequirement: {
         article: 'Art. 17 LPH',
-        description: 'Mayorías: Simple (>50% presentes), Cualificada (>2/3 total), Unanimidad',
+        description: 'Maiorias: Simples (>50% presentes), Qualificada (>2/3 total), Unanimidade',
         mandatory: true
       }
     },
     {
       id: 'redaccion-acta',
-      title: 'Generación del Acta',
-      description: 'Creación automática del acta con plantilla legal',
+      title: 'Geração da Acta',
+      description: 'Criação automática da acta com modelo legal',
       component: 'RedaccionActaStep',
       estimatedTime: 10
     },
     {
       id: 'firmas-acta',
-      title: 'Firmas y Aprobación',
-      description: 'Firma del Presidente, Secretario y aprobación final',
+      title: 'Assinaturas e Aprovação',
+      description: 'Assinatura do Presidente, Secretário e aprovação final',
       component: 'FirmasActaStep',
       estimatedTime: 5,
       legalRequirement: {
         article: 'Art. 19 LPH',
-        description: 'Acta debe ser firmada por Presidente y Secretario',
+        description: 'Acta deve ser assinada pelo Presidente e Secretário',
         mandatory: true
       }
     }

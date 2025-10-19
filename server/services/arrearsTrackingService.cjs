@@ -76,7 +76,7 @@ class ArrearsTrackingService {
               updated_at: new Date()
             });
             
-            console.log(`⚠️ Registro de morosidad creado para miembro ${transaction.member_id}`);
+            console.log(`⚠️ Registo de incumprimento criado para membro ${transaction.member_id}`);
           }
         }
       }
@@ -266,7 +266,7 @@ class ArrearsTrackingService {
       
       return {
         success: true,
-        message: 'Pago registrado exitosamente'
+        message: 'Pagamento registado com sucesso'
       };
       
     } catch (error) {

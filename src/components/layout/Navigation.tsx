@@ -81,7 +81,7 @@ const Navigation: React.FC = () => {
     },
     {
       title: 'Manutenção',
-      href: '/mantenimiento',
+      href: '/manutencao',
       icon: Wrench,
       description: 'Gestão de manutenção'
     },

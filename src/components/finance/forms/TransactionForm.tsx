@@ -12,7 +12,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, Euro, Plus, Minus } from 'lucide-react';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { pt } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useBuildings, useCreateTransaction, useUpdateTransaction } from '@/hooks/useNeonData';
 import { toast } from 'sonner';
@@ -75,10 +75,10 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
 
   const categories = {
     income: [
-      { value: 'quotas', label: 'Quotas Condominiais' },
+      { value: 'quotas', label: 'Quotas de Condomínio' },
       { value: 'reserves', label: 'Transferência de Reservas' },
       { value: 'services', label: 'Prestação de Serviços' },
-      { value: 'rent', label: 'Aluguer de Espaços' },
+      { value: 'rent', label: 'Arrendamento de Espaços' },
       { value: 'others', label: 'Outros Rendimentos' },
     ],
     expense: [
@@ -89,7 +89,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
       { value: 'cleaning', label: 'Limpeza' },
       { value: 'security', label: 'Segurança' },
       { value: 'supplies', label: 'Material de Consumo' },
-      { value: 'others', label: 'Outros Gastos' },
+      { value: 'others', label: 'Outras Despesas' },
     ],
   };
 
@@ -124,8 +124,8 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
       reset();
       onSuccess?.();
     } catch (error) {
-      console.error('Erro ao salvar transação:', error);
-      toast.error('Erro ao salvar transação. Tente novamente.');
+      console.error('Erro ao guardar transação:', error);
+      toast.error('Erro ao guardar transação. Tente novamente.');
     } finally {
       setIsSubmitting(false);
     }
@@ -209,7 +209,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               </SelectTrigger>
               <SelectContent>
                 {buildingsLoading ? (
-                  <SelectItem value="" disabled>Carregando...</SelectItem>
+                  <SelectItem value="" disabled>A carregar...</SelectItem>
                 ) : (
                   buildings?.map((building) => (
                     <SelectItem key={building.id} value={building.id}>
@@ -261,7 +261,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {selectedDate ? format(selectedDate, 'PPP', { locale: es }) : 'Selecione a data'}
+                  {selectedDate ? format(selectedDate, 'PPP', { locale: pt }) : 'Selecione a data'}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
@@ -304,11 +304,11 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               </Button>
             )}
             <Button 
-              type="submit" 
+              type="submit"
               disabled={isSubmitting || buildingsLoading}
               className="min-w-[120px]"
             >
-              {isSubmitting ? 'Salvando...' : transaction ? 'Atualizar' : 'Criar'}
+              {isSubmitting ? 'A guardar...' : transaction ? 'Atualizar' : 'Criar'}
             </Button>
           </div>
         </form>

@@ -63,14 +63,14 @@ const Header: React.FC = () => {
             <div className="flex items-center space-x-1">
               <Wifi className="h-4 w-4 text-green-600" />
               <Badge variant="success" className="text-xs">
-                En línea
+                Online
               </Badge>
             </div>
           ) : (
             <div className="flex items-center space-x-1">
               <WifiOff className="h-4 w-4 text-red-600" />
               <Badge variant="destructive" className="text-xs">
-                Sin conexión
+                Sem ligação
               </Badge>
             </div>
           )}
@@ -156,15 +156,15 @@ const Header: React.FC = () => {
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate('/settings')}>
               <Settings className="mr-2 h-4 w-4" />
-              <span>Configuración</span>
+              <span>Configuração</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem 
+            <DropdownMenuItem
               className="text-red-600 dark:text-red-400"
               onClick={() => logout()}
             >
               <LogOut className="mr-2 h-4 w-4" />
-              <span>Cerrar sesión</span>
+              <span>Terminar sessão</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

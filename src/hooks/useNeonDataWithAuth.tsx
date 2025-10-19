@@ -41,9 +41,13 @@ export function useLetters() {
   return useNeonLetters(buildingId || undefined);
 }
 
-// Re-export other hooks that don't need buildingId
-export { 
+// Re-export other hooks that don't need buildingId or need it passed explicitly
+export {
   useBuildings,
+  useDatabaseConnection,
+  useDashboardStats,
+  useDashboardActivities,
+  useDocumentStats
   // Comentados temporalmente - no existen en useNeonData
   // useCreateBuilding,
   // useUpdateBuilding,
@@ -60,7 +64,6 @@ export {
   // useCreateMinute,
   // useUpdateMinute,
   // useDeleteMinute,
-  // useDashboardStats,
   // useMaintenanceTasks,
   // useCreateMaintenanceTask,
   // useMaintenanceProviders,

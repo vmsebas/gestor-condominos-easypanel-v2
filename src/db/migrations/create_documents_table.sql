@@ -108,7 +108,7 @@ CROSS JOIN (
   VALUES 
     ('Financiero', 'Documentos financieros y contables', '#10b981', 'calculator'),
     ('Legal', 'Contratos, normativas y documentos legales', '#f59e0b', 'scale'),
-    ('Mantenimiento', 'Informes y documentos de mantenimiento', '#8b5cf6', 'wrench'),
+    ('Manutenção', 'Relatórios e documentos de manutenção', '#8b5cf6', 'wrench'),
     ('Reuniones', 'Actas, convocatorias y documentos de reuniones', '#3b82f6', 'users'),
     ('Seguros', 'Pólizas y documentos de seguros', '#ef4444', 'shield'),
     ('Correspondencia', 'Cartas y comunicaciones oficiales', '#06b6d4', 'mail'),

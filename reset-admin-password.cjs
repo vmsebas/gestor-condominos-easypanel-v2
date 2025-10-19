@@ -17,10 +17,10 @@ async function resetAdminPassword() {
       });
     
     if (result) {
-      console.log('✅ Contraseña actualizada exitosamente para admin@example.com');
-      console.log('Nueva contraseña: admin123');
+      console.log('✅ Palavra-passe atualizada com sucesso para admin@example.com');
+      console.log('Nova palavra-passe: admin123');
     } else {
-      console.log('❌ Usuario no encontrado');
+      console.log('❌ Utilizador não encontrado');
     }
     
     process.exit(0);

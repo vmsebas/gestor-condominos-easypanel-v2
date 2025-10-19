@@ -21,7 +21,7 @@ function resolveUser(req, { allowFallback = false } = {}) {
   }
 
   if (!allowFallback) {
-    throw new AppError('No autenticado', 401, null);
+    throw new AppError('Não autenticado', 401, null);
   }
 
   const fallbackBuildingId = resolveBuildingId(req);
@@ -84,7 +84,7 @@ const documentController = {
     if (!req.file) {
       return res.status(400).json({
         success: false,
-        error: 'No file uploaded'
+        error: 'Nenhum ficheiro foi carregado'
       });
     }
 
@@ -146,7 +146,7 @@ const documentController = {
     
     res.json({
       success: true,
-      message: 'Document deleted successfully'
+      message: 'Documento eliminado com sucesso'
     });
   }),
 
@@ -168,7 +168,7 @@ const documentController = {
       if (!res.headersSent) {
         res.status(500).json({
           success: false,
-          error: 'Error downloading file'
+          error: 'Erro ao descarregar ficheiro'
         });
       }
     });
@@ -181,7 +181,7 @@ const documentController = {
     if (!req.file) {
       return res.status(400).json({
         success: false,
-        error: 'No file uploaded'
+        error: 'Nenhum ficheiro foi carregado'
       });
     }
 
@@ -251,7 +251,7 @@ const documentController = {
     
     res.json({
       success: true,
-      message: 'Share removed successfully'
+      message: 'Partilha removida com sucesso'
     });
   }),
 
@@ -318,7 +318,7 @@ const documentController = {
     
     res.json({
       success: true,
-      message: 'Category deleted successfully'
+      message: 'Categoria eliminada com sucesso'
     });
   }),
 

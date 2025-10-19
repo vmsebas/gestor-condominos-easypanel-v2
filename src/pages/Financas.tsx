@@ -12,7 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 
-const Finanzas: React.FC = () => {
+const Financas: React.FC = () => {
   // State for transaction management
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
@@ -248,4 +248,4 @@ const Finanzas: React.FC = () => {
   );
 };
 
-export default Finanzas;
+export default Financas;

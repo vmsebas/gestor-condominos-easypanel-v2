@@ -33,7 +33,7 @@ class AuthController {
     successResponse(res, {
       user: result.user,
       accessToken: result.accessToken
-    }, 'Login exitoso');
+    }, 'Início de sessão bem-sucedido');
   });
 
   /**
@@ -56,7 +56,7 @@ class AuthController {
     successResponse(res, {
       user: result.user,
       accessToken: result.accessToken
-    }, 'Usuario registrado exitosamente', 201);
+    }, 'Utilizador registado com sucesso', 201);
   });
 
   /**
@@ -67,12 +67,12 @@ class AuthController {
     const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
     
     if (!refreshToken) {
-      throw new AppError('Refresh token no proporcionado', 401, null);
+      throw new AppError('Refresh token não fornecido', 401, null);
     }
     
     const result = await authService.refreshAccessToken(refreshToken);
     
-    successResponse(res, result, 'Token actualizado');
+    successResponse(res, result, 'Token renovado');
   });
 
   /**
@@ -87,7 +87,7 @@ class AuthController {
     // Limpiar cookie
     res.clearCookie('refreshToken');
     
-    successResponse(res, null, 'Sesión cerrada exitosamente');
+    successResponse(res, null, 'Sessão terminada com sucesso');
   });
 
   /**
@@ -100,7 +100,7 @@ class AuthController {
     // Limpiar cookie
     res.clearCookie('refreshToken');
     
-    successResponse(res, null, 'Todas las sesiones cerradas');
+    successResponse(res, null, 'Todas as sessões foram terminadas');
   });
 
   /**
@@ -111,7 +111,7 @@ class AuthController {
     const user = await userRepository.findById(req.user.id);
     
     if (!user) {
-      throw new AppError('Usuario no encontrado', 404, null);
+      throw new AppError('Utilizador não encontrado', 404, null);
     }
     
     const { password_hash, reset_password_token, ...userData } = user;
@@ -128,7 +128,7 @@ class AuthController {
     
     await authService.requestPasswordReset(email);
     
-    successResponse(res, null, 'Si el email existe, recibirás instrucciones para resetear tu contraseña');
+    successResponse(res, null, 'Se o email existir, receberá instruções para redefinir a sua palavra-passe');
   });
 
   /**
@@ -140,7 +140,7 @@ class AuthController {
     
     await authService.resetPassword(token, password);
     
-    successResponse(res, null, 'Contraseña actualizada exitosamente');
+    successResponse(res, null, 'Palavra-passe atualizada com sucesso');
   });
 
   /**
@@ -149,10 +149,10 @@ class AuthController {
    */
   changePassword = asyncHandler(async (req, res) => {
     const { currentPassword, newPassword } = req.body;
-    
+
     await authService.changePassword(req.user.id, currentPassword, newPassword);
-    
-    successResponse(res, null, 'Contraseña actualizada exitosamente');
+
+    successResponse(res, null, 'Palavra-passe atualizada com sucesso');
   });
 
   /**
@@ -164,7 +164,7 @@ class AuthController {
     // Por ahora verificamos directamente
     await authService.verifyEmail(req.user.id);
     
-    successResponse(res, null, 'Email verificado exitosamente');
+    successResponse(res, null, 'Email verificado com sucesso');
   });
 
   /**
@@ -186,7 +186,7 @@ class AuthController {
     
     await authService.revokeSession(req.user.id, sessionId);
     
-    successResponse(res, null, 'Sesión revocada exitosamente');
+    successResponse(res, null, 'Sessão revogada com sucesso');
   });
 }
 

@@ -85,7 +85,7 @@ router.get('/:id', authenticate, async (req, res, next) => {
     `, [id]);
     
     if (result.rows.length === 0) {
-      return errorResponse(res, 'Acta no encontrada', 404);
+      return errorResponse(res, 'Ata não encontrada', 404);
     }
     
     return successResponse(res, result.rows[0]);
@@ -183,7 +183,7 @@ router.put('/:id', authenticate, validate(minuteSchema), async (req, res, next) 
     
     if (result.rows.length === 0) {
       await client.query('ROLLBACK');
-      return errorResponse(res, 'Acta no encontrada', 404);
+      return errorResponse(res, 'Ata não encontrada', 404);
     }
     
     await client.query('COMMIT');
@@ -208,10 +208,10 @@ router.delete('/:id', authenticate, async (req, res, next) => {
     );
     
     if (result.rows.length === 0) {
-      return errorResponse(res, 'Acta no encontrada', 404);
+      return errorResponse(res, 'Ata não encontrada', 404);
     }
-    
-    return successResponse(res, { message: 'Acta eliminada exitosamente' });
+
+    return successResponse(res, { message: 'Ata eliminada com sucesso' });
   } catch (error) {
     next(error);
   }

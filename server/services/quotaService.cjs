@@ -112,7 +112,7 @@ class QuotaService {
         .first();
       
       if (!transaction) {
-        throw new Error('Transaction not found');
+        throw new Error('Transação não encontrada');
       }
       
       // Update transaction status

@@ -11,11 +11,11 @@ class BuildingService {
   async getAllBuildings(filters = {}, options = {}) {
     // Validar opciones de paginación
     if (options.page && options.page < 1) {
-      throw new ValidationError('Page number must be greater than 0');
+      throw new ValidationError('O número da página deve ser maior que 0');
     }
     
     if (options.pageSize && (options.pageSize < 1 || options.pageSize > 100)) {
-      throw new ValidationError('Page size must be between 1 and 100');
+      throw new ValidationError('O tamanho da página deve estar entre 1 e 100');
     }
 
     // Calcular offset para paginación
@@ -49,7 +49,7 @@ class BuildingService {
    */
   async getBuildingById(id, includeStats = false) {
     if (!id) {
-      throw new ValidationError('Building ID is required');
+      throw new ValidationError('ID do edifício é obrigatório');
     }
 
     let building;
@@ -61,7 +61,7 @@ class BuildingService {
     }
 
     if (!building) {
-      throw new NotFoundError('Building not found');
+      throw new NotFoundError('Edifício não encontrado');
     }
 
     return building;
@@ -77,7 +77,7 @@ class BuildingService {
     // Verificar si ya existe un edificio con el mismo nombre
     const existingBuildings = await buildingRepository.findAll({ name: data.name });
     if (existingBuildings.length > 0) {
-      throw new ValidationError('A building with this name already exists');
+      throw new ValidationError('Já existe um edifício com este nome');
     }
 
     // Preparar datos para inserción
@@ -99,13 +99,13 @@ class BuildingService {
    */
   async updateBuilding(id, data) {
     if (!id) {
-      throw new ValidationError('Building ID is required');
+      throw new ValidationError('ID do edifício é obrigatório');
     }
 
     // Verificar que el edificio existe
     const existingBuilding = await buildingRepository.findById(id);
     if (!existingBuilding) {
-      throw new NotFoundError('Building not found');
+      throw new NotFoundError('Edifício não encontrado');
     }
 
     // Validar datos si se proporcionan campos requeridos
@@ -120,7 +120,7 @@ class BuildingService {
     if (data.name && data.name !== existingBuilding.name) {
       const duplicates = await buildingRepository.findAll({ name: data.name });
       if (duplicates.length > 0) {
-        throw new ValidationError('A building with this name already exists');
+        throw new ValidationError('Já existe um edifício com este nome');
       }
     }
 
@@ -135,13 +135,13 @@ class BuildingService {
    */
   async deleteBuilding(id, force = false) {
     if (!id) {
-      throw new ValidationError('Building ID is required');
+      throw new ValidationError('ID do edifício é obrigatório');
     }
 
     // Verificar que el edificio existe
     const building = await buildingRepository.findById(id);
     if (!building) {
-      throw new NotFoundError('Building not found');
+      throw new NotFoundError('Edifício não encontrado');
     }
 
     // Verificar si tiene registros relacionados
@@ -166,13 +166,13 @@ class BuildingService {
    */
   async getBuildingStats(id, year) {
     if (!id) {
-      throw new ValidationError('Building ID is required');
+      throw new ValidationError('ID do edifício é obrigatório');
     }
 
     // Verificar que el edificio existe
     const building = await buildingRepository.findById(id);
     if (!building) {
-      throw new NotFoundError('Building not found');
+      throw new NotFoundError('Edifício não encontrado');
     }
 
     // Obtener estadísticas financieras
@@ -221,7 +221,7 @@ class BuildingService {
     // Verificar que el edificio existe
     const building = await buildingRepository.findById(buildingId);
     if (!building) {
-      throw new NotFoundError('Building not found');
+      throw new NotFoundError('Edifício não encontrado');
     }
 
     // Obtener las fracciones
@@ -236,27 +236,27 @@ class BuildingService {
     const errors = [];
 
     if (!data.name || data.name.trim().length === 0) {
-      errors.push('Building name is required');
+      errors.push('O nome do edifício é obrigatório');
     }
 
     if (!data.address || data.address.trim().length === 0) {
-      errors.push('Building address is required');
+      errors.push('A morada do edifício é obrigatória');
     }
 
     if (data.number_of_units !== undefined && data.number_of_units < 0) {
-      errors.push('Number of units cannot be negative');
+      errors.push('O número de unidades não pode ser negativo');
     }
 
     if (data.admin_email && !this.isValidEmail(data.admin_email)) {
-      errors.push('Invalid administrator email format');
+      errors.push('Formato de email do administrador inválido');
     }
 
     if (data.iban && !this.isValidIBAN(data.iban)) {
-      errors.push('Invalid IBAN format');
+      errors.push('Formato de IBAN inválido');
     }
 
     if (errors.length > 0) {
-      throw new ValidationError('Invalid building data', errors);
+      throw new ValidationError('Dados do edifício inválidos', errors);
     }
   }
 

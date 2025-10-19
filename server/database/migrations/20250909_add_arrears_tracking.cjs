@@ -93,7 +93,7 @@ exports.up = async function(knex) {
     });
   }
 
-  console.log('✅ Migración de morosidad aplicada exitosamente');
+  console.log('✅ Migração de morosidade aplicada com sucesso');
 };
 
 exports.down = async function(knex) {

@@ -33,7 +33,7 @@ export function useMembers(buildingId?: string) {
       return result.data || [];
     },
     staleTime: 5 * 60 * 1000,
-    enabled: true, // Always try to fetch, let auth middleware handle it
+    enabled: !!buildingId, // Only run if buildingId exists
     onError: (error: any) => {
       // Don't throw on 401s, let the app handle authentication
       if (error?.response?.status === 401) {
@@ -88,6 +88,7 @@ export function useFinancialSummary(buildingId?: string) {
       if (!result.success) throw new Error(result.error || 'Failed to fetch financial summary');
       return result.data || { income: 0, expenses: 0, balance: 0 };
     },
+    enabled: !!buildingId, // Only run if buildingId exists
     staleTime: 5 * 60 * 1000,
   });
 }

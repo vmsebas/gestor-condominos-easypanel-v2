@@ -526,12 +526,12 @@ const DocumentsPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Descripción</Label>
+                  <Label htmlFor="description">Descrição</Label>
                   <Textarea
                     id="description"
                     value={uploadForm.description}
                     onChange={(e) => setUploadForm(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Descripción opcional del documento"
+                    placeholder="Descrição opcional do documento"
                     rows={3}
                   />
                 </div>
@@ -625,7 +625,7 @@ const DocumentsPage: React.FC = () => {
         </div>
       </motion.div>
 
-      {/* Filtros y búsqueda */}
+      {/* Filtros e pesquisa */}
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
@@ -716,7 +716,7 @@ const DocumentsPage: React.FC = () => {
 
       {/* Lista de documentos */}
       {!documentsLoading && !documentsError && viewMode === 'grid' ? (
-        // Vista en grid
+        // Vista em grelha
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {sortedDocuments.map((doc, index) => {
             const categoryInfo = getCategoryInfo(doc.category);
@@ -869,7 +869,7 @@ const DocumentsPage: React.FC = () => {
           })}
         </div>
       ) : (
-        // Vista en lista
+        // Vista em lista
         <Card>
           <Table>
             <TableHeader>

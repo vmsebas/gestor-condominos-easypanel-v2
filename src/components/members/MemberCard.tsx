@@ -165,7 +165,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
                 <div className="flex items-center gap-2 mt-1">
                   <div className="flex items-center gap-1 text-sm text-muted-foreground">
                     <Home className="h-3 w-3" />
-                    <span>Fracção {member.fraction}</span>
+                    <span>Fração {member.fraction}</span>
                   </div>
                   <div className="flex gap-1">
                     {member.isOwner && (
@@ -319,7 +319,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <Home className="h-4 w-4 text-muted-foreground" />
-                    <span>Fracção {member.fraction}</span>
+                    <span>Fração {member.fraction}</span>
                   </div>
                   
                   {member.isOwner && (

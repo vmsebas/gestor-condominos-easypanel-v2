@@ -37,7 +37,7 @@ import {
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 
-const Mantenimiento: React.FC = () => {
+const Manutencao: React.FC = () => {
   const { data: buildings } = useBuildings();
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [isNewTaskOpen, setIsNewTaskOpen] = useState(false);
@@ -55,13 +55,13 @@ const Mantenimiento: React.FC = () => {
     switch (category) {
       case 'elevador':
         return <Building2 className="h-4 w-4" />;
-      case 'fontaneria':
+      case 'canalizacao':
         return <Droplets className="h-4 w-4" />;
-      case 'eletricidad':
+      case 'eletricidade':
         return <Zap className="h-4 w-4" />;
-      case 'climatizacion':
+      case 'climatizacao':
         return <Thermometer className="h-4 w-4" />;
-      case 'seguridad':
+      case 'seguranca':
         return <Shield className="h-4 w-4" />;
       default:
         return <Wrench className="h-4 w-4" />;
@@ -148,7 +148,7 @@ const Mantenimiento: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <Label htmlFor="title">Título</Label>
-                <Input id="title" placeholder="Ex: Revisão do elevador" />
+                <Input id="title" placeholder="Ex: Inspeção do elevador" />
               </div>
               <div>
                 <Label htmlFor="description">Descrição</Label>
@@ -178,10 +178,10 @@ const Mantenimiento: React.FC = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="elevador">Elevador</SelectItem>
-                      <SelectItem value="fontaneria">Canalização</SelectItem>
-                      <SelectItem value="eletricidad">Eletricidade</SelectItem>
-                      <SelectItem value="climatizacion">Climatização</SelectItem>
-                      <SelectItem value="seguridad">Segurança</SelectItem>
+                      <SelectItem value="canalizacao">Canalização</SelectItem>
+                      <SelectItem value="eletricidade">Eletricidade</SelectItem>
+                      <SelectItem value="climatizacao">Climatização</SelectItem>
+                      <SelectItem value="seguranca">Segurança</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -430,7 +430,7 @@ const Mantenimiento: React.FC = () => {
                 {predictiveAlerts.map((alert) => (
                   <div key={alert.id} className="flex items-start space-x-4 p-4 rounded-lg border">
                     <div className={`p-2 rounded-full ${getUrgencyColor(alert.urgency)}`}>
-                      {alert.type === 'preventivo' ? 
+                      {alert.type === 'preventiva' ?
                         <Clock className="h-4 w-4" /> :
                         alert.type === 'alerta' ?
                         <AlertTriangle className="h-4 w-4" /> :
@@ -540,4 +540,4 @@ const Mantenimiento: React.FC = () => {
   );
 };
 
-export default Mantenimiento;
+export default Manutencao;

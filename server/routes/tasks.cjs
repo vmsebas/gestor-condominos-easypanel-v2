@@ -156,7 +156,7 @@ router.get('/:id', authenticate, async (req, res, next) => {
     `, [id]);
     
     if (result.rows.length === 0) {
-      return errorResponse(res, 'Tarea no encontrada', 404);
+      return errorResponse(res, 'Tarefa não encontrada', 404);
     }
     
     return successResponse(res, result.rows[0]);
@@ -219,7 +219,7 @@ router.put('/:id', authenticate, async (req, res, next) => {
     );
     
     if (result.rows.length === 0) {
-      return errorResponse(res, 'Tarea no encontrada', 404);
+      return errorResponse(res, 'Tarefa não encontrada', 404);
     }
     
     return successResponse(res, result.rows[0]);
@@ -245,7 +245,7 @@ router.put('/:id/complete', authenticate, async (req, res, next) => {
     `, [id, completed_by || req.user.id]);
     
     if (result.rows.length === 0) {
-      return errorResponse(res, 'Tarea no encontrada', 404);
+      return errorResponse(res, 'Tarefa não encontrada', 404);
     }
     
     return successResponse(res, result.rows[0]);
@@ -265,10 +265,10 @@ router.delete('/:id', authenticate, async (req, res, next) => {
     );
     
     if (result.rows.length === 0) {
-      return errorResponse(res, 'Tarea no encontrada', 404);
+      return errorResponse(res, 'Tarefa não encontrada', 404);
     }
     
-    return successResponse(res, { message: 'Tarea eliminada exitosamente' });
+    return successResponse(res, { message: 'Tarefa eliminada com sucesso' });
   } catch (error) {
     next(error);
   }

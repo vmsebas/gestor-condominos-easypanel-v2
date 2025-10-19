@@ -49,7 +49,7 @@ class FileStorageService {
     // Validate extension
     const allowedExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt', '.jpg', '.jpeg', '.png', '.gif'];
     if (!allowedExtensions.includes(extension)) {
-      throw new Error(`File type not allowed: ${extension}`);
+      throw new Error(`Tipo de ficheiro não permitido: ${extension}`);
     }
     
     return `${sanitizedBaseName}_${timestamp}_${randomString}${extension}`;
@@ -66,7 +66,7 @@ class FileStorageService {
       // If using multer disk storage, move the temp file
       await fs.rename(file.path, filePath);
     } else {
-      throw new Error('Invalid file object');
+      throw new Error('Objeto de ficheiro inválido');
     }
     
     return {
@@ -105,12 +105,12 @@ class FileStorageService {
     
     // Check if the resolved path is within the uploads directory
     if (!resolvedPath.startsWith(this.baseUploadPath)) {
-      throw new Error('Invalid file path - security violation');
+      throw new Error('Caminho de ficheiro inválido - violação de segurança');
     }
     
     const exists = await this.fileExists(resolvedPath);
     if (!exists) {
-      throw new Error('File not found');
+      throw new Error('Ficheiro não encontrado');
     }
     
     // Return a function that creates the stream when needed
@@ -124,12 +124,12 @@ class FileStorageService {
     
     // Check if the resolved path is within the uploads directory
     if (!resolvedPath.startsWith(this.baseUploadPath)) {
-      throw new Error('Invalid file path - security violation');
+      throw new Error('Caminho de ficheiro inválido - violação de segurança');
     }
     
     const exists = await this.fileExists(resolvedPath);
     if (!exists) {
-      throw new Error('File not found');
+      throw new Error('Ficheiro não encontrado');
     }
     
     return fs.readFile(resolvedPath);
@@ -138,7 +138,7 @@ class FileStorageService {
   async getFileStats(filepath) {
     const exists = await this.fileExists(filepath);
     if (!exists) {
-      throw new Error('File not found');
+      throw new Error('Ficheiro não encontrado');
     }
     
     const stats = await fs.stat(filepath);

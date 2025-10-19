@@ -134,7 +134,7 @@ export const usePerformance = () => {
           await import('@/pages/Dashboard');
           break;
         case '/finanzas':
-          await import('@/pages/Finanzas');
+          await import('@/pages/Financas');
           break;
         case '/miembros':
           await import('@/pages/Miembros');

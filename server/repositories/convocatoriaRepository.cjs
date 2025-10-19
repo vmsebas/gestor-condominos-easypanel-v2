@@ -171,7 +171,7 @@ class ConvocatoriaRepository extends BaseRepository {
         .then(rows => rows[0]);
       
       if (!convocatoria) {
-        throw new Error('Convocatoria no encontrada');
+        throw new Error('Convocatória não encontrada');
       }
       
       // Si se proporcionan agenda items, actualizarlos

@@ -88,7 +88,7 @@ const ActaWorkflow: React.FC<ActaWorkflowProps> = ({
                 <Clock className="h-8 w-8 text-amber-600 dark:text-amber-400" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold">Paso en desarrollo</h3>
+                <h3 className="text-lg font-semibold">Passo em desenvolvimento</h3>
                 <p className="text-muted-foreground">
                   {currentStep.title} - {currentStep.description}
                 </p>
@@ -136,7 +136,7 @@ const ActaWorkflow: React.FC<ActaWorkflowProps> = ({
                 {ACTA_WORKFLOW.category}
               </Badge>
               <p className="text-sm text-muted-foreground">
-                Tiempo estimado: {ACTA_WORKFLOW.estimatedTotalTime} min
+                Tempo estimado: {ACTA_WORKFLOW.estimatedTotalTime} min
               </p>
             </div>
           </div>
@@ -146,7 +146,7 @@ const ActaWorkflow: React.FC<ActaWorkflowProps> = ({
             {/* Progress Bar */}
             <div>
               <div className="flex justify-between text-sm mb-2">
-                <span>Progreso del workflow</span>
+                <span>Progresso do workflow</span>
                 <span>{progress}%</span>
               </div>
               <Progress value={progress} className="h-2" />
@@ -198,7 +198,7 @@ const ActaWorkflow: React.FC<ActaWorkflowProps> = ({
               <div className="space-y-1">
                 <div className="flex items-center space-x-2">
                   <Badge variant="default">
-                    Paso {workflowState.currentStepIndex + 1} de {ACTA_WORKFLOW.steps.length}
+                    Passo {workflowState.currentStepIndex + 1} de {ACTA_WORKFLOW.steps.length}
                   </Badge>
                   {currentStep.requiredRole && (
                     <Badge variant="outline">
@@ -231,7 +231,7 @@ const ActaWorkflow: React.FC<ActaWorkflowProps> = ({
                     </p>
                     {currentStep.legalRequirement.penalty && (
                       <p className="text-blue-600 dark:text-blue-300 mt-1 text-xs">
-                        Sanción por incumplimiento: {currentStep.legalRequirement.penalty}
+                        Sanção por incumprimento: {currentStep.legalRequirement.penalty}
                       </p>
                     )}
                   </div>

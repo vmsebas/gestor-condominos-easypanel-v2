@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useMembers, useFinancialSummary, useDatabaseConnection, useDashboardStats, useDashboardActivities, useDocumentStats } from '@/hooks/useNeonData';
+import { useMembers, useFinancialSummary, useDatabaseConnection, useDashboardStats, useDashboardActivities, useDocumentStats } from '@/hooks/useNeonDataWithAuth';
+import { useUserBuildingId } from '@/hooks/useUserBuildingId';
 import { 
   LayoutDashboard, 
   FileText, 
@@ -352,15 +353,15 @@ const EnhancedDashboard: React.FC = () => {
   // Datos reales de la base de datos
   const { data: members, isLoading: membersLoading } = useMembers();
   const { data: financialSummary, isLoading: financialLoading } = useFinancialSummary();
-  const { data: dbConnection } = useDatabaseConnection();
-  
-  // Get first building ID for dashboard stats
-  const buildingId = members?.[0]?.building_id;
-  
+  // const { data: dbConnection } = useDatabaseConnection(); // Disabled temporarily to prevent infinite loop
+
+  // Get building ID from user context (hardcoded for now)
+  const buildingId = useUserBuildingId();
+
   // New dashboard hooks for real data
-  const { data: dashboardStats, isLoading: statsLoading } = useDashboardStats(buildingId || '');
-  const { data: recentActivities = [], isLoading: activitiesLoading } = useDashboardActivities(buildingId || '', 10);
-  const { data: documentStats, isLoading: documentStatsLoading } = useDocumentStats(buildingId || '');
+  const { data: dashboardStats, isLoading: statsLoading } = useDashboardStats(buildingId);
+  const { data: recentActivities = [], isLoading: activitiesLoading } = useDashboardActivities(buildingId, 10);
+  const { data: documentStats, isLoading: documentStatsLoading } = useDocumentStats(buildingId);
 
   const stats = useMemo(() => ({
     totalOwners: dashboardStats?.totalOwners || members?.length || 0,
@@ -400,8 +401,9 @@ const EnhancedDashboard: React.FC = () => {
             <Activity className="h-4 w-4" />
             <span>Vista completa del condominio</span>
           </p>
+          {/* Database connection status disabled to prevent infinite loop
           {dbConnection && (
-            <motion.div 
+            <motion.div
               className="mt-2 text-xs text-green-600 dark:text-green-400 flex items-center space-x-1"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -411,6 +413,7 @@ const EnhancedDashboard: React.FC = () => {
               <span>Base de datos conectada: {dbConnection.tables?.length || 0} tablas</span>
             </motion.div>
           )}
+          */}
         </div>
         <div className="flex items-center space-x-3 mt-4 sm:mt-0">
           <Select value={selectedTimeRange} onValueChange={setSelectedTimeRange}>

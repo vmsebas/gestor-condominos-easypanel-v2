@@ -2,6 +2,9 @@ const documentRepository = require('../repositories/documentRepository.cjs');
 const fileStorageService = require('./fileStorageService.cjs');
 const path = require('path');
 
+// Default building ID for development/testing
+const DEFAULT_BUILDING_ID = '9cf64a8a-8570-4f16-94a5-dd48c694324c';
+
 // Supported file types configuration
 const SUPPORTED_FILE_TYPES = {
   '.pdf': { maxSize: 50 * 1024 * 1024, category: 'document' },
@@ -63,12 +66,12 @@ class DocumentService {
     const document = await documentRepository.findById(id);
     
     if (!document) {
-      throw new Error('Document not found');
+      throw new Error('Documento não encontrado');
     }
     
     // Check access permissions
     if (!this.canAccessDocument(document, user)) {
-      throw new Error('Access denied');
+      throw new Error('Acesso negado');
     }
     
     return document;
@@ -80,7 +83,7 @@ class DocumentService {
     const fileConfig = SUPPORTED_FILE_TYPES[ext];
     
     if (!fileConfig) {
-      throw new Error(`File type ${ext} not supported`);
+      throw new Error(`Tipo de ficheiro ${ext} não suportado`);
     }
     
     fileStorageService.validateFile(file, Object.keys(SUPPORTED_FILE_TYPES), fileConfig.maxSize);
@@ -133,12 +136,12 @@ class DocumentService {
     const document = await documentRepository.findById(id);
     
     if (!document) {
-      throw new Error('Document not found');
+      throw new Error('Documento não encontrado');
     }
     
     // Check permissions
     if (!this.canEditDocument(document, user)) {
-      throw new Error('Access denied');
+      throw new Error('Acesso negado');
     }
     
     // Don't allow updating file-related fields
@@ -157,12 +160,12 @@ class DocumentService {
     const document = await documentRepository.findById(id);
     
     if (!document) {
-      throw new Error('Document not found');
+      throw new Error('Documento não encontrado');
     }
     
     // Check permissions
     if (!this.canDeleteDocument(document, user)) {
-      throw new Error('Access denied');
+      throw new Error('Acesso negado');
     }
     
     // Delete file from storage - reconstruct full path
@@ -177,12 +180,12 @@ class DocumentService {
     const document = await documentRepository.findById(id);
     
     if (!document) {
-      throw new Error('Document not found');
+      throw new Error('Documento não encontrado');
     }
     
     // Check access permissions
     if (!this.canAccessDocument(document, user)) {
-      throw new Error('Access denied');
+      throw new Error('Acesso negado');
     }
     
     // Reconstruct full file path from filename stored in database
@@ -192,7 +195,7 @@ class DocumentService {
     // Check if file exists
     const exists = await fileStorageService.fileExists(fullFilePath);
     if (!exists) {
-      throw new Error('File not found in storage');
+      throw new Error('Ficheiro não encontrado no armazenamento');
     }
     
     // Increment download count
@@ -209,12 +212,12 @@ class DocumentService {
     const parentDocument = await documentRepository.findById(parentDocumentId);
     
     if (!parentDocument) {
-      throw new Error('Parent document not found');
+      throw new Error('Documento principal não encontrado');
     }
     
     // Check permissions
     if (!this.canEditDocument(parentDocument, user)) {
-      throw new Error('Access denied');
+      throw new Error('Acesso negado');
     }
     
     // Upload as new version
@@ -235,12 +238,12 @@ class DocumentService {
     const document = await documentRepository.findById(documentId);
     
     if (!document) {
-      throw new Error('Document not found');
+      throw new Error('Documento não encontrado');
     }
     
     // Check access permissions
     if (!this.canAccessDocument(document, user)) {
-      throw new Error('Access denied');
+      throw new Error('Acesso negado');
     }
     
     // Get all versions
@@ -260,12 +263,12 @@ class DocumentService {
     const document = await documentRepository.findById(documentId);
     
     if (!document) {
-      throw new Error('Document not found');
+      throw new Error('Documento não encontrado');
     }
     
     // Check permissions
     if (!this.canShareDocument(document, user)) {
-      throw new Error('Access denied');
+      throw new Error('Acesso negado');
     }
     
     // Check if share already exists
@@ -292,12 +295,12 @@ class DocumentService {
     const document = await documentRepository.findById(documentId);
     
     if (!document) {
-      throw new Error('Document not found');
+      throw new Error('Documento não encontrado');
     }
     
     // Check permissions
     if (!this.canEditDocument(document, user)) {
-      throw new Error('Access denied');
+      throw new Error('Acesso negado');
     }
     
     return documentRepository.findSharesByDocumentId(documentId);
@@ -322,7 +325,7 @@ class DocumentService {
   async createCategory(categoryData, user) {
     // Check if user can manage building
     if (!this.canManageBuilding(categoryData.building_id, user)) {
-      throw new Error('Access denied');
+      throw new Error('Acesso negado');
     }
     
     return documentRepository.createCategory(categoryData);
@@ -332,12 +335,12 @@ class DocumentService {
     const category = await documentRepository.findCategoryById(id);
     
     if (!category) {
-      throw new Error('Category not found');
+      throw new Error('Categoria não encontrada');
     }
     
     // Check if user can manage building
     if (!this.canManageBuilding(category.building_id, user)) {
-      throw new Error('Access denied');
+      throw new Error('Acesso negado');
     }
     
     return documentRepository.updateCategory(id, updateData);
@@ -347,12 +350,12 @@ class DocumentService {
     const category = await documentRepository.findCategoryById(id);
     
     if (!category) {
-      throw new Error('Category not found');
+      throw new Error('Categoria não encontrada');
     }
     
     // Check if user can manage building
     if (!this.canManageBuilding(category.building_id, user)) {
-      throw new Error('Access denied');
+      throw new Error('Acesso negado');
     }
     
     return documentRepository.deleteCategory(id);
@@ -362,7 +365,7 @@ class DocumentService {
   async getStats(buildingId, user) {
     // Check if user can access building
     if (!this.canAccessBuilding(buildingId, user)) {
-      throw new Error('Access denied');
+      throw new Error('Acesso negado');
     }
     
     return documentRepository.getStats(buildingId);

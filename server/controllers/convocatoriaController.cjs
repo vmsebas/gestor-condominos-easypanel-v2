@@ -81,7 +81,7 @@ class ConvocatoriaController {
     
     const convocatoria = await convocatoriaService.createConvocatoria(convocatoriaData);
     
-    successResponse(res, convocatoria, 'Convocatoria creada exitosamente', 201);
+    successResponse(res, convocatoria, 'Convocatória criada com sucesso', 201);
   });
 
   /**
@@ -94,7 +94,7 @@ class ConvocatoriaController {
     
     const convocatoria = await convocatoriaService.updateConvocatoria(id, updateData);
     
-    successResponse(res, convocatoria, 'Convocatoria actualizada exitosamente');
+    successResponse(res, convocatoria, 'Convocatória atualizada com sucesso');
   });
 
   /**
@@ -106,7 +106,7 @@ class ConvocatoriaController {
     
     await convocatoriaService.deleteConvocatoria(id);
     
-    successResponse(res, null, 'Convocatoria eliminada exitosamente');
+    successResponse(res, null, 'Convocatória eliminada com sucesso');
   });
 
   /**
@@ -119,7 +119,7 @@ class ConvocatoriaController {
     const convocatoria = await convocatoriaService.getNextConvocatoria(buildingId);
     
     if (!convocatoria) {
-      return successResponse(res, null, 'No hay convocatorias próximas');
+      return successResponse(res, null, 'Não há convocatórias próximas');
     }
     
     successResponse(res, convocatoria);
@@ -146,7 +146,7 @@ class ConvocatoriaController {
     
     const template = await convocatoriaService.duplicateConvocatoria(id);
     
-    successResponse(res, template, 'Plantilla de convocatoria creada');
+    successResponse(res, template, 'Modelo de convocatória criado');
   });
 
   /**
@@ -158,7 +158,7 @@ class ConvocatoriaController {
     
     await convocatoriaRepository.markMinutesCreated(id);
     
-    successResponse(res, null, 'Convocatoria marcada con acta creada');
+    successResponse(res, null, 'Convocatória marcada com ata criada');
   });
 
   /**
@@ -169,7 +169,7 @@ class ConvocatoriaController {
     const { buildingId, assemblyType } = req.body;
     
     if (!buildingId || !assemblyType) {
-      throw new AppError('Building ID y tipo de asamblea son requeridos', 400, null);
+      throw new AppError('ID do edifício e tipo de assembleia são obrigatórios', 400, null);
     }
     
     const assemblyNumber = await convocatoriaService.generateAssemblyNumber(buildingId, assemblyType);

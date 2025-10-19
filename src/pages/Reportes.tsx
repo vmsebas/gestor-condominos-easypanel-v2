@@ -90,9 +90,9 @@ const Reportes: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Reportes y Analytics</h1>
+          <h1 className="text-3xl font-bold text-foreground">Relatórios e Análises</h1>
           <p className="text-muted-foreground mt-1">
-            Análisis detallado de datos del condominio
+            Análise detalhada de dados do condomínio
           </p>
         </div>
         <div className="flex space-x-3">
@@ -158,7 +158,7 @@ const Reportes: React.FC = () => {
         </Card>
       </div>
 
-      {/* Reportes Principales */}
+      {/* Relatórios Principais */}
       <Tabs defaultValue="financeiro" className="space-y-6">
         <TabsList>
           <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
@@ -167,7 +167,7 @@ const Reportes: React.FC = () => {
           <TabsTrigger value="comparativo">Comparativo</TabsTrigger>
         </TabsList>
 
-        {/* Reporte Financeiro */}
+        {/* Relatório Financeiro */}
         <TabsContent value="financeiro" className="space-y-6">
           <div className="grid lg:grid-cols-2 gap-6">
             <Card>
@@ -264,7 +264,7 @@ const Reportes: React.FC = () => {
           </Card>
         </TabsContent>
 
-        {/* Reporte de Ocupação */}
+        {/* Relatório de Ocupação */}
         <TabsContent value="ocupacao" className="space-y-6">
           <div className="grid lg:grid-cols-2 gap-6">
             <Card>
@@ -321,7 +321,7 @@ const Reportes: React.FC = () => {
           </div>
         </TabsContent>
 
-        {/* Reporte de Actividade */}
+        {/* Relatório de Actividade */}
         <TabsContent value="actividade" className="space-y-6">
           <div className="grid lg:grid-cols-3 gap-6">
             <Card>
@@ -380,7 +380,7 @@ const Reportes: React.FC = () => {
           </div>
         </TabsContent>
 
-        {/* Reporte Comparativo */}
+        {/* Relatório Comparativo */}
         <TabsContent value="comparativo" className="space-y-6">
           <Card>
             <CardHeader>

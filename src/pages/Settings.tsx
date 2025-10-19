@@ -16,7 +16,7 @@ const Settings = () => {
           Configurações
         </h1>
         <p className="text-muted-foreground mt-2">
-          Gerencie as configurações da aplicação e suas preferências
+          Gira as configurações da aplicação e as suas preferências
         </p>
       </div>
 
@@ -37,14 +37,14 @@ const Settings = () => {
                 Informações do Perfil
               </CardTitle>
               <CardDescription>
-                Atualize suas informações pessoais
+                Atualize as suas informações pessoais
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nome</Label>
-                  <Input id="name" placeholder="Seu nome" />
+                  <Input id="name" placeholder="O seu nome" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
@@ -55,7 +55,7 @@ const Settings = () => {
                 <Label htmlFor="phone">Telefone</Label>
                 <Input id="phone" placeholder="+351 900 000 000" />
               </div>
-              <Button>Salvar Alterações</Button>
+              <Button>Guardar Alterações</Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -111,23 +111,23 @@ const Settings = () => {
                 Segurança da Conta
               </CardTitle>
               <CardDescription>
-                Proteja sua conta com configurações de segurança
+                Proteja a sua conta com configurações de segurança
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="current-password">Senha Atual</Label>
+                <Label htmlFor="current-password">Palavra-passe Atual</Label>
                 <Input id="current-password" type="password" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="new-password">Nova Senha</Label>
+                <Label htmlFor="new-password">Nova Palavra-passe</Label>
                 <Input id="new-password" type="password" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirmar Nova Senha</Label>
+                <Label htmlFor="confirm-password">Confirmar Nova Palavra-passe</Label>
                 <Input id="confirm-password" type="password" />
               </div>
-              <Button>Alterar Senha</Button>
+              <Button>Alterar Palavra-passe</Button>
             </CardContent>
           </Card>
         </TabsContent>

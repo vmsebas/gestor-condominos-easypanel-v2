@@ -71,10 +71,10 @@ const Convocatorias: React.FC = () => {
   const handleWorkflowComplete = async (data: any) => {
     let result;
     if (editingConvocatoria) {
-      // Actualizar convocatoria existente
+      // Atualizar convocatória existente
       result = await updateConvocatoria(editingConvocatoria.id, data);
     } else {
-      // Crear nueva convocatoria
+      // Criar nova convocatória
       result = await createConvocatoria(data);
     }
     
@@ -104,7 +104,7 @@ const Convocatorias: React.FC = () => {
 
   const handleGeneratePDF = async (convocatoria: any) => {
     try {
-      // Buscar os dados originais da convocatoria para ter todos os campos
+      // Buscar os dados originais da convocatória para ter todos os campos
       const originalConvocatoria = convocatoriasData?.find(c => c.id === convocatoria.id);
       
       if (!originalConvocatoria) {
@@ -119,15 +119,15 @@ const Convocatorias: React.FC = () => {
         buildingAddress: originalConvocatoria.building_address || '',
         postalCode: originalConvocatoria.postal_code || '',
         city: originalConvocatoria.city || 'Amadora',
-        
-        // Dados da convocatoria
+
+        // Dados da convocatória
         assemblyNumber: originalConvocatoria.assembly_number || convocatoria.minute_number || '',
         assemblyType: originalConvocatoria.assembly_type === 'ordinary' ? 'ordinaria' : 'extraordinaria',
         meetingDate: originalConvocatoria.date || originalConvocatoria.meeting_date || '',
         meetingTime: originalConvocatoria.time || '18:00',
         meetingLocation: originalConvocatoria.location || originalConvocatoria.meeting_location || 'Hall do Prédio',
-        
-        // Segunda convocatoria
+
+        // Segunda convocatória
         secondCallEnabled: originalConvocatoria.second_call_enabled !== false,
         secondCallDate: originalConvocatoria.second_call_date,
         secondCallTime: originalConvocatoria.second_call_time || '19:00',
@@ -188,9 +188,9 @@ const Convocatorias: React.FC = () => {
     <div className="container mx-auto px-4 py-8 space-y-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Convocatorias</h1>
+          <h1 className="text-3xl font-bold text-foreground">Convocatórias</h1>
           <p className="text-muted-foreground mt-1">
-            Gestão e redação de convocatorias de assembleias
+            Gestão e redação de convocatórias de assembleias
           </p>
         </div>
         <Button 
@@ -199,14 +199,14 @@ const Convocatorias: React.FC = () => {
           variant="workflow"
         >
           <Plus className="h-5 w-5 mr-2" />
-          Nova Convocatoria
+          Nova Convocatória
         </Button>
       </div>
 
       {isLoading ? (
         <div className="flex justify-center items-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <span className="ml-2">A carregar convocatorias...</span>
+          <span className="ml-2">A carregar convocatórias...</span>
         </div>
       ) : (
         <>
@@ -218,7 +218,7 @@ const Convocatorias: React.FC = () => {
                   <ScrollText className="h-8 w-8 text-blue-600" />
                   <div>
                     <p className="text-2xl font-bold">{convocatorias.length}</p>
-                    <p className="text-sm text-muted-foreground">Convocatorias totais</p>
+                    <p className="text-sm text-muted-foreground">Convocatórias totais</p>
                   </div>
                 </div>
               </CardContent>
@@ -261,12 +261,12 @@ const Convocatorias: React.FC = () => {
         </Card>
       </div>
 
-      {/* Histórico de Convocatorias */}
+      {/* Histórico de Convocatórias */}
       <Card>
         <CardHeader>
-          <CardTitle>Histórico de Convocatorias</CardTitle>
+          <CardTitle>Histórico de Convocatórias</CardTitle>
           <CardDescription>
-            Todas as convocatorias de assembleias registadas
+            Todas as convocatórias de assembleias registadas
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -353,9 +353,9 @@ const Convocatorias: React.FC = () => {
             ) : (
               <div className="text-center py-12">
                 <ScrollText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-muted-foreground">Não há convocatorias registadas</h3>
+                <h3 className="text-lg font-semibold text-muted-foreground">Não há convocatórias registadas</h3>
                 <p className="text-muted-foreground mt-1">
-                  Crie uma nova convocatoria para registar uma assembleia
+                  Crie uma nova convocatória para registar uma assembleia
                 </p>
               </div>
             )}
@@ -382,7 +382,7 @@ const Convocatorias: React.FC = () => {
         </>
       )}
       
-      {/* Alert Dialog para confirmar eliminación */}
+      {/* Alert Dialog para confirmar eliminação */}
       <AlertDialog open={!!convocatoriaToDelete} onOpenChange={(open) => !open && setConvocatoriaToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

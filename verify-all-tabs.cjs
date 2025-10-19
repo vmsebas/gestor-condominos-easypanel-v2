@@ -112,12 +112,12 @@ async function verifyAllTabs() {
     console.log(`  - Usa datos de: transactions, members, buildings`);
     console.log(`  ✅ Reportes usa datos existentes de BD\n`);
     
-    // 10. Mantenimiento (tareas)
-    console.log('🔧 MANTENIMIENTO:');
+    // 10. Manutenção (tarefas)
+    console.log('🔧 MANUTENÇÃO:');
     const maintenanceTasks = await knex('tasks')
       .where('category', 'maintenance')
       .count('* as count');
-    console.log(`  - Tareas de mantenimiento: ${maintenanceTasks[0].count}`);
+    console.log(`  - Tarefas de manutenção: ${maintenanceTasks[0].count}`);
     const tasksList = await knex('tasks')
       .select('title', 'status', 'priority')
       .limit(3);
@@ -126,7 +126,7 @@ async function verifyAllTabs() {
         console.log(`    • ${t.title} - ${t.status} (${t.priority})`);
       });
     }
-    console.log(`  ✅ Mantenimiento conectado a BD\n`);
+    console.log(`  ✅ Manutenção conectado a BD\n`);
     
     // 11. Tareas
     console.log('✅ TAREAS:');
@@ -149,7 +149,7 @@ async function verifyAllTabs() {
     console.log('✅ Documentos - OK (5 registros)');
     console.log('⚠️  Comunicaciones - Tabla no existe');
     console.log('✅ Reportes - OK (usa datos existentes)');
-    console.log('✅ Mantenimiento - OK (5 tareas)');
+    console.log('✅ Manutenção - OK (5 tarefas)');
     console.log('✅ Tareas - OK (5 registros)');
     
     console.log('\n🎉 TODAS LAS PESTAÑAS ESTÁN CONECTADAS CON DATOS REALES DE LA BD');

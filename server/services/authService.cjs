@@ -19,13 +19,13 @@ class AuthService {
     // Buscar usuario
     const user = await userRepository.findByEmail(email);
     if (!user) {
-      throw new AppError('Credenciales inválidas', 401, null);
+      throw new AppError('Credenciais inválidas', 401, null);
     }
 
     // Verificar si la cuenta está bloqueada
     if (user.locked_until && new Date(user.locked_until) > new Date()) {
       const remainingMinutes = Math.ceil((new Date(user.locked_until) - new Date()) / 60000);
-      throw new AppError(`Cuenta bloqueada. Intenta de nuevo en ${remainingMinutes} minutos`, 403, null);
+      throw new AppError(`Conta bloqueada. Tente novamente em ${remainingMinutes} minutos`, 403, null);
     }
 
     // Verificar contraseña
@@ -33,12 +33,12 @@ class AuthService {
     if (!isValidPassword) {
       // Incrementar intentos fallidos
       await userRepository.incrementFailedAttempts(user.id);
-      throw new AppError('Credenciales inválidas', 401, null);
+      throw new AppError('Credenciais inválidas', 401, null);
     }
 
     // Verificar si el usuario está activo
     if (!user.is_active) {
-      throw new AppError('Usuario inactivo', 403, null);
+      throw new AppError('Utilizador inativo', 403, null);
     }
 
     // Resetear intentos fallidos y actualizar último login
@@ -74,7 +74,7 @@ class AuthService {
     // Verificar si el email ya existe
     const existingUser = await userRepository.findByEmail(userData.email);
     if (existingUser) {
-      throw new AppError('El email ya está registrado', 409, null);
+      throw new AppError('O email já está registado', 409, null);
     }
 
     // Crear usuario
@@ -111,13 +111,13 @@ class AuthService {
     // Verificar refresh token
     const tokenData = await refreshTokenRepository.findValidToken(refreshToken);
     if (!tokenData) {
-      throw new AppError('Refresh token inválido o expirado', 401, null);
+      throw new AppError('Refresh token inválido ou expirado', 401, null);
     }
 
     // Buscar usuario
     const user = await userRepository.findById(tokenData.user_id);
     if (!user || !user.is_active) {
-      throw new AppError('Usuario no encontrado o inactivo', 401, null);
+      throw new AppError('Utilizador não encontrado ou inativo', 401, null);
     }
 
     // Generar nuevo access token
@@ -186,7 +186,7 @@ class AuthService {
     // Buscar usuario por token
     const user = await userRepository.findByResetToken(resetToken);
     if (!user) {
-      throw new AppError('Token de reset inválido o expirado', 400, null);
+      throw new AppError('Token de redefinição inválido ou expirado', 400, null);
     }
 
     // Actualizar contraseña
@@ -204,13 +204,13 @@ class AuthService {
   async changePassword(userId, currentPassword, newPassword) {
     const user = await userRepository.findById(userId);
     if (!user) {
-      throw new AppError('Usuario no encontrado', 404, null);
+      throw new AppError('Utilizador não encontrado', 404, null);
     }
 
     // Verificar contraseña actual
     const isValidPassword = await verifyPassword(currentPassword, user.password_hash);
     if (!isValidPassword) {
-      throw new AppError('Contraseña actual incorrecta', 401, null);
+      throw new AppError('Palavra-passe atual incorreta', 401, null);
     }
 
     // Actualizar contraseña
@@ -238,7 +238,7 @@ class AuthService {
     
     return tokens.map(token => ({
       id: token.id,
-      deviceName: token.device_name || 'Dispositivo desconocido',
+      deviceName: token.device_name || 'Dispositivo desconhecido',
       ipAddress: token.ip_address,
       lastUsed: token.updated_at,
       createdAt: token.created_at
@@ -251,7 +251,7 @@ class AuthService {
   async revokeSession(userId, sessionId) {
     const token = await refreshTokenRepository.findById(sessionId);
     if (!token || token.user_id !== userId) {
-      throw new AppError('Sesión no encontrada', 404, null);
+      throw new AppError('Sessão não encontrada', 404, null);
     }
 
     await refreshTokenRepository.revokeToken(token.token);

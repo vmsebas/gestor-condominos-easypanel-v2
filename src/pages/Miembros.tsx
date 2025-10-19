@@ -113,7 +113,7 @@ const Miembros: React.FC = () => {
                     <CardTitle className="text-lg">{member.name}</CardTitle>
                     <CardDescription className="flex items-center">
                       <Home className="h-4 w-4 mr-1" />
-                      Fracção {member.fraction} - {member.apartment}
+                      Fração {member.fraction} - {member.apartment}
                     </CardDescription>
                   </div>
                 </div>

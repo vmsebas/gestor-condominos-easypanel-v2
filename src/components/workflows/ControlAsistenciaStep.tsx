@@ -69,9 +69,9 @@ const ControlAsistenciaStep: React.FC<ControlAsistenciaStepProps> = ({
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-foreground mb-2">Control de Asistencia</h2>
+        <h2 className="text-2xl font-bold text-foreground mb-2">Controlo de Presenças</h2>
         <p className="text-muted-foreground">
-          Registra la asistencia y representaciones para la junta
+          Regista a presença e representações para a assembleia
         </p>
       </div>
 
@@ -132,7 +132,7 @@ const ControlAsistenciaStep: React.FC<ControlAsistenciaStepProps> = ({
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar propietario o apartamento..."
+              placeholder="Procurar proprietário ou apartamento..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-8"
@@ -144,9 +144,9 @@ const ControlAsistenciaStep: React.FC<ControlAsistenciaStepProps> = ({
       {/* Lista de propietarios */}
       <Card>
         <CardHeader>
-          <CardTitle>Lista de Propietarios</CardTitle>
+          <CardTitle>Lista de Proprietários</CardTitle>
           <CardDescription>
-            Marca la asistencia y gestiona las representaciones
+            Marque a presença e gira as representações
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -216,7 +216,7 @@ const ControlAsistenciaStep: React.FC<ControlAsistenciaStepProps> = ({
 
           {filteredMembers.length === 0 && (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">No se encontraron propietarios</p>
+              <p className="text-muted-foreground">Nenhum proprietário encontrado</p>
             </div>
           )}
         </CardContent>
@@ -230,23 +230,23 @@ const ControlAsistenciaStep: React.FC<ControlAsistenciaStepProps> = ({
       }`}>
         <CardContent className="pt-6">
           <div className="text-center">
-            <h3 className="font-semibold mb-2">Estado del Quórum</h3>
+            <h3 className="font-semibold mb-2">Estado do Quórum</h3>
             <div className="space-y-2">
               <p className="text-sm">
-                <strong>Primera convocatoria:</strong> Requiere &gt;50% de coeficientes ({(totalCoefficient * 0.5).toFixed(1)}%)
+                <strong>Primeira convocatória:</strong> Requer &gt;50% de coeficientes ({(totalCoefficient * 0.5).toFixed(1)}%)
               </p>
               <p className="text-sm">
-                <strong>Segunda convocatoria:</strong> Requiere &gt;25% de coeficientes ({(totalCoefficient * 0.25).toFixed(1)}%)
+                <strong>Segunda convocatória:</strong> Requer &gt;25% de coeficientes ({(totalCoefficient * 0.25).toFixed(1)}%)
               </p>
               <div className={`mt-4 p-3 rounded-lg ${
-                (totalRepresentedCoefficient / totalCoefficient) >= 0.5 
+                (totalRepresentedCoefficient / totalCoefficient) >= 0.5
                   ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
                   : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200'
               }`}>
                 <p className="font-medium">
-                  {(totalRepresentedCoefficient / totalCoefficient) >= 0.5 
-                    ? '✓ Quórum válido para primera convocatoria'
-                    : '⚠️ Quórum insuficiente para primera convocatoria'
+                  {(totalRepresentedCoefficient / totalCoefficient) >= 0.5
+                    ? '✓ Quórum válido para primeira convocatória'
+                    : '⚠️ Quórum insuficiente para primeira convocatória'
                   }
                 </p>
               </div>
@@ -260,7 +260,7 @@ const ControlAsistenciaStep: React.FC<ControlAsistenciaStepProps> = ({
           Anterior
         </Button>
         <Button onClick={onNext} variant="workflow" size="lg">
-          Continuar con verificación
+          Continuar com verificação
         </Button>
       </div>
     </div>

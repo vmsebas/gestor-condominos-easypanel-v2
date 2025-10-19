@@ -12,7 +12,7 @@ router.get('/summary', authenticate, async (req, res) => {
     if (!effectiveBuildingId) {
       return res.status(400).json({ 
         success: false, 
-        error: 'Building ID es requerido' 
+        error: 'ID do edifício é obrigatório' 
       });
     }
     
@@ -26,7 +26,7 @@ router.get('/summary', authenticate, async (req, res) => {
       data
     });
   } catch (error) {
-    console.error('Error obteniendo resumen de morosidad:', error);
+    console.error('Erro ao obter resumo de incumprimentos:', error);
     res.status(500).json({ 
       success: false, 
       error: error.message 
@@ -46,7 +46,7 @@ router.get('/member/:memberId', authenticate, async (req, res) => {
       data: history
     });
   } catch (error) {
-    console.error('Error obteniendo historial de morosidad:', error);
+    console.error('Erro ao obter histórico de incumprimentos:', error);
     res.status(500).json({ 
       success: false, 
       error: error.message 
@@ -70,7 +70,7 @@ router.post('/payment/:transactionId', authenticate, async (req, res) => {
       data: result
     });
   } catch (error) {
-    console.error('Error marcando pago como recibido:', error);
+    console.error('Erro ao marcar pagamento como recebido:', error);
     res.status(500).json({ 
       success: false, 
       error: error.message 
@@ -87,7 +87,7 @@ router.get('/config', authenticate, async (req, res) => {
     if (!effectiveBuildingId) {
       return res.status(400).json({ 
         success: false, 
-        error: 'Building ID es requerido' 
+        error: 'ID do edifício é obrigatório' 
       });
     }
     
@@ -98,7 +98,7 @@ router.get('/config', authenticate, async (req, res) => {
       data: config
     });
   } catch (error) {
-    console.error('Error obteniendo configuración:', error);
+    console.error('Erro ao obter configuração:', error);
     res.status(500).json({ 
       success: false, 
       error: error.message 
@@ -115,7 +115,7 @@ router.put('/config', authenticate, authorize('admin', 'super_admin'), async (re
     if (!effectiveBuildingId) {
       return res.status(400).json({ 
         success: false, 
-        error: 'Building ID es requerido' 
+        error: 'ID do edifício é obrigatório' 
       });
     }
     
@@ -129,7 +129,7 @@ router.put('/config', authenticate, authorize('admin', 'super_admin'), async (re
       data: result
     });
   } catch (error) {
-    console.error('Error actualizando configuración:', error);
+    console.error('Erro ao atualizar configuração:', error);
     res.status(500).json({ 
       success: false, 
       error: error.message 
@@ -146,7 +146,7 @@ router.get('/report', authenticate, async (req, res) => {
     if (!effectiveBuildingId) {
       return res.status(400).json({ 
         success: false, 
-        error: 'Building ID es requerido' 
+        error: 'ID do edifício é obrigatório' 
       });
     }
     
@@ -160,7 +160,7 @@ router.get('/report', authenticate, async (req, res) => {
       data: report
     });
   } catch (error) {
-    console.error('Error generando reporte:', error);
+    console.error('Erro ao gerar relatório:', error);
     res.status(500).json({ 
       success: false, 
       error: error.message 
@@ -178,7 +178,7 @@ router.post('/check-overdue', authenticate, authorize('admin', 'super_admin'), a
       data: result
     });
   } catch (error) {
-    console.error('Error chequeando pagos vencidos:', error);
+    console.error('Erro ao verificar pagamentos vencidos:', error);
     res.status(500).json({ 
       success: false, 
       error: error.message 

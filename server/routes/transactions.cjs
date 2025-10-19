@@ -79,7 +79,7 @@ router.get('/summary', authenticate, async (req, res, next) => {
     const { buildingId, year } = req.query;
     
     if (!buildingId) {
-      return errorResponse(res, 'ID de edificio requerido', 400);
+      return errorResponse(res, 'ID do edifício é obrigatório', 400);
     }
     
     let whereClause = 'WHERE building_id = $1';
@@ -160,7 +160,7 @@ router.get('/:id', authenticate, async (req, res, next) => {
     `, [id]);
     
     if (result.rows.length === 0) {
-      return errorResponse(res, 'Transacción no encontrada', 404);
+      return errorResponse(res, 'Transação não encontrada', 404);
     }
     
     return successResponse(res, result.rows[0]);
@@ -236,7 +236,7 @@ router.put('/:id', authenticate, validate(transactionSchema), async (req, res, n
     );
     
     if (result.rows.length === 0) {
-      return errorResponse(res, 'Transacción no encontrada', 404);
+      return errorResponse(res, 'Transação não encontrada', 404);
     }
     
     return successResponse(res, result.rows[0]);
@@ -256,10 +256,10 @@ router.delete('/:id', authenticate, async (req, res, next) => {
     );
     
     if (result.rows.length === 0) {
-      return errorResponse(res, 'Transacción no encontrada', 404);
+      return errorResponse(res, 'Transação não encontrada', 404);
     }
-    
-    return successResponse(res, { message: 'Transacción eliminada exitosamente' });
+
+    return successResponse(res, { message: 'Transação eliminada com sucesso' });
   } catch (error) {
     next(error);
   }

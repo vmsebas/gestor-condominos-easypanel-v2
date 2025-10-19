@@ -14,7 +14,7 @@ import { useAuthStore } from '@/store/authStore';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+  password: z.string().min(6, 'A palavra-passe deve ter pelo menos 6 caracteres'),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -41,11 +41,11 @@ export function LoginForm() {
       if (response.success) {
         const { user, accessToken } = response.data;
         login(user, accessToken);
-        toast.success('¡Bienvenido!');
+        toast.success('Bem-vindo!');
         navigate('/dashboard');
       }
     } catch (error: any) {
-      const message = error.response?.data?.error || 'Error al iniciar sesión';
+      const message = error.response?.data?.error || 'Erro ao iniciar sessão';
       toast.error(message);
     } finally {
       setIsLoading(false);
@@ -55,9 +55,9 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold">Iniciar Sesión</CardTitle>
+        <CardTitle className="text-2xl font-bold">Iniciar Sessão</CardTitle>
         <CardDescription>
-          Ingresa tus credenciales para acceder al sistema
+          Introduza as suas credenciais para aceder ao sistema
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -76,7 +76,7 @@ export function LoginForm() {
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Contraseña</Label>
+            <Label htmlFor="password">Palavra-passe</Label>
             <div className="relative">
               <Input
                 id="password"
@@ -107,19 +107,19 @@ export function LoginForm() {
         <CardFooter className="flex flex-col space-y-4">
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Iniciar Sesión
+            Iniciar Sessão
           </Button>
           <div className="text-sm text-center space-y-2">
             <a
               href="/forgot-password"
               className="text-primary hover:underline"
             >
-              ¿Olvidaste tu contraseña?
+              Esqueceu-se da palavra-passe?
             </a>
             <p className="text-muted-foreground">
-              ¿No tienes cuenta?{' '}
+              Não tem conta?{' '}
               <a href="/register" className="text-primary hover:underline">
-                Regístrate
+                Registe-se
               </a>
             </p>
           </div>

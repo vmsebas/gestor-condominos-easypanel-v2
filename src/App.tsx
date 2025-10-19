@@ -15,13 +15,13 @@ const ConvocatoriaDetail = React.lazy(() => import('@/pages/ConvocatoriaDetail')
 const ConvocatoriasTest = React.lazy(() => import('@/pages/ConvocatoriasTest'));
 const Actas = React.lazy(() => import('@/pages/Actas'));
 const ActaDetail = React.lazy(() => import('@/pages/ActaDetail'));
-const Finanzas = React.lazy(() => import('@/pages/Finanzas'));
+const Financas = React.lazy(() => import('@/pages/Financas'));
 const Miembros = React.lazy(() => import('@/pages/Miembros'));
 const MemberProfile = React.lazy(() => import('@/pages/MemberProfile'));
 const BuildingsManager = React.lazy(() => import('@/components/buildings/BuildingsManager'));
 const Comunicaciones = React.lazy(() => import('@/pages/Comunicaciones'));
 const Reportes = React.lazy(() => import('@/pages/Reportes'));
-const Mantenimiento = React.lazy(() => import('@/pages/Mantenimiento'));
+const Manutencao = React.lazy(() => import('@/pages/Manutencao'));
 const Tarefas = React.lazy(() => import('@/pages/Tarefas'));
 const Documentos = React.lazy(() => import('@/pages/Documentos'));
 const Settings = React.lazy(() => import('@/pages/Settings'));
@@ -150,7 +150,7 @@ function App() {
                   } />
                   <Route path="/finanzas" element={
                     <ProtectedRoute>
-                      <Finanzas />
+                      <Financas />
                     </ProtectedRoute>
                   } />
                   <Route path="/miembros" element={
@@ -183,9 +183,9 @@ function App() {
                       <Reportes />
                     </ProtectedRoute>
                   } />
-                  <Route path="/mantenimiento" element={
+                  <Route path="/manutencao" element={
                     <ProtectedRoute>
-                      <Mantenimiento />
+                      <Manutencao />
                     </ProtectedRoute>
                   } />
                   <Route path="/tarefas" element={

@@ -74,7 +74,7 @@ class MemberController {
     
     const member = await memberService.createMember(memberData);
     
-    successResponse(res, member, 'Miembro creado exitosamente', 201);
+    successResponse(res, member, 'Membro criado com sucesso', 201);
   });
 
   /**
@@ -87,7 +87,7 @@ class MemberController {
     
     const member = await memberService.updateMember(id, updateData);
     
-    successResponse(res, member, 'Miembro actualizado exitosamente');
+    successResponse(res, member, 'Membro atualizado com sucesso');
   });
 
   /**
@@ -99,7 +99,7 @@ class MemberController {
     
     await memberService.deleteMember(id);
     
-    successResponse(res, null, 'Miembro eliminado exitosamente');
+    successResponse(res, null, 'Membro eliminado com sucesso');
   });
 
   /**
@@ -112,7 +112,7 @@ class MemberController {
     
     await memberService.updateMemberFees(id, fees);
     
-    successResponse(res, null, 'Cuotas actualizadas exitosamente');
+    successResponse(res, null, 'Quotas atualizadas com sucesso');
   });
 
   /**
@@ -123,7 +123,7 @@ class MemberController {
     const { buildingId } = req.query;
     
     if (!buildingId) {
-      throw new AppError('ID de edificio es requerido', 400, null);
+      throw new AppError('ID do edifício é obrigatório', 400, null);
     }
     
     const result = await memberService.getDebtors(buildingId);
@@ -140,16 +140,16 @@ class MemberController {
     const csvData = req.file; // Asumiendo que se usa multer
     
     if (!buildingId) {
-      throw new AppError('ID de edificio es requerido', 400, null);
+      throw new AppError('ID do edifício é obrigatório', 400, null);
     }
     
     if (!csvData) {
-      throw new AppError('Archivo CSV es requerido', 400, null);
+      throw new AppError('Ficheiro CSV é obrigatório', 400, null);
     }
     
     const result = await memberService.importMembersFromCSV(buildingId, csvData);
     
-    successResponse(res, result, 'Miembros importados exitosamente');
+    successResponse(res, result, 'Membros importados com sucesso');
   });
 
   /**
@@ -160,7 +160,7 @@ class MemberController {
     const { buildingId } = req.query;
     
     if (!buildingId) {
-      throw new AppError('ID de edificio es requerido', 400, null);
+      throw new AppError('ID do edifício é obrigatório', 400, null);
     }
     
     const csvData = await memberService.exportMembersToCSV(buildingId);
@@ -188,11 +188,11 @@ class MemberController {
                      (user.memberId && user.memberId === id);
     
     if (!canUpload) {
-      throw new AppError('No tienes permiso para actualizar este avatar', 403, null);
+      throw new AppError('Não tem permissão para atualizar este avatar', 403, null);
     }
     
     if (!req.file) {
-      throw new AppError('No se ha proporcionado ningún archivo', 400, null);
+      throw new AppError('Nenhum ficheiro foi fornecido', 400, null);
     }
     
     // Delete old avatar if exists
@@ -209,7 +209,7 @@ class MemberController {
     successResponse(res, {
       member: updatedMember,
       avatarUrl
-    }, 'Avatar actualizado correctamente');
+    }, 'Avatar atualizado com sucesso');
   });
 
   /**
@@ -228,7 +228,7 @@ class MemberController {
                      (user.memberId && user.memberId === id);
     
     if (!canDelete) {
-      throw new AppError('No tienes permiso para eliminar este avatar', 403, null);
+      throw new AppError('Não tem permissão para eliminar este avatar', 403, null);
     }
     
     // Delete avatar file if exists
@@ -241,7 +241,7 @@ class MemberController {
     
     successResponse(res, {
       member: updatedMember
-    }, 'Avatar eliminado correctamente');
+    }, 'Avatar eliminado com sucesso');
   });
 }
 

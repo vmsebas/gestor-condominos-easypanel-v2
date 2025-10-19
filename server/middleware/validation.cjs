@@ -19,7 +19,7 @@ const validate = (schema, property = 'body') => {
         message: detail.message
       }));
       
-      return next(new ValidationError('Validation failed', errors));
+      return next(new ValidationError('Erro de validação', errors));
     }
 
     // Reemplazar los datos con los valores validados y transformados
@@ -35,39 +35,39 @@ const schemas = {
     create: Joi.object({
       name: Joi.string().trim().min(3).max(100).required()
         .messages({
-          'string.min': 'Building name must be at least 3 characters',
-          'string.max': 'Building name cannot exceed 100 characters',
-          'any.required': 'Building name is required'
+          'string.min': 'O nome do edifício deve ter pelo menos 3 caracteres',
+          'string.max': 'O nome do edifício não pode exceder 100 caracteres',
+          'any.required': 'O nome do edifício é obrigatório'
         }),
       address: Joi.string().trim().min(5).max(200).required()
         .messages({
-          'string.min': 'Address must be at least 5 characters',
-          'any.required': 'Address is required'
+          'string.min': 'A morada deve ter pelo menos 5 caracteres',
+          'any.required': 'A morada é obrigatória'
         }),
       postal_code: Joi.string().trim().pattern(/^\d{4}-\d{3}$/).allow('', null)
         .messages({
-          'string.pattern.base': 'Postal code must be in format XXXX-XXX'
+          'string.pattern.base': 'O código postal deve estar no formato XXXX-XXX'
         }),
       city: Joi.string().trim().min(2).max(100).allow('', null),
       number_of_units: Joi.number().integer().min(0).default(0)
         .messages({
-          'number.min': 'Number of units cannot be negative'
+          'number.min': 'O número de unidades não pode ser negativo'
         }),
       administrator: Joi.string().trim().max(100).allow('', null),
       admin_contact: Joi.string().trim().max(20).allow('', null),
       admin_email: Joi.string().trim().email().allow('', null)
         .messages({
-          'string.email': 'Invalid email format'
+          'string.email': 'Formato de email inválido'
         }),
       iban: Joi.string().trim().uppercase().pattern(/^[A-Z]{2}\d{2}[A-Z0-9]+$/).allow('', null)
         .messages({
-          'string.pattern.base': 'Invalid IBAN format'
+          'string.pattern.base': 'Formato de IBAN inválido'
         }),
       bank: Joi.string().trim().max(100).allow('', null),
       account_number: Joi.string().trim().max(50).allow('', null),
       swift: Joi.string().trim().uppercase().length(11).allow('', null)
         .messages({
-          'string.length': 'SWIFT code must be exactly 11 characters'
+          'string.length': 'O código SWIFT deve ter exatamente 11 caracteres'
         })
     }),
     
@@ -100,8 +100,8 @@ const schemas = {
   idParam: Joi.object({
     id: Joi.string().uuid().required()
       .messages({
-        'string.guid': 'Invalid ID format',
-        'any.required': 'ID is required'
+        'string.guid': 'Formato de ID inválido',
+        'any.required': 'ID é obrigatório'
       })
   }),
 
@@ -117,7 +117,7 @@ const schemas = {
       phone: Joi.string().trim().max(20).allow('', null),
       nif: Joi.string().trim().pattern(/^\d{9}$/).allow('', null)
         .messages({
-          'string.pattern.base': 'NIF must be 9 digits'
+          'string.pattern.base': 'O NIF deve ter 9 dígitos'
         }),
       is_active: Joi.boolean().default(true),
       permilage: Joi.number().min(0).max(1000).default(0),
@@ -172,7 +172,7 @@ const schemas = {
       description: Joi.string().trim().min(3).max(500).required(),
       amount: Joi.number().positive().required()
         .messages({
-          'number.positive': 'Amount must be greater than 0'
+          'number.positive': 'O valor deve ser maior que 0'
         }),
       category_id: Joi.string().uuid().allow(null),
       member_id: Joi.string().uuid().allow(null),
@@ -190,66 +190,66 @@ const schemas = {
       email: Joi.string().email().required()
         .messages({
           'string.email': 'Email inválido',
-          'any.required': 'Email es requerido'
+          'any.required': 'Email é obrigatório'
         }),
       password: Joi.string().min(6).required()
         .messages({
-          'string.min': 'La contraseña debe tener al menos 6 caracteres',
-          'any.required': 'Contraseña es requerida'
+          'string.min': 'A palavra-passe deve ter pelo menos 6 caracteres',
+          'any.required': 'Palavra-passe é obrigatória'
         }),
       deviceName: Joi.string().max(255).allow('', null)
     }),
-    
+
     register: Joi.object({
       email: Joi.string().email().required()
         .messages({
           'string.email': 'Email inválido',
-          'any.required': 'Email es requerido'
+          'any.required': 'Email é obrigatório'
         }),
       password: Joi.string().min(6).max(100).required()
         .messages({
-          'string.min': 'La contraseña debe tener al menos 6 caracteres',
-          'any.required': 'Contraseña es requerida'
+          'string.min': 'A palavra-passe deve ter pelo menos 6 caracteres',
+          'any.required': 'Palavra-passe é obrigatória'
         }),
       name: Joi.string().trim().min(2).max(255).required()
         .messages({
-          'string.min': 'El nombre debe tener al menos 2 caracteres',
-          'any.required': 'Nombre es requerido'
+          'string.min': 'O nome deve ter pelo menos 2 caracteres',
+          'any.required': 'Nome é obrigatório'
         }),
       phone: Joi.string().trim().max(50).allow('', null),
       building_id: Joi.string().uuid().allow(null),
       member_id: Joi.string().uuid().allow(null)
     }),
-    
+
     forgotPassword: Joi.object({
       email: Joi.string().email().required()
         .messages({
           'string.email': 'Email inválido',
-          'any.required': 'Email es requerido'
+          'any.required': 'Email é obrigatório'
         })
     }),
-    
+
     resetPassword: Joi.object({
       token: Joi.string().required()
         .messages({
-          'any.required': 'Token es requerido'
+          'any.required': 'Token é obrigatório'
         }),
       password: Joi.string().min(6).max(100).required()
         .messages({
-          'string.min': 'La contraseña debe tener al menos 6 caracteres',
-          'any.required': 'Contraseña es requerida'
+          'string.min': 'A palavra-passe deve ter pelo menos 6 caracteres',
+          'any.required': 'Palavra-passe é obrigatória'
         })
     }),
-    
+
     changePassword: Joi.object({
       currentPassword: Joi.string().required()
         .messages({
-          'any.required': 'Contraseña actual es requerida'
+          'any.required': 'Palavra-passe atual é obrigatória'
         }),
       newPassword: Joi.string().min(6).max(100).required()
         .messages({
-          'string.min': 'La nueva contraseña debe tener al menos 6 caracteres',
-          'any.required': 'Nueva contraseña es requerida'
+          'string.min': 'A nova palavra-passe deve ter pelo menos 6 caracteres',
+          'any.required': 'Nova palavra-passe é obrigatória'
         })
     })
   },
@@ -261,7 +261,7 @@ const schemas = {
       assembly_type: Joi.string().valid('ordinary', 'extraordinary').required(),
       date: Joi.date().iso().min('now').required()
         .messages({
-          'date.min': 'La fecha no puede ser en el pasado'
+          'date.min': 'A data não pode ser no passado'
         }),
       time: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).required()
         .messages({
@@ -400,8 +400,8 @@ const schemas = {
   buildingIdParam: Joi.object({
     buildingId: Joi.string().uuid().required()
       .messages({
-        'string.guid': 'Invalid building ID format',
-        'any.required': 'Building ID is required'
+        'string.guid': 'Formato de ID do edifício inválido',
+        'any.required': 'ID do edifício é obrigatório'
       })
   }),
   
@@ -413,16 +413,16 @@ const schemas = {
         Joi.number().integer().positive()
       ).required()
         .messages({
-          'alternatives.match': `Invalid ${paramName} format`,
-          'any.required': `${paramName} is required`
+          'alternatives.match': `Formato de ${paramName} inválido`,
+          'any.required': `${paramName} é obrigatório`
         })
     }),
-    
+
     uuidParam: (paramName = 'id') => Joi.object({
       [paramName]: Joi.string().uuid().required()
         .messages({
-          'string.guid': `Invalid ${paramName} format`,
-          'any.required': `${paramName} is required`
+          'string.guid': `Formato de ${paramName} inválido`,
+          'any.required': `${paramName} é obrigatório`
         })
     })
   }

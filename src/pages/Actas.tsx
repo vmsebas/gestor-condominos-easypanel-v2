@@ -45,7 +45,7 @@ const Actas: React.FC = () => {
   }) || [];
 
   const handleWorkflowComplete = (data: any) => {
-    console.log('Acta completada:', data);
+    console.log('Acta concluída:', data);
     setShowWorkflow(false);
     // Aqui seria a lógica para guardar na base de dados
   };
@@ -55,7 +55,7 @@ const Actas: React.FC = () => {
       case 'draft':
         return <Badge variant="outline">Rascunho</Badge>;
       case 'completed':
-        return <Badge variant="info">Completada</Badge>;
+        return <Badge variant="info">Concluída</Badge>;
       case 'signed':
         return <Badge variant="success">Celebrada</Badge>;
       default:
@@ -153,7 +153,7 @@ const Actas: React.FC = () => {
               <FileText className="h-8 w-8 text-orange-600" />
               <div>
                 <p className="text-2xl font-bold">{actas.filter(a => a.status === 'completed').length}</p>
-                <p className="text-sm text-muted-foreground">Completadas</p>
+                <p className="text-sm text-muted-foreground">Concluídas</p>
               </div>
             </div>
           </CardContent>

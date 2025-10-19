@@ -46,7 +46,7 @@ class ConvocatoriaService {
     // Verificar que el edificio existe
     const building = await buildingRepository.findById(buildingId);
     if (!building) {
-      throw new AppError('Edificio no encontrado', 404, null);
+      throw new AppError('Edifício não encontrado', 404, null);
     }
 
     const convocatorias = await convocatoriaRepository.findByBuildingWithAgenda(buildingId);
@@ -69,7 +69,7 @@ class ConvocatoriaService {
     const convocatoria = await convocatoriaRepository.findByIdWithAgenda(id);
     
     if (!convocatoria) {
-      throw new AppError('Convocatoria no encontrada', 404, null);
+      throw new AppError('Convocatória não encontrada', 404, null);
     }
     
     return convocatoria;
@@ -98,27 +98,27 @@ class ConvocatoriaService {
     // Verificar que el edificio existe
     const building = await buildingRepository.findById(building_id);
     if (!building) {
-      throw new AppError('Edificio no encontrado', 404, null);
+      throw new AppError('Edifício não encontrado', 404, null);
     }
 
     // Verificar que no existe otra convocatoria con el mismo número de asamblea
     if (assembly_number) {
       const exists = await convocatoriaRepository.existsAssemblyNumber(building_id, assembly_number);
       if (exists) {
-        throw new AppError('Ya existe una convocatoria con ese número de asamblea', 409, null);
+        throw new AppError('Já existe uma convocatória com esse número de assembleia', 409, null);
       }
     }
 
     // Validar fechas
     const meetingDate = new Date(date);
     if (meetingDate < new Date()) {
-      throw new AppError('La fecha de la convocatoria no puede ser en el pasado', 400, null);
+      throw new AppError('A data da convocatória não pode ser no passado', 400, null);
     }
 
     if (second_call_enabled && second_call_date) {
       const secondCallDate = new Date(second_call_date);
       if (secondCallDate < meetingDate) {
-        throw new AppError('La segunda convocatoria no puede ser antes que la primera', 400, null);
+        throw new AppError('A segunda convocatória não pode ser antes da primeira', 400, null);
       }
     }
 
@@ -158,7 +158,7 @@ class ConvocatoriaService {
     const convocatoria = await convocatoriaRepository.findById(id);
     
     if (!convocatoria) {
-      throw new AppError('Convocatoria no encontrada', 404, null);
+      throw new AppError('Convocatória não encontrada', 404, null);
     }
 
     // No permitir actualizar si ya tiene acta creada
@@ -174,7 +174,7 @@ class ConvocatoriaService {
         id
       );
       if (exists) {
-        throw new AppError('Ya existe una convocatoria con ese número de asamblea', 409, null);
+        throw new AppError('Já existe uma convocatória com esse número de assembleia', 409, null);
       }
     }
 
@@ -194,7 +194,7 @@ class ConvocatoriaService {
     const convocatoria = await convocatoriaRepository.findById(id);
     
     if (!convocatoria) {
-      throw new AppError('Convocatoria no encontrada', 404, null);
+      throw new AppError('Convocatória não encontrada', 404, null);
     }
 
     // No permitir eliminar si tiene acta creada
@@ -288,7 +288,7 @@ class ConvocatoriaService {
     const original = await convocatoriaRepository.findByIdWithAgenda(id);
     
     if (!original) {
-      throw new AppError('Convocatoria no encontrada', 404, null);
+      throw new AppError('Convocatória não encontrada', 404, null);
     }
 
     // Preparar datos para la nueva convocatoria

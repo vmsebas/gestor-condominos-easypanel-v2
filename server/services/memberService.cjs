@@ -13,7 +13,7 @@ class MemberService {
     // Verificar que el edificio existe
     const building = await buildingRepository.findById(buildingId);
     if (!building) {
-      throw new AppError('Edificio no encontrado', 404, null);
+      throw new AppError('Edifício não encontrado', 404, null);
     }
 
     const result = await memberRepository.findByBuildingPaginated(buildingId, options);
@@ -34,7 +34,7 @@ class MemberService {
     const member = await memberRepository.findByIdWithDetails(id);
     
     if (!member) {
-      throw new AppError('Miembro no encontrado', 404, null);
+      throw new AppError('Membro não encontrado', 404, null);
     }
     
     return member;
@@ -47,7 +47,7 @@ class MemberService {
     const profile = await memberRepository.getMemberProfile(id);
     
     if (!profile) {
-      throw new AppError('Miembro no encontrado', 404, null);
+      throw new AppError('Membro não encontrado', 404, null);
     }
     
     return profile;
@@ -60,7 +60,7 @@ class MemberService {
     // Verificar que el edificio existe
     const building = await buildingRepository.findById(data.building_id);
     if (!building) {
-      throw new AppError('Edificio no encontrado', 404, null);
+      throw new AppError('Edifício não encontrado', 404, null);
     }
 
     // Verificar si ya existe un miembro con el mismo apartamento
@@ -70,7 +70,7 @@ class MemberService {
     );
     
     if (duplicateApartment) {
-      throw new AppError('Ya existe un miembro en ese apartamento', 409, null);
+      throw new AppError('Já existe um membro neste apartamento', 409, null);
     }
 
     // Crear el miembro
@@ -86,7 +86,7 @@ class MemberService {
     const member = await memberRepository.findById(id);
     
     if (!member) {
-      throw new AppError('Miembro no encontrado', 404, null);
+      throw new AppError('Membro não encontrado', 404, null);
     }
 
     // Si se está cambiando el apartamento, verificar que no esté duplicado
@@ -97,7 +97,7 @@ class MemberService {
       );
       
       if (duplicateApartment) {
-        throw new AppError('Ya existe un miembro en ese apartamento', 409, null);
+        throw new AppError('Já existe um membro neste apartamento', 409, null);
       }
     }
 
@@ -114,14 +114,14 @@ class MemberService {
     const member = await memberRepository.findById(id);
     
     if (!member) {
-      throw new AppError('Miembro no encontrado', 404, null);
+      throw new AppError('Membro não encontrado', 404, null);
     }
 
     // Verificar si tiene transacciones asociadas
     const hasTransactions = await this.checkMemberTransactions(id);
     if (hasTransactions) {
       throw new AppError(
-        'No se puede eliminar el miembro porque tiene transacciones asociadas',
+        'Não é possível eliminar o membro porque tem transações associadas',
         null,
         409
       );
@@ -140,7 +140,7 @@ class MemberService {
     const member = await memberRepository.findById(id);
     
     if (!member) {
-      throw new AppError('Miembro no encontrado', 404, null);
+      throw new AppError('Membro não encontrado', 404, null);
     }
 
     await memberRepository.updateFees(id, fees);
@@ -155,7 +155,7 @@ class MemberService {
     // Verificar que el edificio existe
     const building = await buildingRepository.findById(buildingId);
     if (!building) {
-      throw new AppError('Edificio no encontrado', 404, null);
+      throw new AppError('Edifício não encontrado', 404, null);
     }
 
     const debtors = await memberRepository.findDebtors(buildingId);
@@ -191,7 +191,7 @@ class MemberService {
    */
   async importMembersFromCSV(buildingId, csvData) {
     // TODO: Implementar importación desde CSV
-    throw new AppError('Funcionalidad no implementada', 501, null);
+    throw new AppError('Funcionalidade não implementada', 501, null);
   }
 
   /**

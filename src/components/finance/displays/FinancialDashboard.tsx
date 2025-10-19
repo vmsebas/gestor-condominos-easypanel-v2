@@ -78,11 +78,11 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ className }) =>
 
       // Carregar períodos se não estão carregados
       if (periods.length === 0) {
-        // TODO: Implementar getFinancialPeriods en financeAPI
+        // TODO: Implementar getFinancialPeriods no financeAPI
         const periodsData = []; // await financeAPI.getFinancialPeriods(currentBuilding.id);
         setPeriods(periodsData);
-        
-        // Selecionar período ativo por padrão
+
+        // Selecionar período ativo por defeito
         const activePeriod = periodsData.find(p => p.isActive) || periodsData[0];
         if (activePeriod && !selectedPeriod) {
           setSelectedPeriod(activePeriod.id);
@@ -166,7 +166,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ className }) =>
             <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">Nenhum edifício selecionado</h3>
             <p className="text-muted-foreground">
-              Selecione um edifício para ver os dados financeiros.
+              Selecione um edifício para visualizar os dados financeiros.
             </p>
           </div>
         </CardContent>
@@ -196,7 +196,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ className }) =>
                 Dashboard Financeiro
               </CardTitle>
               <p className="text-sm text-muted-foreground">
-                Visão geral das finanças do edifício {currentBuilding.name}
+                Panorâmica das finanças do edifício {currentBuilding.name}
               </p>
             </div>
             
@@ -257,7 +257,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ className }) =>
               variant="success"
               description="Total de receitas"
             />
-            
+
             <StatCard
               title="Despesas"
               value={formatCurrency(summary.totalExpenses)}
@@ -265,7 +265,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ className }) =>
               variant="destructive"
               description="Total de despesas"
             />
-            
+
             <StatCard
               title="Saldo"
               value={formatCurrency(summary.balance)}
@@ -273,7 +273,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ className }) =>
               variant={summary.balance >= 0 ? 'success' : 'destructive'}
               description="Receitas - Despesas"
             />
-            
+
             <StatCard
               title="Execução Orçamental"
               value={formatPercentage(summary.budgetUtilization)}
@@ -296,7 +296,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ className }) =>
       {summary && (
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+            <TabsTrigger value="overview">Panorâmica</TabsTrigger>
             <TabsTrigger value="income">Receitas</TabsTrigger>
             <TabsTrigger value="expenses">Despesas</TabsTrigger>
             <TabsTrigger value="trends">Tendências</TabsTrigger>
@@ -373,7 +373,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ className }) =>
                     {summary.incomeByCategory.map((category, index) => (
                       <div key={category.categoryId} className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
-                          <div 
+                          <div
                             className="w-3 h-3 rounded-full"
                             style={{ backgroundColor: `hsl(${index * 360 / summary.incomeByCategory.length}, 70%, 50%)` }}
                           />
@@ -404,7 +404,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ className }) =>
                     {summary.expensesByCategory.map((category, index) => (
                       <div key={category.categoryId} className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
-                          <div 
+                          <div
                             className="w-3 h-3 rounded-full"
                             style={{ backgroundColor: `hsl(${index * 360 / summary.expensesByCategory.length}, 70%, 50%)` }}
                           />

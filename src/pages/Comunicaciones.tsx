@@ -7,7 +7,7 @@ import { Mail, MessageSquare, Plus, Send, FileText, Users, Clock, CheckCircle } 
 
 interface Letter {
   id: string;
-  type: 'morosidad' | 'aviso' | 'informativa' | 'legal';
+  type: 'incumprimento' | 'aviso' | 'informativa' | 'legal';
   title: string;
   recipient: string;
   status: 'draft' | 'sent' | 'delivered' | 'read';
@@ -39,7 +39,7 @@ const Comunicaciones: React.FC = () => {
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'morosidad':
+      case 'incumprimento':
         return 'text-red-600 bg-red-100 dark:bg-red-900/20';
       case 'aviso':
         return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/20';
@@ -54,7 +54,7 @@ const Comunicaciones: React.FC = () => {
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'morosidad':
+      case 'incumprimento':
         return <Mail className="h-4 w-4" />;
       case 'aviso':
         return <MessageSquare className="h-4 w-4" />;
@@ -176,7 +176,10 @@ const Comunicaciones: React.FC = () => {
                     </div>
                     <div className="flex items-center space-x-3">
                       <Badge className={`${getTypeColor(letter.type)} border-0`}>
-                        {letter.type}
+                        {letter.type === 'incumprimento' ? 'Incumprimento' :
+                         letter.type === 'aviso' ? 'Aviso' :
+                         letter.type === 'informativa' ? 'Informativa' :
+                         letter.type === 'legal' ? 'Legal' : letter.type}
                       </Badge>
                       {getStatusBadge(letter.status)}
                       <Button variant="ghost" size="sm">
@@ -214,7 +217,10 @@ const Comunicaciones: React.FC = () => {
                     <CardContent>
                       <div className="flex items-center justify-between">
                         <Badge className={`${getTypeColor(template.category)} border-0`}>
-                          {template.category}
+                          {template.category === 'incumprimento' ? 'Incumprimento' :
+                           template.category === 'aviso' ? 'Aviso' :
+                           template.category === 'informativa' ? 'Informativa' :
+                           template.category === 'legal' ? 'Legal' : template.category}
                         </Badge>
                         <div className="flex space-x-2">
                           <Button variant="outline" size="sm">

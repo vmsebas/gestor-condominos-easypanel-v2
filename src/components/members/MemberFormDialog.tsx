@@ -240,9 +240,9 @@ const MemberFormDialog: React.FC<MemberFormDialogProps> = ({
             </span>
           </DialogTitle>
           <DialogDescription>
-            {mode === 'create' 
-              ? 'Adicione um novo membro ao condomínio'
-              : 'Atualize as informações do membro'
+            {mode === 'create'
+              ? 'Adicionar um novo membro ao condomínio'
+              : 'Atualizar as informações do membro'
             }
           </DialogDescription>
         </DialogHeader>

@@ -7,8 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { useMembers, useFinancialSummary } from '@/hooks/useNeonDataWithAuth';
-import { useDatabaseConnection, useDashboardStats, useDashboardActivities } from '@/hooks/useNeonData';
+import { useMembers, useFinancialSummary, useDatabaseConnection, useDashboardStats, useDashboardActivities } from '@/hooks/useNeonDataWithAuth';
 import { 
   LayoutDashboard, 
   FileText, 
@@ -29,12 +28,12 @@ import {
 const Dashboard: React.FC = () => {
   const [useEnhancedView, setUseEnhancedView] = useState(true);
 
-  // Si está habilitada la vista mejorada, usar el nuevo dashboard
+  // Se a vista melhorada estiver ativada, usar o novo dashboard
   if (useEnhancedView) {
     return (
       <div className="relative">
-        {/* Toggle para cambiar vista */}
-        <motion.div 
+        {/* Alternador para mudar vista */}
+        <motion.div
           className="fixed top-4 right-4 z-50 bg-background/80 backdrop-blur-sm border rounded-lg p-3 shadow-lg"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -47,7 +46,7 @@ const Dashboard: React.FC = () => {
             />
             <Label htmlFor="enhanced-view" className="text-sm flex items-center space-x-1">
               <Sparkles className="h-4 w-4" />
-              <span>Vista Mejorada</span>
+              <span>Vista Melhorada</span>
             </Label>
           </div>
         </motion.div>
