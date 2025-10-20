@@ -11,10 +11,13 @@ if (!connectionString) {
   process.exit(1);
 }
 
+// Detectar si se requiere SSL basándose en la URL de conexión
+const requiresSSL = connectionString.includes('sslmode=require');
+
 // Pool de conexiones reutilizable
 const pool = new Pool({
   connectionString: connectionString,
-  ssl: false, // No SSL para base de datos local
+  ssl: requiresSSL ? { rejectUnauthorized: false } : false, // SSL automático para Neon, sin SSL para local
   max: 20, // máximo número de clientes en el pool
   idleTimeoutMillis: 30000, // tiempo antes de cerrar conexiones inactivas
   connectionTimeoutMillis: 5000, // tiempo máximo para establecer conexión
