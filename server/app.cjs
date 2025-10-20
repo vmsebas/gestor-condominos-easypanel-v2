@@ -46,6 +46,7 @@ app.use('/api/buildings', require('./routes/buildings.cjs'));
 app.use('/api/members', require('./routes/members.cjs'));
 app.use('/api/convocatorias', require('./routes/convocatorias.cjs'));
 app.use('/api/documents', require('./routes/documents.cjs'));
+app.use('/api/attendance-sheets', require('./routes/attendanceSheets.cjs'));
 
 // Rutas duplicadas para manejar el problema de proxy de Cloudflare
 app.use('/auth', require('./routes/auth.cjs'));
@@ -53,6 +54,7 @@ app.use('/buildings', require('./routes/buildings.cjs'));
 app.use('/members', require('./routes/members.cjs'));
 app.use('/convocatorias', require('./routes/convocatorias.cjs'));
 app.use('/documents', require('./routes/documents.cjs'));
+app.use('/attendance-sheets', require('./routes/attendanceSheets.cjs'));
 app.use('/transactions', require('./routes/transactions.cjs'));
 app.use('/minutes', require('./routes/minutes.cjs'));
 app.use('/actas', require('./routes/minutes.cjs'));

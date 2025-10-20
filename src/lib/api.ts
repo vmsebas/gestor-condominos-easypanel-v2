@@ -190,6 +190,107 @@ export const deleteActa = async (id: string) => {
   return deleteMinute(id);
 };
 
+// Update agenda items with voting data
+export const updateMinuteAgendaItems = async (minuteId: string, agendaItems: any[]) => {
+  const response = await api.put(`/minutes/${minuteId}/agenda-items`, { agenda_items: agendaItems });
+  return response.data;
+};
+
+// Create minute from convocatoria
+export const createMinuteFromConvocatoria = async (convocatoriaId: string) => {
+  const response = await api.post(`/minutes/from-convocatoria/${convocatoriaId}`);
+  return response.data;
+};
+
+// Attendance Sheets
+export const getAttendanceSheets = async (params?: {
+  buildingId?: string;
+  convocatoriaId?: string;
+  minuteId?: string;
+}) => {
+  const response = await api.get('/attendance-sheets', { params });
+  return response.data;
+};
+
+export const getAttendanceSheetById = async (id: string) => {
+  const response = await api.get(`/attendance-sheets/${id}`);
+  return response.data;
+};
+
+export const getAttendanceSheetByConvocatoria = async (convocatoriaId: string) => {
+  const response = await api.get(`/attendance-sheets/convocatoria/${convocatoriaId}`);
+  return response.data;
+};
+
+export const getAttendanceSheetByMinute = async (minuteId: string) => {
+  const response = await api.get(`/attendance-sheets/minute/${minuteId}`);
+  return response.data;
+};
+
+export const createAttendanceSheet = async (data: {
+  building_id: string;
+  convocatoria_id?: string;
+  minute_id?: string;
+  meeting_date: string;
+  total_members: number;
+  attendees?: any[];
+}) => {
+  const response = await api.post('/attendance-sheets', data);
+  return response.data;
+};
+
+export const updateAttendanceSheet = async (id: string, data: {
+  meeting_date?: string;
+  total_members?: number;
+  attendees?: any[];
+}) => {
+  const response = await api.put(`/attendance-sheets/${id}`, data);
+  return response.data;
+};
+
+export const deleteAttendanceSheet = async (id: string) => {
+  const response = await api.delete(`/attendance-sheets/${id}`);
+  return response.data;
+};
+
+export const addAttendee = async (sheetId: string, data: {
+  member_id: string;
+  member_name: string;
+  attendance_type?: 'present' | 'represented' | 'absent';
+  representative_name?: string;
+  signature?: string;
+  arrival_time?: string;
+}) => {
+  const response = await api.post(`/attendance-sheets/${sheetId}/attendees`, data);
+  return response.data;
+};
+
+export const updateAttendee = async (sheetId: string, attendeeId: string, data: {
+  attendance_type?: 'present' | 'represented' | 'absent';
+  representative_name?: string;
+  signature?: string;
+  arrival_time?: string;
+}) => {
+  const response = await api.put(`/attendance-sheets/${sheetId}/attendees/${attendeeId}`, data);
+  return response.data;
+};
+
+export const removeAttendee = async (sheetId: string, attendeeId: string) => {
+  const response = await api.delete(`/attendance-sheets/${sheetId}/attendees/${attendeeId}`);
+  return response.data;
+};
+
+export const calculateQuorum = async (sheetId: string) => {
+  const response = await api.get(`/attendance-sheets/${sheetId}/quorum`);
+  return response.data;
+};
+
+export const getAttendanceStats = async (buildingId: string, fromDate?: string, toDate?: string) => {
+  const params = { fromDate, toDate };
+  const response = await api.get(`/attendance-sheets/building/${buildingId}/stats`, { params });
+  return response.data;
+};
+
 // Convocatorias
 export const getConvocatorias = async (buildingId: string) => {
   const response = await api.get('/convocatorias', { params: { buildingId } });

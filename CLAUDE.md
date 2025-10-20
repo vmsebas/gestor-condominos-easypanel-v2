@@ -32,11 +32,157 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 1. **Database Connection**: Fixed authentication by updating DATABASE_URL in docker-compose.yml
 2. **Actas visibility**: Updated admin user's building_id to match existing minutes data
 3. **Tasks API error**: Changed `assigned_to` → `assignee_id` and `users` → `members` table
-4. **Documents API error**: 
+4. **Documents API error**:
    - Removed all references to non-existent `deleted_at` column
    - Changed `m.full_name` → `m.name` (members table uses 'name' column)
 5. **Frontend build errors**: Commented out imports from removed `dbService.ts`
 6. **Dark theme**: Set dark theme as default to prevent "black pages" issue
+
+## ✨ NEW: Attendance Sheets System (October 20, 2025)
+
+### Overview
+Complete implementation of digital attendance tracking system for assembly meetings with signature capture and quorum calculation.
+
+### Backend Implementation (COMPLETE ✅)
+
+#### Files Created:
+1. **`server/repositories/attendanceSheetRepository.cjs`** (319 lines)
+   - Extends BaseRepository with attendance-specific methods
+   - Methods: `findByBuilding`, `findByConvocatoria`, `findByMinute`, `findByIdWithAttendees`
+   - Transactional operations: `createWithAttendees`, `updateWithAttendees`
+   - Individual attendee operations: `addAttendee`, `updateAttendee`, `removeAttendee`
+   - Analytics: `calculateQuorum`, `getAttendanceStats`
+
+2. **`server/controllers/attendanceSheetController.cjs`** (268 lines)
+   - RESTful controller with error handling
+   - All CRUD operations for attendance sheets and attendees
+   - Automatic recalculation of present/represented counts
+   - Quorum calculation endpoint
+
+3. **`server/routes/attendanceSheets.cjs`** (125 lines)
+   - Protected routes with authentication middleware
+   - Role-based authorization (admin, manager for write operations)
+   - Input validation using existing schemas
+   - 12 endpoints total
+
+#### Routes Registered in `server/app.cjs`:
+- `/api/attendance-sheets` - Main API route
+- `/attendance-sheets` - Cloudflare proxy compatible route
+
+### API Endpoints:
+
+```javascript
+// GET endpoints
+GET  /api/attendance-sheets                              // List all (with filters)
+GET  /api/attendance-sheets/:id                          // Get by ID with attendees
+GET  /api/attendance-sheets/convocatoria/:convocatoriaId // Get by convocatoria
+GET  /api/attendance-sheets/minute/:minuteId             // Get by minute
+GET  /api/attendance-sheets/:id/quorum                   // Calculate quorum
+GET  /api/attendance-sheets/building/:buildingId/stats   // Attendance statistics
+
+// POST endpoints
+POST /api/attendance-sheets                              // Create with attendees
+POST /api/attendance-sheets/:id/attendees                // Add single attendee
+
+// PUT endpoints
+PUT  /api/attendance-sheets/:id                          // Update sheet
+PUT  /api/attendance-sheets/:id/attendees/:attendeeId    // Update attendee
+
+// DELETE endpoints
+DELETE /api/attendance-sheets/:id                        // Delete sheet
+DELETE /api/attendance-sheets/:id/attendees/:attendeeId  // Remove attendee
+```
+
+### Frontend Implementation (COMPLETE ✅)
+
+#### API Client Functions (`src/lib/api.ts`) - 88 lines added:
+- `getAttendanceSheets(params)` - List with filters
+- `getAttendanceSheetById(id)` - Get single sheet
+- `getAttendanceSheetByConvocatoria(convocatoriaId)` - Get by convocatoria
+- `getAttendanceSheetByMinute(minuteId)` - Get by minute
+- `createAttendanceSheet(data)` - Create new sheet
+- `updateAttendanceSheet(id, data)` - Update sheet
+- `deleteAttendanceSheet(id)` - Delete sheet
+- `addAttendee(sheetId, data)` - Add member to sheet
+- `updateAttendee(sheetId, attendeeId, data)` - Update attendance status
+- `removeAttendee(sheetId, attendeeId)` - Remove member
+- `calculateQuorum(sheetId)` - Get quorum calculation
+- `getAttendanceStats(buildingId, fromDate, toDate)` - Statistics
+
+#### Existing UI Components (Already Implemented):
+- `src/components/actas/AttendanceSheet.tsx` - Full attendance UI with signatures
+- `src/components/workflows/ControlAsistenciaStep.tsx` - Workflow step (needs API integration)
+- `src/components/ui/signature-pad.tsx` - Digital signature capture
+
+### Database Schema:
+
+#### attendance_sheets table:
+```sql
+- id (uuid, PK)
+- building_id (uuid, FK → buildings)
+- convocatoria_id (uuid, FK → convocatorias, nullable)
+- minute_id (uuid, FK → minutes, nullable)
+- meeting_date (date)
+- total_members (integer)
+- present_members (integer)
+- represented_members (integer)
+- created_at, updated_at (timestamps)
+```
+
+#### attendees table:
+```sql
+- id (uuid, PK)
+- attendance_sheet_id (uuid, FK → attendance_sheets)
+- member_id (uuid, FK → members)
+- member_name (varchar)
+- attendance_type (enum: 'present', 'represented', 'absent')
+- representative_name (varchar, nullable)
+- signature (text, base64 PNG)
+- arrival_time (time, nullable)
+- created_at, updated_at (timestamps)
+```
+
+### Features:
+- ✅ Digital signature capture (mouse + touch support for iPad/tablets)
+- ✅ Real-time quorum calculation based on permilage
+- ✅ Three attendance states: present, represented, absent
+- ✅ PDF generation for attendance sheets
+- ✅ Print-friendly view
+- ✅ Automatic statistics and analytics
+- ✅ Full CRUD operations with transactions
+- ✅ Legal compliance (Portuguese Civil Code Art. 1431º, 1432º)
+
+### Testing:
+```bash
+# Test endpoint availability (requires auth token)
+curl -X GET http://localhost:3002/api/attendance-sheets \
+  -H "Content-Type: application/json"
+
+# Expected: {"success": false, "error": "Token de autenticação não fornecido"}
+# This confirms endpoint is registered and auth middleware is working
+```
+
+### Next Steps (TODO):
+1. ⏳ **Integrate API calls in ControlAsistenciaStep** - Save attendance to database
+2. ⏳ **Auto-load attendance sheet** when editing existing acta
+3. ⏳ **Implement VerificacionQuorumStep** - Use attendance data for quorum verification
+4. ⏳ **Add attendance statistics to Dashboard** - Show attendance trends
+5. ⏳ **Implement offline support** - Cache signatures locally if API fails
+
+### Legal Compliance:
+- Portuguese Civil Code **Art. 1431º, n.º 3** - Proxy representation rights
+- Portuguese Civil Code **Art. 1432º** - Assembly convocation rules
+- **Dec-Lei n.º 290-D/99** - Electronic signatures validity
+- **Regulamento (UE) n.º 910/2014** - eIDAS regulation
+
+### Architecture Pattern:
+```
+User Action → ControlAsistenciaStep (UI)
+           → api.createAttendanceSheet()
+           → attendanceSheetController.createAttendanceSheet()
+           → attendanceSheetRepository.createWithAttendees()
+           → PostgreSQL (attendance_sheets + attendees tables)
+```
 
 ## Development Commands
 
