@@ -7,13 +7,14 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { useMembers, useFinancialSummary, useDatabaseConnection, useDashboardStats, useDashboardActivities } from '@/hooks/useNeonDataWithAuth';
-import { 
-  LayoutDashboard, 
-  FileText, 
-  ScrollText, 
-  Calculator, 
-  Users, 
+import { useQuery } from '@tanstack/react-query';
+import { getMembers, getDashboardStats } from '@/lib/api';
+import {
+  LayoutDashboard,
+  FileText,
+  ScrollText,
+  Calculator,
+  Users,
   Building2,
   TrendingUp,
   AlertTriangle,
@@ -56,27 +57,36 @@ const Dashboard: React.FC = () => {
   }
 
   // Vista clásica (código original)
-  // Dados da base de dados local
-  const { data: members, isLoading: membersLoading } = useMembers();
-  const { data: financialSummary, isLoading: financialLoading } = useFinancialSummary();
-  const { data: dbConnection } = useDatabaseConnection();
-  
+  // Dados da base de dados local - USANDO API LOCAL
+  const { data: membersResponse, isLoading: membersLoading } = useQuery({
+    queryKey: ['members'],
+    queryFn: () => getMembers(),
+  });
+
+  const members = membersResponse?.data || [];
+
   // Get first building ID for dashboard stats
   const buildingId = members?.[0]?.building_id;
-  
-  // New dashboard hooks for real data
-  const { data: dashboardStats } = useDashboardStats(buildingId || '');
-  const { data: recentActivities = [] } = useDashboardActivities(buildingId || '', 5);
+
+  // Dashboard stats from API local
+  const { data: dashboardStatsResponse, isLoading: statsLoading } = useQuery({
+    queryKey: ['dashboardStats', buildingId],
+    queryFn: () => getDashboardStats(buildingId || ''),
+    enabled: !!buildingId,
+  });
+
+  const dashboardStats = dashboardStatsResponse?.data || null;
+  const recentActivities: any[] = [];
   
   const stats = {
     totalOwners: dashboardStats?.totalOwners || members?.length || 0,
-    nextMeeting: dashboardStats?.nextMeeting ? 
-      new Date(dashboardStats.nextMeeting.date).toLocaleDateString('pt-PT') : 
+    nextMeeting: dashboardStats?.nextMeeting ?
+      new Date(dashboardStats.nextMeeting.date).toLocaleDateString('pt-PT') :
       'Não agendada',
     budget: dashboardStats?.budget || 50000,
-    expenses: dashboardStats?.expenses || financialSummary?.expenses || 0,
-    income: dashboardStats?.income || financialSummary?.income || 0,
-    balance: dashboardStats?.balance || financialSummary?.balance || 0,
+    expenses: dashboardStats?.expenses || 0,
+    income: dashboardStats?.income || 0,
+    balance: dashboardStats?.balance || 0,
     pendingPayments: dashboardStats?.pendingPayments || 0,
     completedTasks: dashboardStats?.completedTasks || 0
   };
@@ -122,14 +132,14 @@ const Dashboard: React.FC = () => {
         <p className="text-muted-foreground mt-1">
           Vista geral do estado do condomínio
         </p>
-        {dbConnection && (
+        {!membersLoading && members.length > 0 && (
           <div className="mt-2 text-xs text-green-600 dark:text-green-400">
-            ✓ Ligado à base de dados local: {dbConnection.tables?.length || 0} tabelas encontradas
+            ✓ Ligado à API local - {members.length} condóminos carregados
           </div>
         )}
-        {!dbConnection && !membersLoading && (
-          <div className="mt-2 text-xs text-red-600 dark:text-red-400">
-            ✗ Erro de ligação à base de dados
+        {!membersLoading && members.length === 0 && (
+          <div className="mt-2 text-xs text-yellow-600 dark:text-yellow-400">
+            ⚠ Nenhum condómino encontrado
           </div>
         )}
       </div>

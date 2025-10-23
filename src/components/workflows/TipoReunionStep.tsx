@@ -11,7 +11,9 @@ interface TipoReunionStepProps {
 
 const TipoReunionStep: React.FC<TipoReunionStepProps> = ({ data, onUpdate, onNext }) => {
   const handleTypeSelect = (type: 'ordinaria' | 'extraordinaria') => {
-    onUpdate({ meetingType: type });
+    // Map 'ordinaria' to 'ordinary' and 'extraordinaria' to 'extraordinary' for API
+    const apiType = type === 'ordinaria' ? 'ordinary' : 'extraordinary';
+    onUpdate({ assembly_type: apiType, meetingType: type });
   };
 
   return (

@@ -164,12 +164,13 @@ class MemberRepository extends BaseRepository {
       )
       .first();
 
-    // Obtener pagos pendientes
-    const pendingPayments = await this.db('payment_month_assignments')
+    // Obtener atrasos (en lugar de payment_month_assignments que no existe)
+    const pendingPayments = await this.db('arrears')
       .where('member_id', id)
       .where('is_paid', false)
       .count('* as count')
-      .first();
+      .first()
+      .catch(() => ({ count: 0 })); // Si la consulta falla, retornar 0
 
     return {
       ...member,

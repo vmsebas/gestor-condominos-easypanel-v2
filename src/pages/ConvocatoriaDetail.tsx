@@ -132,9 +132,14 @@ const ConvocatoriaDetail: React.FC = () => {
             {data.agenda_items && data.agenda_items.length > 0 && (
               <div className="pt-4 border-t">
                 <h3 className="font-semibold mb-2">Ordem de Trabalhos</h3>
-                <ol className="list-decimal list-inside space-y-1">
+                <ol className="list-decimal list-inside space-y-2">
                   {data.agenda_items.map((item: any, index: number) => (
-                    <li key={index} className="text-sm">{item}</li>
+                    <li key={item.id || index} className="text-sm">
+                      <strong>{item.title}</strong>
+                      {item.description && (
+                        <p className="text-muted-foreground mt-1 ml-5">{item.description}</p>
+                      )}
+                    </li>
                   ))}
                 </ol>
               </div>

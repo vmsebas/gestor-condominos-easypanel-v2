@@ -46,7 +46,7 @@ const Header: React.FC = () => {
     }
   };
 
-  const buildingName = "Edificio Alameda 123"; // This would come from context/state
+  const buildingName = "Condomino Buraca 1"; // Building ID: fb0d83d3-fe04-47cb-ba48-f95538a2a7fc
 
   return (
     <header className="flex items-center justify-between px-6 py-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

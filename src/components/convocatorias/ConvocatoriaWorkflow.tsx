@@ -11,10 +11,7 @@ import TipoReunionStep from '@/components/workflows/TipoReunionStep';
 import FechaLugarStep from '@/components/workflows/FechaLugarStep';
 import OrdenDiaStep from '@/components/workflows/OrdenDiaStep';
 import DocumentacionStep from '@/components/workflows/DocumentacionStep';
-import SegundaConvocatoriaStep from '@/components/workflows/SegundaConvocatoriaStep';
-import MetodoEnvioStep from '@/components/workflows/MetodoEnvioStep';
-import EnvioConfirmacionStep from '@/components/workflows/EnvioConfirmacionStep';
-import RevisionLegalStep from '@/components/workflows/RevisionLegalStep';
+import RevisionGuardarStep from '@/components/workflows/RevisionGuardarStep';
 
 interface ConvocatoriaWorkflowProps {
   buildingId?: string;
@@ -96,14 +93,8 @@ const ConvocatoriaWorkflow: React.FC<ConvocatoriaWorkflowProps> = ({
         return <OrdenDiaStep {...commonProps} />;
       case 'DocumentacionStep':
         return <DocumentacionStep {...commonProps} />;
-      case 'SegundaConvocatoriaStep':
-        return <SegundaConvocatoriaStep {...commonProps} />;
-      case 'MetodoEnvioStep':
-        return <MetodoEnvioStep {...commonProps} />;
-      case 'RevisionLegalStep':
-        return <RevisionLegalStep {...commonProps} />;
-      case 'EnvioConfirmacionStep':
-        return <EnvioConfirmacionStep {...commonProps} />;
+      case 'RevisionGuardarStep':
+        return <RevisionGuardarStep {...commonProps} />;
       default:
         return (
           <div className="text-center py-12">

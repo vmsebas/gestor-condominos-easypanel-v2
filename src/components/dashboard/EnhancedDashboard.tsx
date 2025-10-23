@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useMembers, useFinancialSummary, useDatabaseConnection, useDashboardStats, useDashboardActivities, useDocumentStats } from '@/hooks/useNeonDataWithAuth';
+import { useQuery } from '@tanstack/react-query';
+import { getMembers, getDashboardStats } from '@/lib/api';
 import { useUserBuildingId } from '@/hooks/useUserBuildingId';
 import { 
   LayoutDashboard, 
@@ -350,31 +351,41 @@ const EnhancedDashboard: React.FC = () => {
   const [selectedTimeRange, setSelectedTimeRange] = useState('month');
   const [refreshing, setRefreshing] = useState(false);
   
-  // Datos reales de la base de datos
-  const { data: members, isLoading: membersLoading } = useMembers();
-  const { data: financialSummary, isLoading: financialLoading } = useFinancialSummary();
-  // const { data: dbConnection } = useDatabaseConnection(); // Disabled temporarily to prevent infinite loop
+  // Datos reales de la base de datos - USANDO API LOCAL
+  const { data: membersResponse, isLoading: membersLoading } = useQuery({
+    queryKey: ['members'],
+    queryFn: () => getMembers(),
+  });
 
-  // Get building ID from user context (hardcoded for now)
+  const members = membersResponse?.data || [];
+
+  // Get building ID from user context
   const buildingId = useUserBuildingId();
 
-  // New dashboard hooks for real data
-  const { data: dashboardStats, isLoading: statsLoading } = useDashboardStats(buildingId);
-  const { data: recentActivities = [], isLoading: activitiesLoading } = useDashboardActivities(buildingId, 10);
-  const { data: documentStats, isLoading: documentStatsLoading } = useDocumentStats(buildingId);
+  // Dashboard stats from API local
+  const { data: dashboardStatsResponse, isLoading: statsLoading } = useQuery({
+    queryKey: ['dashboardStats', buildingId],
+    queryFn: () => getDashboardStats(buildingId || ''),
+    enabled: !!buildingId,
+  });
+
+  const dashboardStats = dashboardStatsResponse?.data || null;
+  const recentActivities: any[] = [];
+  const documentStats = null;
+  const documentStatsLoading = false;
 
   const stats = useMemo(() => ({
     totalOwners: dashboardStats?.totalOwners || members?.length || 0,
     nextMeeting: dashboardStats?.nextMeeting,
     budget: dashboardStats?.budget || 50000,
-    expenses: dashboardStats?.expenses || financialSummary?.expenses || 0,
-    income: dashboardStats?.income || financialSummary?.income || 0,
-    balance: dashboardStats?.balance || financialSummary?.balance || 0,
+    expenses: dashboardStats?.expenses || 0,
+    income: dashboardStats?.income || 0,
+    balance: dashboardStats?.balance || 0,
     pendingPayments: dashboardStats?.pendingPayments || 0,
     completedTasks: dashboardStats?.completedTasks || 0,
     occupancyRate: dashboardStats?.occupancyRate || 0,
     maintenanceScore: dashboardStats?.maintenanceScore || 95
-  }), [dashboardStats, members, financialSummary]);
+  }), [dashboardStats, members]);
 
   const budgetUsage = stats.budget ? Math.round((stats.expenses / stats.budget) * 100) : 0;
 
@@ -462,7 +473,7 @@ const EnhancedDashboard: React.FC = () => {
           icon={Euro}
           color="purple"
           trend={{ value: 12, positive: true }}
-          loading={financialLoading}
+          loading={statsLoading}
         />
         <AnimatedMetric
           title="Manutenção"

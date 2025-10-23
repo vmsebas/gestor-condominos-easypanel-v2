@@ -7,30 +7,79 @@ import { workflowEngine, ACTA_WORKFLOW } from '@/lib/workflows';
 import { CheckCircle, Circle, Clock, AlertCircle, FileSignature } from 'lucide-react';
 
 // Import workflow step components
+import PreparacionReunionStep from '@/components/workflows/PreparacionReunionStep';
 import ControlAsistenciaStep from '@/components/workflows/ControlAsistenciaStep';
+import VerificacionQuorumStep from '@/components/workflows/VerificacionQuorumStep';
+import DesarrolloReunionStep from '@/components/workflows/DesarrolloReunionStep';
+import RedaccionActaStep from '@/components/workflows/RedaccionActaStep';
+import FirmasActaStep from '@/components/workflows/FirmasActaStep';
+import { getMinuteById, updateMinuteAgendaItems } from '@/lib/api';
+import { toast } from 'sonner';
 
 interface ActaWorkflowProps {
   convocatoriaId?: string;
+  actaId?: string; // NEW: Para editar acta existente
   onComplete?: (data: any) => void;
   onCancel?: () => void;
 }
 
-const ActaWorkflow: React.FC<ActaWorkflowProps> = ({ 
-  convocatoriaId, 
-  onComplete, 
-  onCancel 
+const ActaWorkflow: React.FC<ActaWorkflowProps> = ({
+  convocatoriaId,
+  actaId,
+  onComplete,
+  onCancel
 }) => {
   const [workflowState, setWorkflowState] = useState(() => {
     // Try to load existing workflow state
     const saved = workflowEngine.loadWorkflowState(ACTA_WORKFLOW.id);
-    return saved || workflowEngine.startWorkflow(ACTA_WORKFLOW.id, { convocatoriaId });
+    return saved || workflowEngine.startWorkflow(ACTA_WORKFLOW.id, { convocatoriaId, actaId });
   });
 
-  const [currentStep, setCurrentStep] = useState(() => 
+  const [currentStep, setCurrentStep] = useState(() =>
     workflowEngine.getCurrentStep(ACTA_WORKFLOW.id)
   );
 
+  const [isLoadingActa, setIsLoadingActa] = useState(false);
+
   const progress = workflowEngine.getWorkflowProgress(ACTA_WORKFLOW.id);
+
+  // Load acta data if editing existing acta
+  useEffect(() => {
+    const loadActaData = async () => {
+      if (actaId && !workflowState.data.agenda_items) {
+        setIsLoadingActa(true);
+        try {
+          const result = await getMinuteById(actaId);
+          const acta = result.data || result;
+
+          // Update workflow state with acta data
+          handleStepUpdate({
+            actaId,
+            agenda_items: acta.agenda_items || [],
+            building_id: acta.building_id,
+            building_name: acta.building_name,
+            building_address: acta.building_address,
+            minute_number: acta.minute_number,
+            meeting_date: acta.meeting_date,
+            meeting_time: acta.meeting_time,
+            location: acta.location,
+            assembly_type: acta.assembly_type,
+            president_name: acta.president_name,
+            secretary_name: acta.secretary_name
+          });
+
+          toast.success('Acta carregada com sucesso');
+        } catch (error) {
+          console.error('Error loading acta:', error);
+          toast.error('Erro ao carregar acta');
+        } finally {
+          setIsLoadingActa(false);
+        }
+      }
+    };
+
+    loadActaData();
+  }, [actaId]);
 
   // Save state whenever it changes
   useEffect(() => {
@@ -42,12 +91,24 @@ const ActaWorkflow: React.FC<ActaWorkflowProps> = ({
     setWorkflowState({ ...workflowState, data: { ...workflowState.data, ...data } });
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    // Si estamos en el paso de desarrollo y hay actaId, guardar votaciones
+    if (currentStep?.component === 'DesarrolloReunionStep' && workflowState.data.actaId) {
+      try {
+        await updateMinuteAgendaItems(workflowState.data.actaId, workflowState.data.agenda_items);
+        toast.success('Votações guardadas com sucesso');
+      } catch (error) {
+        console.error('Error saving votes:', error);
+        toast.error('Erro ao guardar votações');
+        return; // No avanzar si falla el guardado
+      }
+    }
+
     const nextState = workflowEngine.nextStep(ACTA_WORKFLOW.id);
     if (nextState) {
       setWorkflowState(nextState);
       setCurrentStep(workflowEngine.getCurrentStep(ACTA_WORKFLOW.id));
-      
+
       if (nextState.isComplete && onComplete) {
         onComplete(nextState.data);
       }
@@ -78,8 +139,18 @@ const ActaWorkflow: React.FC<ActaWorkflowProps> = ({
     };
 
     switch (currentStep.component) {
+      case 'PreparacionReunionStep':
+        return <PreparacionReunionStep {...commonProps} />;
       case 'ControlAsistenciaStep':
         return <ControlAsistenciaStep {...commonProps} />;
+      case 'VerificacionQuorumStep':
+        return <VerificacionQuorumStep {...commonProps} />;
+      case 'DesarrolloReunionStep':
+        return <DesarrolloReunionStep {...commonProps} />;
+      case 'RedaccionActaStep':
+        return <RedaccionActaStep {...commonProps} />;
+      case 'FirmasActaStep':
+        return <FirmasActaStep {...commonProps} />;
       default:
         return (
           <div className="text-center py-12">

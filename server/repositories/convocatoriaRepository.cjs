@@ -16,12 +16,10 @@ class ConvocatoriaRepository extends BaseRepository {
       .where('building_id', buildingId)
       // .whereNull('deleted_at') - convocatorias table doesn't have deleted_at column
       .orderBy('date', 'desc');
-    
-    // For now, set empty agenda items since the table structure doesn't support it
-    for (const convocatoria of convocatorias) {
-      convocatoria.agenda_items = [];
-    }
-    
+
+    // Agenda items are already in the JSONB column
+    // No need to load from minute_agenda_items table
+
     return convocatorias;
   }
 
@@ -71,12 +69,11 @@ class ConvocatoriaRepository extends BaseRepository {
     }
     
     const convocatorias = await query;
-    
-    // For now, set empty agenda items since the table structure doesn't support it
-    for (const convocatoria of convocatorias) {
-      convocatoria.agenda_items = [];
-    }
-    
+
+    // Agenda items are already loaded from the JSONB column
+    // No need to load from minute_agenda_items table anymore
+    // They are stored directly in convocatorias.agenda_items (JSONB column)
+
     return convocatorias;
   }
 
@@ -85,14 +82,14 @@ class ConvocatoriaRepository extends BaseRepository {
    */
   async findByIdWithAgenda(id) {
     const convocatoria = await this.findById(id);
-    
+
     if (!convocatoria) {
       return null;
     }
-    
-    // For now, set empty agenda items since the table structure doesn't support it
-    convocatoria.agenda_items = [];
-    
+
+    // Agenda items are already in the JSONB column
+    // No need to load from minute_agenda_items table
+
     return convocatoria;
   }
 

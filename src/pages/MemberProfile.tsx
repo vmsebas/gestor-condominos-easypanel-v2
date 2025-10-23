@@ -45,11 +45,8 @@ function formatFileSize(bytes: number): string {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
-import { 
-  useMemberProfile,
-  useBuildings,
-  useDeleteMember
-} from '@/hooks/useNeonData';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -105,25 +102,54 @@ interface Letter {
 const MemberProfile: React.FC = () => {
   const { memberId } = useParams<{ memberId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('overview');
-  
+
   // Dialog states
   const [memberFormOpen, setMemberFormOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  
-  const deleteMemberMutation = useDeleteMember();
-  
+
+  // Fetch member profile data (includes all related data)
+  const { data: profileResponse, isLoading: profileLoading, error: profileError } = useQuery({
+    queryKey: ['member-profile', memberId],
+    queryFn: async () => {
+      const response = await axios.get(`/api/members/${memberId}/profile`);
+      return response.data;
+    },
+    enabled: !!memberId,
+  });
+
+  // Fetch buildings for building info
+  const { data: buildingsResponse } = useQuery({
+    queryKey: ['buildings'],
+    queryFn: async () => {
+      const response = await axios.get('/api/buildings');
+      return response.data;
+    },
+  });
+
+  // Delete member mutation
+  const deleteMemberMutation = useMutation({
+    mutationFn: async (memberId: string) => {
+      const response = await axios.delete(`/api/members/${memberId}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['members'] });
+    },
+  });
+
   const handleEditMember = () => {
     setMemberFormOpen(true);
   };
-  
+
   const handleDeleteMember = () => {
     setDeleteDialogOpen(true);
   };
-  
+
   const confirmDeleteMember = async () => {
     if (!member) return;
-    
+
     try {
       await deleteMemberMutation.mutateAsync(member.id);
       toast.success('Membro eliminado com sucesso!');
@@ -134,20 +160,20 @@ const MemberProfile: React.FC = () => {
     }
   };
 
-  // Fetch member profile data (includes all related data)
-  const { data: profileData, isLoading: profileLoading, error: profileError } = useMemberProfile(memberId || '');
-  
-  // Fetch buildings for building info
-  const { data: buildings } = useBuildings();
-  
   // Extract data from profile
-  const member = profileData?.member;
-  const memberTransactions = profileData?.transactions || [];
-  const memberDocuments = profileData?.documents || [];
-  const financialSummary = profileData?.financialSummary;
-  const statistics = profileData?.statistics;
-  
-  const building = buildings?.find(b => b.id === member?.building_id);
+  // axios returns response.data which contains { success: true, data: {...member data...} }
+  // useQuery stores response.data in profileResponse
+  // So profileResponse = { success: true, data: {...} }
+  const member = profileResponse?.data;
+  const memberTransactions = member?.recent_transactions || [];
+  const memberDocuments = member?.shared_documents || [];
+  const financialSummary = member?.financial_stats;
+  const statistics = member?.statistics;
+
+  // Extract buildings array from response
+  // API returns: { success: true, data: [...buildings array...] }
+  const buildings = buildingsResponse?.data || [];
+  const building = buildings?.find((b: any) => b.id === member?.building_id);
 
   // For now, we'll use empty arrays for letters since they're not in the profile endpoint yet
   const memberLetters: Letter[] = [];
@@ -215,12 +241,14 @@ const MemberProfile: React.FC = () => {
     );
   }
 
-  // Use financial summary from API or calculate if not available
-  const totalPaid = financialSummary?.totalPaid || 0;
-  const totalDue = financialSummary?.totalDue || 0;
-  const currentBalance = financialSummary?.currentBalance || 0;
-  const monthlyFee = financialSummary?.monthlyFee || 0;
-  const annualFee = financialSummary?.annualFee || 0;
+  // Map financial data from API response
+  // API returns: financial_stats: { total_paid, total_expenses, total_transactions, pending_payments }
+  const totalPaid = financialSummary?.total_paid || 0;
+  const totalExpenses = financialSummary?.total_expenses || 0;
+  const totalDue = 0; // TODO: Calculate from pending payments or arrears
+  const currentBalance = totalPaid - totalExpenses;
+  const monthlyFee = parseFloat(member?.new_monthly_fee || '0');
+  const annualFee = parseFloat(member?.new_annual_fee || '0');
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">

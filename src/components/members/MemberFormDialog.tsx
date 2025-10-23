@@ -24,7 +24,8 @@ import {
   UserPlus,
   Edit3
 } from 'lucide-react';
-import { useBuildings, useCreateMember, useUpdateMember } from '@/hooks/useNeonData';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
 import { toast } from 'sonner';
 
 interface MemberFormData {
@@ -62,21 +63,52 @@ const MemberFormDialog: React.FC<MemberFormDialogProps> = ({
   member,
   mode
 }) => {
-  const { data: buildings } = useBuildings();
-  const createMemberMutation = useCreateMember();
-  const updateMemberMutation = useUpdateMember();
+  const queryClient = useQueryClient();
+
+  // Hardcoded building ID (should come from context in production)
+  const BUILDING_ID = 'fb0d83d3-fe04-47cb-ba48-f95538a2a7fc';
+
+  const { data: buildingsResponse } = useQuery({
+    queryKey: ['buildings'],
+    queryFn: async () => {
+      const response = await axios.get('/api/buildings');
+      return response.data;
+    },
+  });
+
+  const buildings = buildingsResponse?.data || [];
+
+  const createMemberMutation = useMutation({
+    mutationFn: async (memberData: any) => {
+      const response = await axios.post('/api/members', memberData);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['members'] });
+    },
+  });
+
+  const updateMemberMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const response = await axios.put(`/api/members/${id}`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['members'] });
+    },
+  });
 
   const [formData, setFormData] = useState<MemberFormData>({
-    building_id: '',
+    building_id: BUILDING_ID,
     name: '',
     email: '',
     phone: '',
     apartment: '',
     fraction: '',
-    votes: 100,
+    votes: 1,
     new_monthly_fee: 0,
     new_annual_fee: 0,
-    permilage: 100,
+    permilage: 166.7,
     nif: '',
     notes: '',
     is_active: true,

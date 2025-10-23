@@ -3,7 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import ConvocatoriaWorkflow from '@/components/convocatorias/ConvocatoriaWorkflow';
-import { ScrollText, Plus, Calendar, Users, FileText, Clock, CheckCircle, Loader2, Home, Eye, Download, Edit2, Trash2, MoreVertical } from 'lucide-react';
+import SendCommunicationDialog from '@/components/communications/SendCommunicationDialog';
+import { ScrollText, Plus, Calendar, Users, FileText, Clock, CheckCircle, Loader2, Home, Eye, Download, Edit2, Trash2, MoreVertical, Send } from 'lucide-react';
 import { useConvocatorias } from '@/hooks/useConvocatorias';
 import { DataTablePagination } from '@/components/ui/data-table-pagination';
 import { useNavigate } from 'react-router-dom';
@@ -34,6 +35,8 @@ const Convocatorias: React.FC = () => {
   const [showWorkflow, setShowWorkflow] = useState(false);
   const [convocatoriaToDelete, setConvocatoriaToDelete] = useState<any>(null);
   const [editingConvocatoria, setEditingConvocatoria] = useState<any>(null);
+  const [showSendDialog, setShowSendDialog] = useState(false);
+  const [convocatoriaToSend, setConvocatoriaToSend] = useState<any>(null);
   const navigate = useNavigate();
   
   const {
@@ -51,7 +54,7 @@ const Convocatorias: React.FC = () => {
   const convocatorias = convocatoriasData?.map(convocatoria => {
     const dateString = convocatoria.meeting_date || convocatoria.date;
     const formattedDate = dateString ? dateString.split('T')[0] : '';
-    
+
     return {
       id: convocatoria.id,
       type: convocatoria.assembly_type === 'ordinary' ? 'ordinaria' : 'extraordinaria',
@@ -64,7 +67,8 @@ const Convocatorias: React.FC = () => {
       totalOwners: 20, // This would come from building data
       minute_number: convocatoria.minute_number || convocatoria.assembly_number,
       createdAt: convocatoria.created_at,
-      convocatoria_id: convocatoria.convocatoria_id
+      convocatoria_id: convocatoria.convocatoria_id,
+      agenda_items: convocatoria.agenda_items || []
     };
   }) || [];
 
@@ -164,22 +168,43 @@ const Convocatorias: React.FC = () => {
 
   const confirmDeleteConvocatoria = async () => {
     if (!convocatoriaToDelete) return;
-    
+
     const result = await deleteConvocatoria(convocatoriaToDelete.id);
     if (result) {
       setConvocatoriaToDelete(null);
     }
   };
 
+  const handleSendConvocatoria = (convocatoria: any) => {
+    // Find original data with all fields
+    const originalConvocatoria = convocatoriasData?.find(c => c.id === convocatoria.id);
+    console.log('📤 Sending convocatoria:', originalConvocatoria);
+    console.log('📤 Agenda items:', originalConvocatoria?.agenda_items);
+    setConvocatoriaToSend(originalConvocatoria || convocatoria);
+    setShowSendDialog(true);
+  };
+
   if (showWorkflow) {
+    // Get building data from first convocatoria or use default
+    const buildingData = convocatoriasData?.[0] || {};
+    const buildingId = buildingData.building_id || 'fb0d83d3-fe04-47cb-ba48-f95538a2a7fc';
+    const buildingName = buildingData.building_name || 'Condomino Buraca 1';
+    const buildingAddress = buildingData.building_address || 'Estrada da Circunvalação, nº 1';
+
     return (
       <ConvocatoriaWorkflow
+        buildingId={buildingId}
+        initialData={{
+          ...editingConvocatoria,
+          building_id: buildingId,
+          building_name: buildingName,
+          building_address: buildingAddress,
+        }}
         onComplete={handleWorkflowComplete}
         onCancel={() => {
           setShowWorkflow(false);
           setEditingConvocatoria(null);
         }}
-        initialData={editingConvocatoria}
       />
     );
   }
@@ -294,7 +319,7 @@ const Convocatorias: React.FC = () => {
                         <span>•</span>
                         <span>{convocatoria.time.split(':')[0] + 'h' + convocatoria.time.split(':')[1]}</span>
                         <span>•</span>
-                        <span>0 itens</span>
+                        <span>{convocatoria.agenda_items?.length || 0} itens</span>
                         {convocatoria.attendees && convocatoria.totalOwners && (
                           <>
                             <span>•</span>
@@ -334,11 +359,16 @@ const Convocatorias: React.FC = () => {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
                         <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handleSendConvocatoria(convocatoria)}>
+                          <Send className="h-4 w-4 mr-2" />
+                          Enviar Convocatória
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => handleEditConvocatoria(convocatoria)}>
                           <Edit2 className="h-4 w-4 mr-2" />
                           Editar
                         </DropdownMenuItem>
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                           onClick={() => handleDeleteConvocatoria(convocatoria)}
                           className="text-red-600"
                         >
@@ -400,6 +430,23 @@ const Convocatorias: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Send Communication Dialog */}
+      {convocatoriaToSend && (
+        <SendCommunicationDialog
+          open={showSendDialog}
+          onOpenChange={setShowSendDialog}
+          communicationType="convocatoria"
+          buildingId={convocatoriaToSend.building_id}
+          buildingName={convocatoriaToSend.building_name || 'Edifício'}
+          buildingAddress={convocatoriaToSend.building_address || ''}
+          communicationData={convocatoriaToSend}
+          onSendComplete={() => {
+            toast.success('Comunicações enviadas!');
+            setShowSendDialog(false);
+          }}
+        />
+      )}
     </div>
   );
 };

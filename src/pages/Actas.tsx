@@ -3,10 +3,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import ActaWorkflow from '@/components/actas/ActaWorkflow';
-import { ScrollText, Plus, Calendar, Users, FileText, Clock, CheckCircle, Loader2, Home, Eye, Download, Edit2, Trash2, MoreVertical } from 'lucide-react';
-import { useActas } from '@/hooks/useNeonDataWithAuth';
+import SendCommunicationDialog from '@/components/communications/SendCommunicationDialog';
+import { ScrollText, Plus, Calendar, Users, FileText, Clock, CheckCircle, Loader2, Home, Eye, Download, Edit2, Trash2, MoreVertical, Send } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { getMinutes } from '@/lib/api';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
+import { toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,8 +23,16 @@ import {
 
 const Actas: React.FC = () => {
   const [showWorkflow, setShowWorkflow] = useState(false);
-  
-  const { data: actasData, isLoading, error } = useActas();
+  const [editingActa, setEditingActa] = useState<any>(null);
+  const [showSendDialog, setShowSendDialog] = useState(false);
+  const [actaToSend, setActaToSend] = useState<any>(null);
+
+  const { data: actasResponse, isLoading, error } = useQuery({
+    queryKey: ['minutes'],
+    queryFn: () => getMinutes(),
+  });
+
+  const actasData = actasResponse?.data || [];
   
   // Transform API data to match our UI needs
   const actas = actasData?.map(acta => {
@@ -73,8 +84,8 @@ const Actas: React.FC = () => {
   };
 
   const handleEditActa = (acta: any) => {
-    console.log('Editar acta:', acta);
-    // TODO: Implementar edição
+    setEditingActa(acta);
+    setShowWorkflow(true);
   };
 
   const handleDeleteActa = (acta: any) => {
@@ -82,11 +93,22 @@ const Actas: React.FC = () => {
     // TODO: Implementar eliminação
   };
 
+  const handleSendActa = (acta: any) => {
+    // Find original data with all fields
+    const originalActa = actasData?.find(a => a.id === acta.id);
+    setActaToSend(originalActa || acta);
+    setShowSendDialog(true);
+  };
+
   if (showWorkflow) {
     return (
       <ActaWorkflow
+        actaId={editingActa?.id}
         onComplete={handleWorkflowComplete}
-        onCancel={() => setShowWorkflow(false)}
+        onCancel={() => {
+          setShowWorkflow(false);
+          setEditingActa(null);
+        }}
       />
     );
   }
@@ -245,11 +267,16 @@ const Actas: React.FC = () => {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
                         <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handleSendActa(acta)}>
+                          <Send className="h-4 w-4 mr-2" />
+                          Enviar Acta
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => handleEditActa(acta)}>
                           <Edit2 className="h-4 w-4 mr-2" />
                           Editar
                         </DropdownMenuItem>
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                           onClick={() => handleDeleteActa(acta)}
                           className="text-red-600"
                         >
@@ -274,6 +301,23 @@ const Actas: React.FC = () => {
         </CardContent>
       </Card>
         </>
+      )}
+
+      {/* Send Communication Dialog */}
+      {actaToSend && (
+        <SendCommunicationDialog
+          open={showSendDialog}
+          onOpenChange={setShowSendDialog}
+          communicationType="acta"
+          buildingId={actaToSend.building_id}
+          buildingName={actaToSend.building_name || 'Edifício'}
+          buildingAddress={actaToSend.building_address || ''}
+          communicationData={actaToSend}
+          onSendComplete={() => {
+            toast.success('Comunicações enviadas!');
+            setShowSendDialog(false);
+          }}
+        />
       )}
     </div>
   );

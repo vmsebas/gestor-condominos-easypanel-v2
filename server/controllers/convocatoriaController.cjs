@@ -40,7 +40,13 @@ class ConvocatoriaController {
     };
     
     const result = await convocatoriaService.getAllConvocatorias(filters, options);
-    
+
+    // DEBUG: Log quantas convocatorias foram encontradas
+    console.log(`🔍 DEBUG: Retornando ${result.data.length} convocatorias para buildingId: ${effectiveBuildingId}`);
+    result.data.forEach((c, i) => {
+      console.log(`   ${i+1}. ${c.assembly_number || 'SEM Nº'} - ${c.date} - ${c.agenda_items?.length || 0} items`);
+    });
+
     return res.status(200).json({
       success: true,
       data: result.data,

@@ -13,9 +13,9 @@ class MemberController {
    */
   getAllMembers = asyncHandler(async (req, res) => {
     const { buildingId, isActive, search, page, pageSize, orderBy, orderDesc } = req.query;
-    
+
     // Use buildingId from query, or hardcoded default for debugging
-    const HARDCODED_BUILDING_ID = '9cf64a8a-8570-4f16-94a5-dd48c694324c';
+    const HARDCODED_BUILDING_ID = 'fb0d83d3-fe04-47cb-ba48-f95538a2a7fc'; // Condomino Buraca 1 (REAL DATA)
     const effectiveBuildingId = buildingId || req.user?.buildingId || HARDCODED_BUILDING_ID;
     
     // ⚠️ DEBUGGING: Always allow access with hardcoded building ID
@@ -34,10 +34,10 @@ class MemberController {
     };
     
     // If no buildingId (super_admin case), get all members
-    const result = effectiveBuildingId 
+    const result = effectiveBuildingId
       ? await memberService.getMembersByBuilding(effectiveBuildingId, options)
       : await memberService.getAllMembers(options);
-    
+
     successResponse(res, result);
   });
 

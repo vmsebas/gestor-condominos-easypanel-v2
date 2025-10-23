@@ -1,18 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Calendar, Clock, MapPin, Users, FileText, Download, Edit, Printer, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, MapPin, Users, FileText, Download, Edit, Printer, CheckCircle, ThumbsUp, ThumbsDown, Minus } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getMinuteById } from '@/lib/api';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
+import ActaWorkflow from '@/components/actas/ActaWorkflow';
 
 const ActaDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [showEditWorkflow, setShowEditWorkflow] = useState(false);
 
   const { data: acta, isLoading, error } = useQuery({
     queryKey: ['minute', id],
@@ -61,6 +63,19 @@ const ActaDetail: React.FC = () => {
         return <Badge variant="outline">{status}</Badge>;
     }
   };
+
+  if (showEditWorkflow) {
+    return (
+      <ActaWorkflow
+        actaId={id}
+        onComplete={() => {
+          setShowEditWorkflow(false);
+          window.location.reload(); // Recargar para mostrar cambios
+        }}
+        onCancel={() => setShowEditWorkflow(false)}
+      />
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -154,19 +169,64 @@ const ActaDetail: React.FC = () => {
 
             {data.agenda_items && data.agenda_items.length > 0 && (
               <div className="pt-4 border-t">
-                <h3 className="font-semibold mb-2">Ordem de Trabalhos</h3>
-                <ol className="list-decimal list-inside space-y-2">
-                  {data.agenda_items.map((item: any, index: number) => (
-                    <li key={index} className="text-sm">
-                      <span className="font-medium">{item.title}</span>
-                      {item.resolution && (
-                        <div className="ml-5 mt-1 text-muted-foreground">
-                          Resolução: {item.resolution}
+                <h3 className="font-semibold mb-2">Ordem de Trabalhos e Votações</h3>
+                <div className="space-y-4">
+                  {data.agenda_items.map((item: any, index: number) => {
+                    const hasVotes = (item.votes_in_favor || 0) + (item.votes_against || 0) + (item.abstentions || 0) > 0;
+
+                    return (
+                      <div key={index} className="border rounded-lg p-4 space-y-2">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-xs">{item.item_number}</Badge>
+                              <span className="font-medium">{item.title}</span>
+                            </div>
+                            {item.description && (
+                              <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
+                            )}
+                          </div>
+                          {item.decision && (
+                            <Badge variant={
+                              item.decision.includes('APROVADO') ? 'success' :
+                              item.decision.includes('REJEITADO') ? 'destructive' :
+                              'secondary'
+                            }>
+                              {item.decision}
+                            </Badge>
+                          )}
                         </div>
-                      )}
-                    </li>
-                  ))}
-                </ol>
+
+                        {hasVotes && (
+                          <div className="grid grid-cols-3 gap-3 mt-2 pt-2 border-t">
+                            <div className="flex items-center gap-2 text-sm">
+                              <ThumbsUp className="h-4 w-4 text-green-600" />
+                              <span className="font-semibold">{item.votes_in_favor || 0}</span>
+                              <span className="text-muted-foreground">a favor</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm">
+                              <ThumbsDown className="h-4 w-4 text-red-600" />
+                              <span className="font-semibold">{item.votes_against || 0}</span>
+                              <span className="text-muted-foreground">contra</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm">
+                              <Minus className="h-4 w-4 text-gray-600" />
+                              <span className="font-semibold">{item.abstentions || 0}</span>
+                              <span className="text-muted-foreground">abstenções</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {item.discussion && (
+                          <div className="mt-2 text-sm bg-muted p-2 rounded">
+                            <p className="font-medium text-muted-foreground">Discussão:</p>
+                            <p className="mt-1">{item.discussion}</p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
@@ -186,7 +246,7 @@ const ActaDetail: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                <Button>
+                <Button onClick={() => setShowEditWorkflow(true)}>
                   <Edit className="mr-2 h-4 w-4" />
                   Editar Ata
                 </Button>

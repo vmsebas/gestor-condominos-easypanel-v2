@@ -63,19 +63,19 @@ export interface WorkflowState {
 export const CONVOCATORIA_WORKFLOW: WorkflowDefinition = {
   id: 'convocatoria-junta',
   name: 'Convocatória de Assembleia de Condóminos',
-  description: 'Processo completo para convocar uma assembleia de condóminos cumprindo todos os requisitos legais',
+  description: 'Processo simplificado para criar uma convocatória de assembleia',
   category: 'convocatoria',
   icon: 'FileText',
-  estimatedTotalTime: 45,
-  requiredDocuments: ['estatutos', 'censo_proprietarios'],
-  outputDocuments: ['convocatoria_oficial', 'comprovativo_receção'],
+  estimatedTotalTime: 35,
+  requiredDocuments: [],
+  outputDocuments: ['convocatoria_oficial'],
   legalContext: {
     framework: 'CC_PT',
     applicableArticles: ['Art. 1430.º CC', 'Art. 1431.º CC', 'Art. 1432.º CC'],
     complianceNotes: [
       'Convocatória com 15-30 dias de antecedência',
       'Ordem do dia detalhada',
-      'Documentação anexa obrigatória'
+      'Envio posterior por email/WhatsApp'
     ]
   },
   steps: [
@@ -98,24 +98,24 @@ export const CONVOCATORIA_WORKFLOW: WorkflowDefinition = {
     {
       id: 'fecha-lugar',
       title: 'Data, Hora e Local',
-      description: 'Estabelecer quando e onde se realizará a assembleia',
+      description: 'Estabelecer quando e onde se realizará a assembleia (1ª e 2ª convocatória)',
       component: 'FechaLugarStep',
-      estimatedTime: 5,
+      estimatedTime: 7,
       validation: [
         { field: 'meetingDate', type: 'date', message: 'Data da reunião obrigatória' },
         { field: 'meetingTime', type: 'required', message: 'Hora da reunião obrigatória' },
         { field: 'meetingLocation', type: 'required', message: 'Local da reunião obrigatório' }
       ],
       legalRequirement: {
-        article: 'Art. 1430.º CC',
-        description: 'Mínimo 15 dias naturais de antecedência para primeira convocatória',
+        article: 'Art. 1430.º e 1431.º CC',
+        description: 'Mínimo 15 dias de antecedência. Segunda convocatória: meia hora depois',
         mandatory: true
       }
     },
     {
       id: 'orden-dia',
       title: 'Ordem do Dia',
-      description: 'Definir os pontos a tratar na reunião',
+      description: 'Definir os pontos a tratar na reunião (biblioteca com 27 modelos)',
       component: 'OrdenDiaStep',
       estimatedTime: 15,
       validation: [
@@ -130,54 +130,18 @@ export const CONVOCATORIA_WORKFLOW: WorkflowDefinition = {
     {
       id: 'documentacion',
       title: 'Documentação Anexa',
-      description: 'Anexar orçamentos, relatórios e documentos necessários',
+      description: 'Anexar orçamentos, relatórios e documentos necessários (opcional)',
       component: 'DocumentacionStep',
-      estimatedTime: 10,
+      estimatedTime: 5,
       canSkip: true,
       validation: []
     },
     {
-      id: 'segunda-convocatoria',
-      title: 'Segunda Convocatória',
-      description: 'Configurar segunda convocatória caso não haja quórum',
-      component: 'SegundaConvocatoriaStep',
-      estimatedTime: 8,
-      validation: [],
-      legalRequirement: {
-        article: 'Art. 1431.º CC',
-        description: 'Segunda convocatória com qualquer número de condóminos presentes',
-        mandatory: false
-      }
-    },
-    {
-      id: 'metodo-envio',
-      title: 'Método de Envio',
-      description: 'Selecionar método de notificação com validade legal',
-      component: 'MetodoEnvioStep',
+      id: 'revision-guardar',
+      title: 'Revisão e Guardar',
+      description: 'Vista prévia da convocatória e guardar na base de dados',
+      component: 'RevisionGuardarStep',
       estimatedTime: 5,
-      validation: [
-        { field: 'deliveryMethods', type: 'required', message: 'Método de envio obrigatório' }
-      ],
-      legalRequirement: {
-        article: 'Art. 1430.º CC',
-        description: 'Notificação por método que garanta a receção',
-        mandatory: true
-      }
-    },
-    {
-      id: 'revision-legal',
-      title: 'Revisão Legal Automática',
-      description: 'Verificação do cumprimento de todos os requisitos legais',
-      component: 'RevisionLegalStep',
-      estimatedTime: 3,
-      validation: []
-    },
-    {
-      id: 'envio-confirmacion',
-      title: 'Envio e Confirmação',
-      description: 'Envio massivo de convocatórias e rastreamento de entregas',
-      component: 'EnvioConfirmacionStep',
-      estimatedTime: 4,
       validation: []
     }
   ]

@@ -15,15 +15,33 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { useMembers, useDeleteMember } from '@/hooks/useNeonData';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getMembers } from '@/lib/api';
 import MemberFormDialog from '@/components/members/MemberFormDialog';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { toast } from 'sonner';
+import axios from 'axios';
 
 const Miembros: React.FC = () => {
-  const { data: membersData, isLoading, error } = useMembers();
-  const deleteMemberMutation = useDeleteMember();
+  const queryClient = useQueryClient();
+
+  const { data: membersResponse, isLoading, error } = useQuery({
+    queryKey: ['members'],
+    queryFn: () => getMembers(),
+  });
+
+  const membersData = membersResponse?.data?.members || [];
+
+  const deleteMemberMutation = useMutation({
+    mutationFn: async (memberId: string) => {
+      const response = await axios.delete(`/api/members/${memberId}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['members'] });
+    },
+  });
   const navigate = useNavigate();
   
   // Dialog states
@@ -79,7 +97,7 @@ const Miembros: React.FC = () => {
     return (
       <div className="container mx-auto px-4 py-12">
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-          <p>Erro ao carregar os membros: {error.message}</p>
+          <p>Erro ao carregar os membros: {error instanceof Error ? error.message : 'Erro desconhecido'}</p>
         </div>
       </div>
     );

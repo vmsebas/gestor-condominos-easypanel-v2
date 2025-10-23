@@ -33,18 +33,18 @@ const FechaLugarStep: React.FC<FechaLugarStepProps> = ({ data, onUpdate, onPrevi
   const validateAndNext = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!data.meetingDate) {
-      newErrors.meetingDate = 'A data da reunião é obrigatória';
-    } else if (!isAfter(new Date(data.meetingDate), addDays(new Date(), 14))) {
-      newErrors.meetingDate = 'A data deve ser pelo menos 15 dias depois de hoje';
+    if (!data.meeting_date) {
+      newErrors.meeting_date = 'A data da reunião é obrigatória';
+    } else if (!isAfter(new Date(data.meeting_date), addDays(new Date(), 14))) {
+      newErrors.meeting_date = 'A data deve ser pelo menos 15 dias depois de hoje';
     }
 
-    if (!data.meetingTime) {
-      newErrors.meetingTime = 'A hora da reunião é obrigatória';
+    if (!data.meeting_time) {
+      newErrors.meeting_time = 'A hora da reunião é obrigatória';
     }
 
-    if (!data.meetingLocation?.trim()) {
-      newErrors.meetingLocation = 'O local da reunião é obrigatório';
+    if (!data.location?.trim()) {
+      newErrors.location = 'O local da reunião é obrigatório';
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -52,13 +52,19 @@ const FechaLugarStep: React.FC<FechaLugarStepProps> = ({ data, onUpdate, onPrevi
       return;
     }
 
+    // Calculate first and second call times
+    onUpdate({
+      first_call_time: data.meeting_time,
+      second_call_time: data.second_call_time || 'meia hora depois'
+    });
+
     onNext();
   };
 
   const calculateDaysFromToday = () => {
-    if (data.meetingDate) {
+    if (data.meeting_date) {
       const today = new Date();
-      const meetingDate = new Date(data.meetingDate);
+      const meetingDate = new Date(data.meeting_date);
       const diffTime = meetingDate.getTime() - today.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       return diffDays;
@@ -106,24 +112,24 @@ const FechaLugarStep: React.FC<FechaLugarStepProps> = ({ data, onUpdate, onPrevi
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="meetingDate">Fecha de reunión *</Label>
+              <Label htmlFor="meeting_date">Fecha de reunión *</Label>
               <Input
-                id="meetingDate"
+                id="meeting_date"
                 type="date"
                 min={minDate}
-                value={data.meetingDate || ''}
-                onChange={(e) => handleInputChange('meetingDate', e.target.value)}
-                className={errors.meetingDate ? 'border-red-500' : ''}
+                value={data.meeting_date || ''}
+                onChange={(e) => handleInputChange('meeting_date', e.target.value)}
+                className={errors.meeting_date ? 'border-red-500' : ''}
               />
-              {errors.meetingDate && (
-                <p className="text-sm text-red-500 mt-1">{errors.meetingDate}</p>
+              {errors.meeting_date && (
+                <p className="text-sm text-red-500 mt-1">{errors.meeting_date}</p>
               )}
             </div>
 
-            {data.meetingDate && (
+            {data.meeting_date && (
               <div className="p-3 rounded-lg bg-muted">
                 <p className="text-sm font-medium">
-                  {format(new Date(data.meetingDate), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })}
+                  {format(new Date(data.meeting_date), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })}
                 </p>
                 <p className={`text-sm mt-1 ${
                   daysFromToday >= 15 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
@@ -134,10 +140,10 @@ const FechaLugarStep: React.FC<FechaLugarStepProps> = ({ data, onUpdate, onPrevi
               </div>
             )}
 
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => handleInputChange('meetingDate', suggestedDate)}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleInputChange('meeting_date', suggestedDate)}
               className="w-full"
             >
               Sugerir data (20 dias desde hoje)
@@ -157,16 +163,16 @@ const FechaLugarStep: React.FC<FechaLugarStepProps> = ({ data, onUpdate, onPrevi
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="meetingTime">Hora de inicio *</Label>
+              <Label htmlFor="meeting_time">Hora de inicio *</Label>
               <Input
-                id="meetingTime"
+                id="meeting_time"
                 type="time"
-                value={data.meetingTime || ''}
-                onChange={(e) => handleInputChange('meetingTime', e.target.value)}
-                className={errors.meetingTime ? 'border-red-500' : ''}
+                value={data.meeting_time || ''}
+                onChange={(e) => handleInputChange('meeting_time', e.target.value)}
+                className={errors.meeting_time ? 'border-red-500' : ''}
               />
-              {errors.meetingTime && (
-                <p className="text-sm text-red-500 mt-1">{errors.meetingTime}</p>
+              {errors.meeting_time && (
+                <p className="text-sm text-red-500 mt-1">{errors.meeting_time}</p>
               )}
             </div>
 
@@ -178,7 +184,7 @@ const FechaLugarStep: React.FC<FechaLugarStepProps> = ({ data, onUpdate, onPrevi
                     key={time}
                     variant="outline"
                     size="sm"
-                    onClick={() => handleInputChange('meetingTime', time)}
+                    onClick={() => handleInputChange('meeting_time', time)}
                     className="text-xs"
                   >
                     {time}h
@@ -202,17 +208,17 @@ const FechaLugarStep: React.FC<FechaLugarStepProps> = ({ data, onUpdate, onPrevi
         </CardHeader>
         <CardContent>
           <div>
-            <Label htmlFor="meetingLocation">Dirección del lugar *</Label>
+            <Label htmlFor="location">Dirección del lugar *</Label>
             <Textarea
-              id="meetingLocation"
+              id="location"
               placeholder="Ej: Salón de actos del edificio, Calle Principal 123, Local bajo..."
-              value={data.meetingLocation || ''}
-              onChange={(e) => handleInputChange('meetingLocation', e.target.value)}
-              className={errors.meetingLocation ? 'border-red-500' : ''}
+              value={data.location || ''}
+              onChange={(e) => handleInputChange('location', e.target.value)}
+              className={errors.location ? 'border-red-500' : ''}
               rows={3}
             />
-            {errors.meetingLocation && (
-              <p className="text-sm text-red-500 mt-1">{errors.meetingLocation}</p>
+            {errors.location && (
+              <p className="text-sm text-red-500 mt-1">{errors.location}</p>
             )}
           </div>
         </CardContent>
