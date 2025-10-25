@@ -11,6 +11,7 @@ import { getMinutes } from '@/lib/api';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { generateActaCompletaPDF } from '@/lib/actaGenerator';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -91,9 +92,23 @@ const Actas: React.FC = () => {
     window.location.href = `/actas/${acta.id}`;
   };
 
-  const handleGeneratePDF = (acta: any) => {
-    console.log('Gerar PDF da acta:', acta);
-    // TODO: Implementar geração de PDF
+  const handleGeneratePDF = async (acta: any) => {
+    try {
+      // Find original data with all fields
+      const originalActa = actasData?.find(a => a.id === acta.id);
+
+      if (!originalActa) {
+        toast.error('Dados da acta não encontrados');
+        return;
+      }
+
+      // Generate PDF with complete data
+      generateActaCompletaPDF(originalActa, true);
+      toast.success('PDF gerado com sucesso!');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Erro ao gerar PDF da acta');
+    }
   };
 
   const handleEditActa = (acta: any) => {
