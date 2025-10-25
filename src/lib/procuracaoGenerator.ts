@@ -181,157 +181,196 @@ export const generateBlankProcuracaoPDF = (
 
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 25;
+  const margin = 20;
   const contentWidth = pageWidth - 2 * margin;
-  let y = 35;
-
-  const addText = (text: string, fontSize: number = 11, align: 'left' | 'center' = 'left', bold: boolean = false) => {
-    doc.setFontSize(fontSize);
-    doc.setFont('helvetica', bold ? 'bold' : 'normal');
-
-    if (align === 'center') {
-      const lines = doc.splitTextToSize(text, contentWidth);
-      lines.forEach((line: string) => {
-        doc.text(line, pageWidth / 2, y, { align: 'center' });
-        y += fontSize / 2 + 2;
-      });
-    } else {
-      const lines = doc.splitTextToSize(text, contentWidth);
-      lines.forEach((line: string) => {
-        doc.text(line, margin, y);
-        y += fontSize / 2 + 2;
-      });
-    }
-    y += 2;
-  };
-
-  const addLine = (text: string, fontSize: number = 11) => {
-    doc.setFontSize(fontSize);
-    doc.setFont('helvetica', 'normal');
-    doc.text(text, margin, y);
-    y += fontSize / 2 + 5;
-  };
-
-  const addSpace = (space: number = 8) => {
-    y += space;
-  };
-
-  // Title
-  doc.setFontSize(18);
-  doc.setFont('helvetica', 'bold');
-  doc.text('PROCURAÇÃO', pageWidth / 2, y, { align: 'center' });
-  y += 12;
-
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text('(Artigo 1431.º, n.º 3, do Código Civil)', pageWidth / 2, y, { align: 'center' });
-  y += 15;
+  let y = 25;
 
   const assemblyTypeText = assemblyType === 'ordinary' ? 'Ordinária' : 'Extraordinária';
   const assemblyDateFormatted = formatDatePortuguese(assemblyDate);
 
-  // Outorgante section
-  doc.setFontSize(12);
+  // Title with border
+  doc.setFillColor(245, 245, 245);
+  doc.rect(margin - 5, y - 5, contentWidth + 10, 20, 'F');
+  doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
-  doc.text('OUTORGANTE (Condómino):', margin, y);
-  y += 12;
+  doc.text('PROCURAÇÃO', pageWidth / 2, y + 5, { align: 'center' });
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'italic');
+  doc.text('Para Representação em Assembleia de Condóminos', pageWidth / 2, y + 12, { align: 'center' });
+  y += 28;
+
+  // Legal reference
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.text('(Ao abrigo do artigo 1431.º, n.º 3, do Código Civil Português)', pageWidth / 2, y, { align: 'center' });
+  y += 10;
+
+  // Outorgante section
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.5);
+  doc.line(margin, y, pageWidth - margin, y);
+  y += 5;
 
   doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('I. OUTORGANTE (Condómino)', margin, y);
+  y += 8;
+
+  doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  addLine('Nome: ____________________________________________________________________________');
-  addLine('NIF: _____________________________________________________________________________');
-  addLine('Morada: __________________________________________________________________________');
-  addLine('_________________________________________________________________________________');
-  addLine('Fração: __________________________________________________________________________');
-  addSpace(10);
+
+  // Name field
+  doc.text('Nome completo:', margin, y);
+  doc.line(margin + 30, y, pageWidth - margin, y);
+  y += 7;
+
+  // NIF field
+  doc.text('NIF:', margin, y);
+  doc.line(margin + 30, y, pageWidth - margin, y);
+  y += 7;
+
+  // Address fields
+  doc.text('Morada:', margin, y);
+  doc.line(margin + 30, y, pageWidth - margin, y);
+  y += 7;
+  doc.line(margin, y, pageWidth - margin, y);
+  y += 7;
+
+  // Fraction and permilage
+  doc.text('Fração:', margin, y);
+  doc.line(margin + 30, y, margin + 90, y);
+  doc.text('Permilagem:', margin + 100, y);
+  doc.line(margin + 130, y, pageWidth - margin, y);
+  y += 10;
 
   // Procurador section
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text('PROCURADOR (Representante):', margin, y);
-  y += 12;
+  doc.setLineWidth(0.5);
+  doc.line(margin, y, pageWidth - margin, y);
+  y += 5;
 
   doc.setFontSize(11);
-  doc.setFont('helvetica', 'normal');
-  addLine('Nome: ____________________________________________________________________________');
-  addLine('NIF: _____________________________________________________________________________');
-  addLine('Morada: __________________________________________________________________________');
-  addLine('_________________________________________________________________________________');
-  addSpace(10);
-
-  // Assembly details
-  doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text('ASSEMBLEIA:', margin, y);
-  y += 12;
+  doc.text('II. PROCURADOR (Representante Nomeado)', margin, y);
+  y += 8;
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+
+  doc.text('Nome completo:', margin, y);
+  doc.line(margin + 30, y, pageWidth - margin, y);
+  y += 7;
+
+  doc.text('NIF:', margin, y);
+  doc.line(margin + 30, y, pageWidth - margin, y);
+  y += 7;
+
+  doc.text('Morada:', margin, y);
+  doc.line(margin + 30, y, pageWidth - margin, y);
+  y += 7;
+  doc.line(margin, y, pageWidth - margin, y);
+  y += 10;
+
+  // Assembly details section
+  doc.setLineWidth(0.5);
+  doc.line(margin, y, pageWidth - margin, y);
+  y += 5;
 
   doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('III. ASSEMBLEIA DE CONDÓMINOS', margin, y);
+  y += 8;
+
+  doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  addLine(`Edifício: ${buildingName}`);
-  addLine(`Morada: ${buildingAddress}`);
-  addLine(`Tipo: Assembleia ${assemblyTypeText} de Condóminos`);
-  addLine(`Data: ${assemblyDateFormatted}`);
-  addLine(`Hora: ${assemblyTime}`);
-  addSpace(10);
+  doc.text(`Edifício: ${buildingName}`, margin, y);
+  y += 6;
+  doc.text(`Morada: ${buildingAddress}`, margin, y);
+  y += 6;
+  doc.text(`Tipo: Assembleia ${assemblyTypeText} de Condóminos`, margin, y);
+  y += 6;
+  doc.text(`Data: ${assemblyDateFormatted}`, margin, y);
+  doc.text(`Hora: ${assemblyTime}`, margin + 100, y);
+  y += 10;
 
   // Powers section
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text('PODERES CONFERIDOS:', margin, y);
-  y += 12;
+  doc.setLineWidth(0.5);
+  doc.line(margin, y, pageWidth - margin, y);
+  y += 5;
 
   doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('IV. PODERES CONFERIDOS', margin, y);
+  y += 8;
+
+  doc.setFontSize(9.5);
   doc.setFont('helvetica', 'normal');
 
+  const introText = 'Pelo presente instrumento, nomeio e constituo como meu(minha) procurador(a) a pessoa acima identificada, conferindo-lhe os mais amplos poderes para me representar na assembleia acima referida, nomeadamente para:';
+  const introLines = doc.splitTextToSize(introText, contentWidth);
+  introLines.forEach((line: string) => {
+    doc.text(line, margin, y);
+    y += 5;
+  });
+  y += 3;
+
   const powers = [
+    'Assinar a lista de presenças em meu nome;',
     'Participar em todas as discussões e deliberações da assembleia;',
     'Exercer o direito de voto sobre todos os assuntos constantes da ordem de trabalhos;',
-    'Assinar a lista de presenças e quaisquer documentos relacionados com a assembleia;',
     'Requerer esclarecimentos e apresentar propostas;',
+    'Assinar a ata da assembleia e quaisquer outros documentos necessários;',
     'Praticar todos os atos necessários ao bom e fiel cumprimento deste mandato.'
   ];
 
   powers.forEach((power, index) => {
-    const lines = doc.splitTextToSize(`${index + 1}. ${power}`, contentWidth - 5);
-    lines.forEach((line: string, lineIndex: number) => {
+    const powerText = `${index + 1}. ${power}`;
+    const lines = doc.splitTextToSize(powerText, contentWidth - 5);
+    lines.forEach((line: string) => {
       doc.text(line, margin + 3, y);
-      y += 6;
+      y += 4.5;
     });
-    // Add extra space after each power item
-    if (index < powers.length - 1) {
-      y += 1;
-    }
   });
-
-  addSpace(10);
+  y += 5;
 
   // Validity clause
-  doc.setFont('helvetica', 'italic');
-  addText('A presente procuração é válida exclusivamente para a assembleia acima identificada.', 10);
-  addSpace(15);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  const validityText = 'A presente procuração é válida exclusivamente para a assembleia acima identificada.';
+  doc.text(validityText, pageWidth / 2, y, { align: 'center' });
+  y += 12;
 
   // Signature section
   doc.setFont('helvetica', 'normal');
-  doc.text('_____________________, _____ de ________________ de __________', margin, y);
-  y += 20;
+  doc.setFontSize(10);
 
-  doc.text('__________________________________________', pageWidth / 2 + 10, y, { align: 'center' });
-  y += 6;
+  const signatureY = pageHeight - 45;
+  doc.text('_________________________________, ______ de __________________ de __________', margin, signatureY);
+
+  doc.text('(Local)', margin + 5, signatureY + 4);
+  doc.text('(Data)', margin + 75, signatureY + 4);
+
+  doc.line(pageWidth / 2 - 30, signatureY + 15, pageWidth / 2 + 30, signatureY + 15);
   doc.setFontSize(9);
-  doc.text('(Assinatura do Outorgante)', pageWidth / 2 + 10, y, { align: 'center' });
+  doc.text('(Assinatura do Outorgante/Condómino)', pageWidth / 2, signatureY + 19, { align: 'center' });
 
-  // Footer - Legal notice
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'italic');
+  // Footer - Legal notices
   const footerY = pageHeight - 20;
-  doc.text('Nos termos do artigo 1431.º, n.º 3, do Código Civil, os condóminos podem fazer-se representar', pageWidth / 2, footerY, { align: 'center' });
-  doc.text('por mandatário, bastando, para o efeito, procuração escrita.', pageWidth / 2, footerY + 4, { align: 'center' });
-  doc.setFontSize(7);
-  doc.text('Este documento não necessita de reconhecimento de assinatura.', pageWidth / 2, footerY + 10, { align: 'center' });
+  doc.setDrawColor(100, 100, 100);
+  doc.setLineWidth(0.3);
+  doc.line(margin, footerY - 3, pageWidth - margin, footerY - 3);
+
+  doc.setFontSize(7.5);
+  doc.setFont('helvetica', 'italic');
+  doc.text('Nos termos do artigo 1431.º, n.º 3, do Código Civil, os condóminos podem fazer-se representar por mandatário,', pageWidth / 2, footerY, { align: 'center' });
+  doc.text('bastando, para o efeito, procuração escrita. Este documento não necessita de reconhecimento notarial.', pageWidth / 2, footerY + 4, { align: 'center' });
+
+  doc.setFontSize(6.5);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Documento gerado em ' + new Date().toLocaleDateString('pt-PT'), pageWidth / 2, footerY + 9, { align: 'center' });
 
   // Output
   if (download) {
-    const fileName = `Modelo_Procuracao_${assemblyTypeText}_${assemblyDate.replace(/\//g, '-')}.pdf`;
+    const fileName = `Procuracao_${assemblyTypeText}_${assemblyDate.replace(/\//g, '-')}.pdf`;
     doc.save(fileName);
   } else {
     return doc.output('blob');
