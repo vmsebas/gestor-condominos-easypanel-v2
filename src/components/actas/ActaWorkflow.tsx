@@ -239,6 +239,28 @@ const ActaWorkflow: React.FC<ActaWorkflowProps> = ({
                 <FileSignature className="h-8 w-8 text-primary" />
                 <span>{ACTA_WORKFLOW.name}</span>
               </CardTitle>
+
+              {/* Informação Contextual: Número e Edifício */}
+              <div className="flex items-center gap-2 mt-3">
+                {(workflowState.data.minute_number || workflowState.data.assembly_number) && (
+                  <Badge variant="default" className="text-base px-3 py-1">
+                    {workflowState.data.minute_number
+                      ? `Acta #${workflowState.data.minute_number}`
+                      : `Convocatória #${workflowState.data.assembly_number}`}
+                  </Badge>
+                )}
+                {workflowState.data.building_name && (
+                  <Badge variant="outline" className="text-sm">
+                    {workflowState.data.building_name}
+                  </Badge>
+                )}
+                {workflowState.data.assembly_type && (
+                  <Badge variant="secondary" className="text-sm">
+                    {workflowState.data.assembly_type === 'ordinary' ? 'Ordinária' : 'Extraordinária'}
+                  </Badge>
+                )}
+              </div>
+
               <CardDescription className="mt-2">
                 {ACTA_WORKFLOW.description}
               </CardDescription>

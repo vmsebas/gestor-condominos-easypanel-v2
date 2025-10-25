@@ -1037,6 +1037,166 @@ const handleDistributeActa = (actaData: any) => {
 
 ---
 
+## ✨ SPRINT 7: Melhorias de UI nos Workflows (v0.0.9)
+
+### 📋 Resumo do Sprint
+
+**Data**: 25 Outubro 2025
+**Objetivo**: Melhorar a visualização contextual nos workflows de Actas e Convocatorias
+**Resultado**: ✅ Implementação completa
+
+### 🎯 Problema Identificado
+
+Os workflows de actas e convocatorias mostravam apenas o título genérico do workflow, sem contexto sobre:
+- Qual acta ou convocatória está sendo trabalhada
+- Número da acta/convocatória
+- Edifício relacionado
+- Tipo de assembleia
+
+Isto dificultava a orientação do utilizador durante o processo.
+
+### ✨ Solução Implementada
+
+Adicionada uma **linha de badges contextuais** logo abaixo do título principal em ambos os workflows, mostrando:
+
+1. **Número da Acta/Convocatória**: Badge azul destacado
+   - "Acta #28" (em ActaWorkflow)
+   - "Convocatória #31" (em ConvocatoriaWorkflow)
+
+2. **Nome do Edifício**: Badge outline
+   - Ex: "Condomino Buraca 1"
+
+3. **Tipo de Assembleia**: Badge secondary
+   - "Ordinária" ou "Extraordinária"
+
+### 📝 Arquivos Modificados
+
+#### 1. `src/components/actas/ActaWorkflow.tsx`
+**Linhas adicionadas**: ~19 linhas
+
+**Alterações**:
+```typescript
+{/* Informação Contextual: Número e Edifício */}
+<div className="flex items-center gap-2 mt-3">
+  {(workflowState.data.minute_number || workflowState.data.assembly_number) && (
+    <Badge variant="default" className="text-base px-3 py-1">
+      {workflowState.data.minute_number
+        ? `Acta #${workflowState.data.minute_number}`
+        : `Convocatória #${workflowState.data.assembly_number}`}
+    </Badge>
+  )}
+  {workflowState.data.building_name && (
+    <Badge variant="outline" className="text-sm">
+      {workflowState.data.building_name}
+    </Badge>
+  )}
+  {workflowState.data.assembly_type && (
+    <Badge variant="secondary" className="text-sm">
+      {workflowState.data.assembly_type === 'ordinary' ? 'Ordinária' : 'Extraordinária'}
+    </Badge>
+  )}
+</div>
+```
+
+#### 2. `src/components/convocatorias/ConvocatoriaWorkflow.tsx`
+**Linhas adicionadas**: ~19 linhas
+
+**Alterações**:
+```typescript
+{/* Informação Contextual: Número e Edifício */}
+<div className="flex items-center gap-2 mt-3">
+  {workflowState.data.assembly_number && (
+    <Badge variant="default" className="text-base px-3 py-1">
+      Convocatória #{workflowState.data.assembly_number}
+    </Badge>
+  )}
+  {workflowState.data.building_name && (
+    <Badge variant="outline" className="text-sm">
+      {workflowState.data.building_name}
+    </Badge>
+  )}
+  {workflowState.data.assembly_type && (
+    <Badge variant="secondary" className="text-sm">
+      {workflowState.data.assembly_type === 'ordinary' ? 'Ordinária' : 'Extraordinária'}
+    </Badge>
+  )}
+</div>
+```
+
+### 🎨 Melhorias de UX
+
+#### Antes:
+```
+┌─────────────────────────────────────────┐
+│ 📝 Celebração de Assembleia e Redação  │
+│    de Acta                              │
+│    Gestão completa da reunião...        │
+└─────────────────────────────────────────┘
+```
+
+#### Depois:
+```
+┌─────────────────────────────────────────┐
+│ 📝 Celebração de Assembleia e Redação  │
+│    de Acta                              │
+│                                          │
+│    [Acta #28] [Condomino Buraca 1]      │
+│    [Ordinária]                           │
+│                                          │
+│    Gestão completa da reunião...        │
+└─────────────────────────────────────────┘
+```
+
+### 🧪 Testes Realizados
+
+**Script**: `scripts/test-frontend-complete.sh`
+
+#### Resultados:
+```
+✅ Frontend responde correctamente (HTTP 200)
+✅ Backend responde correctamente (HTTP 200)
+✅ Login exitoso - Token obtenido
+✅ API devuelve 4 convocatorias
+✅ Todos os campos estão correctos
+✅ Acta relacionada tem todos os campos
+✅ TypeScript compilado sem erros
+```
+
+### 📊 Estatísticas do Sprint 7
+
+#### Linhas de Código:
+- **ActaWorkflow.tsx**: +19 linhas
+- **ConvocatoriaWorkflow.tsx**: +19 linhas
+- **Total**: ~38 linhas de código TypeScript/React
+
+#### Build:
+- **ActaWorkflow-uqXOsDtk.js**: 137.99 kB (gzip: 19.22 kB)
+- **Convocatorias-DS7qQzft.js**: 223.55 kB (gzip: 52.68 kB)
+- **Tempo de build**: 9.63s
+
+#### Tempo de Implementação:
+- Análise de workflows: ~5 min
+- Implementação em ActaWorkflow: ~5 min
+- Implementação em ConvocatoriaWorkflow: ~5 min
+- Testes e verificação: ~5 min
+- **Total**: ~20 min
+
+### ✅ Benefícios
+
+1. **Orientação Clara**: Utilizador sempre sabe em que acta/convocatória está a trabalhar
+2. **Contexto Completo**: Informação do edifício e tipo de assembleia sempre visível
+3. **Navegação Melhorada**: Fácil identificação se estiver a trabalhar em múltiplos workflows
+4. **Consistência**: Mesmo padrão visual em ambos os workflows
+
+### 🎯 Impacto
+
+- **Usabilidade**: ⬆️ Melhoria significativa na orientação do utilizador
+- **UX**: ⬆️ Redução de confusão ao trabalhar com múltiplas actas
+- **Eficiência**: ⬆️ Menos tempo perdido a confirmar contexto
+- **Profissionalismo**: ⬆️ Interface mais polida e informativa
+
+---
+
 **Última actualização**: 25 Outubro 2025
-**Versão**: v0.0.8
-**Estado**: ✅ Sprints 3, 4, 5 e 6 completos e testados
+**Versão**: v0.0.9
+**Estado**: ✅ Sprints 3, 4, 5, 6 e 7 completos e testados
