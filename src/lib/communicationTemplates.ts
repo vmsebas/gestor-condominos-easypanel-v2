@@ -158,21 +158,21 @@ export const convocatoriaWhatsAppMessage = (data: TemplateData): string => {
 
   return `Olá *${data.member_name}*,
 
-📅 *Lembrete: Assembleia ${assemblyType}*
+*Lembrete: Assembleia ${assemblyType}*
 
-🗓️ Data: ${data.meeting_date}
-⏰ Hora: ${firstCallTime}
-📍 Local: ${data.location}
+Data: ${data.meeting_date}
+Hora: ${firstCallTime}
+Local: ${data.location}
 
-━━━━━━━━━━━━━━━━━━━━━
+-------------------------
 
-✉️ A convocatória oficial com toda a informação foi enviada por *email/correio registado* conforme a lei.
+A convocatória oficial foi enviada por email/correio registado conforme a lei.
 
 Este WhatsApp é apenas um lembrete informal, sem valor jurídico.
 
-━━━━━━━━━━━━━━━━━━━━━
+-------------------------
 
-✅ Por favor confirme a sua presença.
+Por favor confirme a sua presença.
 
 ${data.sender_name || 'A Administração'}
 ${data.building_name}`;
@@ -187,18 +187,18 @@ export const actaWhatsAppMessage = (data: TemplateData): string => {
 
   return `Olá *${data.member_name}*,
 
-📄 *Acta da Assembleia ${assemblyType}*
+*Acta da Assembleia ${assemblyType}*
 ${data.minute_number ? `Acta n.º ${data.minute_number}` : ''}
 
-📅 Realizada em: ${data.meeting_date}
+Realizada em: ${data.meeting_date}
 
-━━━━━━━━━━━━━━━━━━━━━
+-------------------------
 
-✉️ A acta completa em PDF foi enviada por *email* para consulta e arquivo.
+A acta completa em PDF foi enviada por email para consulta e arquivo.
 
-⚖️ Prazo de impugnação: 3 meses (Art. 1435.º do Código Civil)
+Prazo de impugnação: 3 meses (Art. 1435.º do Código Civil)
 
-━━━━━━━━━━━━━━━━━━━━━
+-------------------------
 
 Para esclarecimentos, contacte a administração.
 
