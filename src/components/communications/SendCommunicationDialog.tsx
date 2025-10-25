@@ -40,7 +40,8 @@ import {
   formatTimePortuguese,
   type TemplateData
 } from '@/lib/communicationTemplates';
-import { generateConvocatoriaPDF, generateActaPDF } from '@/lib/pdfGenerator';
+import { generateConvocatoriaPDF } from '@/lib/pdfGenerator';
+import { generateActaCompletaPDF } from '@/lib/actaGenerator';
 import { generateBlankProcuracaoPDF } from '@/lib/procuracaoGenerator';
 import CorreioCertificadoPanel from './CorreioCertificadoPanel';
 import EmailPreviewDialog from './EmailPreviewDialog';
@@ -190,7 +191,7 @@ const SendCommunicationDialog: React.FC<SendCommunicationDialogProps> = ({
     if (communicationType === 'convocatoria') {
       blob = generateConvocatoriaPDF(templateData, false);
     } else if (communicationType === 'acta') {
-      blob = generateActaPDF(communicationData, false);
+      blob = generateActaCompletaPDF(communicationData, false);
     }
 
     if (blob) {
