@@ -9,7 +9,9 @@ import { useConvocatorias } from '@/hooks/useConvocatorias';
 import { DataTablePagination } from '@/components/ui/data-table-pagination';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import ConvocatoriaPdfGenerator from '@/utils/convocatoriaPdfGenerator';
+import { generateConvocatoriaPDF } from '@/lib/pdfGenerator';
+import { formatDatePortuguese } from '@/lib/communicationTemplates';
+import type { TemplateData } from '@/lib/communicationTemplates';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -187,49 +189,44 @@ const Convocatorias: React.FC = () => {
     try {
       // Buscar os dados originais da convocatória para ter todos os campos
       const originalConvocatoria = convocatoriasData?.find(c => c.id === convocatoria.id);
-      
+
       if (!originalConvocatoria) {
         toast.error('Dados da convocatória não encontrados');
         return;
       }
-      
-      // Preparar dados para o gerador de PDF
-      const pdfData = {
-        // Dados do edificio
-        buildingName: originalConvocatoria.building_name || '',
-        buildingAddress: originalConvocatoria.building_address || '',
-        postalCode: originalConvocatoria.postal_code || '',
-        city: originalConvocatoria.city || 'Amadora',
 
-        // Dados da convocatória
-        assemblyNumber: originalConvocatoria.assembly_number || convocatoria.minute_number || '',
-        assemblyType: originalConvocatoria.assembly_type === 'ordinary' ? 'ordinaria' : 'extraordinaria',
-        meetingDate: originalConvocatoria.date || originalConvocatoria.meeting_date || '',
-        meetingTime: originalConvocatoria.time || '18:00',
-        meetingLocation: originalConvocatoria.location || originalConvocatoria.meeting_location || 'Hall do Prédio',
+      console.log('📄 Gerando PDF da convocatória:', originalConvocatoria);
 
-        // Segunda convocatória
-        secondCallEnabled: originalConvocatoria.second_call_enabled !== false,
-        secondCallDate: originalConvocatoria.second_call_date,
-        secondCallTime: originalConvocatoria.second_call_time || '19:00',
-        
-        // Responsaveis
-        administrator: originalConvocatoria.administrator || '',
-        secretary: originalConvocatoria.secretary,
-        
-        // Agenda
-        agendaItems: originalConvocatoria.agenda_items || [],
-        
-        // Legal
-        legalReference: originalConvocatoria.legal_reference
+      // Preparar dados no formato TemplateData para o gerador de PDF
+      const templateData: TemplateData = {
+        building_name: originalConvocatoria.building_name || 'Edifício',
+        building_address: originalConvocatoria.building_address || '',
+        building_postal_code: originalConvocatoria.postal_code || '',
+        building_city: originalConvocatoria.city || '',
+        member_name: '', // Não aplicável para convocatória geral
+        assembly_type: originalConvocatoria.assembly_type || 'ordinary',
+        assembly_number: originalConvocatoria.assembly_number,
+        meeting_date: originalConvocatoria.date || originalConvocatoria.meeting_date
+          ? formatDatePortuguese(originalConvocatoria.date || originalConvocatoria.meeting_date)
+          : '',
+        meeting_time: originalConvocatoria.time || originalConvocatoria.meeting_time || '18:00',
+        first_call_time: originalConvocatoria.first_call_time || originalConvocatoria.time || '18:00',
+        second_call_time: originalConvocatoria.second_call_time || '19:00',
+        location: originalConvocatoria.location || originalConvocatoria.meeting_location || 'Local a definir',
+        agenda_items: originalConvocatoria.agenda_items || [],
+        convocatoria_number: originalConvocatoria.assembly_number,
+        sender_name: originalConvocatoria.administrator || 'A Administração',
+        sender_role: 'Administrador do Condomínio'
       };
-      
-      // Gerar e baixar o PDF
-      await ConvocatoriaPdfGenerator.generateAndDownload(pdfData);
-      toast.success('PDF gerado com sucesso');
+
+      console.log('📄 Template data preparado:', templateData);
+
+      // Gerar e baixar o PDF usando função simples e funcional
+      generateConvocatoriaPDF(templateData, true);
+      toast.success('PDF gerado com sucesso!');
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
-      toast.error('Erro ao gerar PDF');
+      toast.error('Erro ao gerar PDF da convocatória');
     }
   };
 
