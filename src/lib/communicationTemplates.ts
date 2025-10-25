@@ -155,50 +155,27 @@ e do artigo 1432.º do Código Civil.
 export const convocatoriaWhatsAppMessage = (data: TemplateData): string => {
   const assemblyType = data.assembly_type === 'ordinary' ? 'Ordinária' : 'Extraordinária';
   const firstCallTime = data.first_call_time || data.meeting_time;
-  const secondCallTime = data.second_call_time || 'meia hora depois';
 
-  // Format agenda items for WhatsApp (shorter version)
-  const agendaPreview = data.agenda_items && data.agenda_items.length > 0
-    ? data.agenda_items.slice(0, 3).map(item => `${item.item_number}. ${item.title}`).join('\n')
-    : 'Consultar email';
+  return `Olá *${data.member_name}*,
 
-  return `*${data.building_name}*
-━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📢 CONVOCATÓRIA
-Assembleia ${assemblyType} de Condóminos
+📅 *Lembrete: Assembleia ${assemblyType}*
 
-Exmo(a). Sr(a). *${data.member_name}*${data.member_apartment ? `\nFração ${data.member_apartment}` : ''}
+🗓️ Data: ${data.meeting_date}
+⏰ Hora: ${firstCallTime}
+📍 Local: ${data.location}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━
 
-📅 *DATA:* ${data.meeting_date}
+✉️ A convocatória oficial com toda a informação foi enviada por *email/correio registado* conforme a lei.
 
-⏰ *HORÁRIO:*
-• 1ª Convocatória: ${firstCallTime}
-  (Quórum: > 50%)
-• 2ª Convocatória: ${secondCallTime}
-  (Quórum: > 25%)
+Este WhatsApp é apenas um lembrete informal, sem valor jurídico.
 
-📍 *LOCAL:*
-${data.location}
+━━━━━━━━━━━━━━━━━━━━━
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📋 *ORDEM DO DIA:*
-${agendaPreview}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-ℹ️ A convocatória oficial completa com todos os detalhes foi enviada por email.
-
-⚠️ Caso não possa comparecer, pode fazer-se representar mediante procuração escrita.
-
-✅ Por favor, confirme a sua presença ou representação.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Por favor confirme a sua presença.
 
 ${data.sender_name || 'A Administração'}
-${data.sender_role || 'Administrador do Condomínio'}`;
+${data.building_name}`;
 };
 
 // ============================================================================
@@ -208,43 +185,25 @@ ${data.sender_role || 'Administrador do Condomínio'}`;
 export const actaWhatsAppMessage = (data: TemplateData): string => {
   const assemblyType = data.assembly_type === 'ordinary' ? 'Ordinária' : 'Extraordinária';
 
-  return `*${data.building_name}*
-━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📄 ACTA DA ASSEMBLEIA
+  return `Olá *${data.member_name}*,
+
+📄 *Acta da Assembleia ${assemblyType}*
 ${data.minute_number ? `Acta n.º ${data.minute_number}` : ''}
 
-Exmo(a). Sr(a). *${data.member_name}*${data.member_apartment ? `\nFração ${data.member_apartment}` : ''}
+📅 Realizada em: ${data.meeting_date}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━
 
-📅 *ASSEMBLEIA REALIZADA:*
-${data.meeting_date}
-Assembleia ${assemblyType} de Condóminos
+✉️ A acta completa em PDF foi enviada por *email* para consulta e arquivo.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚖️ Prazo de impugnação: 3 meses (Art. 1435.º do Código Civil)
 
-📋 *CONTEÚDO DA ACTA:*
+━━━━━━━━━━━━━━━━━━━━━
 
-✅ Registo de presenças e representações
-✅ Verificação de quórum
-✅ Deliberações sobre ordem do dia
-✅ Resultados das votações
-✅ Assinaturas validadas
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📎 *DOCUMENTO ANEXO*
-A acta completa em PDF foi enviada por email para consulta e arquivo.
-
-⚖️ *PRAZO DE IMPUGNAÇÃO*
-Nos termos do Art. 1435.º do Código Civil, as deliberações podem ser impugnadas judicialmente no prazo de 3 meses.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Para qualquer esclarecimento, não hesite em contactar.
+Para esclarecimentos, contacte a administração.
 
 ${data.sender_name || 'A Administração'}
-${data.sender_role || 'Administrador do Condomínio'}`;
+${data.building_name}`;
 };
 
 // ============================================================================

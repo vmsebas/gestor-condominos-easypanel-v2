@@ -2369,6 +2369,205 @@ O PDF gerado agora usa o mesmo template profissional que no envio de comunicaç�
 
 ---
 
-**Última actualização**: 25 Outubro 2025 (22h45)
-**Versão**: v0.1.4
-**Estado**: ✅ Sprints 3-10.2 completos e testados
+## 🔧 Sprint 10.3: Simplificação das Mensagens WhatsApp (v0.1.5)
+
+**Data**: 25 Outubro 2025 (23h15)
+**Duração**: ~15 minutos
+**Objetivo**: Simplificar mensagens WhatsApp para formato amigável e lembrete informal
+
+### 🐛 Problema Reportado pelo Utilizador
+
+> "el texto de whatsapp debe verse bien en whatsapp y con los datos solo imprescindibles no con todo esto y recordando que la convocatoria se envia por email o carta registrada como dice la ley el mensaje de whatsapp es solo un recordatorio no tiene valor juridico"
+
+**Análise do Problema**:
+1. ❌ **Mensagens demasiado longas e formais** - Convocatórias com ~47 linhas, Actas com ~37 linhas
+2. ❌ **Informação excessiva** - Incluía quórum percentual, 1ª/2ª convocatória, toda a ordem do dia
+3. ❌ **Não deixava claro o propósito** - WhatsApp é apenas lembrete informal, não documento legal
+4. ✅ **Faltava avisar** - Que a convocatória oficial vai por email/correio registado (legal)
+
+### 📝 Mudanças Implementadas
+
+#### 1. Convocatória WhatsApp - ANTES vs DEPOIS
+
+**ANTES** (~47 linhas):
+```
+*Condomino Buraca 1*
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📢 CONVOCATÓRIA
+Assembleia Extraordinária de Condóminos
+
+Exmo(a). Sr(a). *Vítor Manuel Sebastian Rodrigues*
+Fração RC/DTO
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📅 *DATA:* 15 de novembro de 2025
+
+⏰ *HORÁRIO:*
+• 1ª Convocatória: 19:00
+  (Quórum: > 50%)
+• 2ª Convocatória: meia hora depois
+  (Quórum: > 25%)
+
+📍 *LOCAL:*
+Salão de reuniões do prédio, Rés-do-chão
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 *ORDEM DO DIA:*
+1. Aprovação de obras na fachada
+2. Instalação de sistema de videovigilância
+3. Assuntos gerais
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ℹ️ A convocatória oficial completa com todos os detalhes foi enviada por email.
+
+⚠️ Caso não possa comparecer, pode fazer-se representar mediante procuração escrita.
+
+✅ Por favor, confirme a sua presença ou representação.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+A Administração
+Administrador do Condomínio
+```
+
+**DEPOIS** (~14 linhas):
+```
+Olá *Vítor Manuel Sebastian Rodrigues*,
+
+📅 *Lembrete: Assembleia Extraordinária*
+
+🗓️ Data: 15 de novembro de 2025
+⏰ Hora: 19:00
+📍 Local: Salão de reuniões do prédio, Rés-do-chão
+
+━━━━━━━━━━━━━━━━━━━━━
+
+✉️ A convocatória oficial com toda a informação foi enviada por *email/correio registado* conforme a lei.
+
+Este WhatsApp é apenas um lembrete informal, sem valor jurídico.
+
+━━━━━━━━━━━━━━━━━━━━━
+
+✅ Por favor confirme a sua presença.
+
+A Administração
+Condomino Buraca 1
+```
+
+**Melhorias**:
+- ✅ Reduziu de ~47 para ~14 linhas (70% menor)
+- ✅ Tom informal e amigável ("Olá" em vez de "Exmo(a). Sr(a).")
+- ✅ Apenas dados essenciais: data, hora, local
+- ✅ Avisa que documento oficial foi por email/correio registado
+- ✅ Deixa claro: "sem valor jurídico"
+- ✅ Removida informação de quórum (não necessária no lembrete)
+- ✅ Removida ordem do dia completa (deve consultar email oficial)
+
+#### 2. Acta WhatsApp - ANTES vs DEPOIS
+
+**ANTES** (~37 linhas):
+```
+*Condomino Buraca 1*
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📄 ACTA DA ASSEMBLEIA
+Acta n.º 28
+
+Exmo(a). Sr(a). *Nome*
+Fração RC/DTO
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📅 *ASSEMBLEIA REALIZADA:*
+15 de novembro de 2025
+Assembleia Extraordinária de Condóminos
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 *CONTEÚDO DA ACTA:*
+
+✅ Registo de presenças e representações
+✅ Verificação de quórum
+✅ Deliberações sobre ordem do dia
+✅ Resultados das votações
+✅ Assinaturas validadas
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📎 *DOCUMENTO ANEXO*
+A acta completa em PDF foi enviada por email para consulta e arquivo.
+
+⚖️ *PRAZO DE IMPUGNAÇÃO*
+Nos termos do Art. 1435.º do Código Civil, as deliberações podem ser impugnadas judicialmente no prazo de 3 meses.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Para qualquer esclarecimento, não hesite em contactar.
+
+A Administração
+Administrador do Condomínio
+```
+
+**DEPOIS** (~12 linhas):
+```
+Olá *Nome*,
+
+📄 *Acta da Assembleia Extraordinária*
+Acta n.º 28
+
+📅 Realizada em: 15 de novembro de 2025
+
+━━━━━━━━━━━━━━━━━━━━━
+
+✉️ A acta completa em PDF foi enviada por *email* para consulta e arquivo.
+
+⚖️ Prazo de impugnação: 3 meses (Art. 1435.º do Código Civil)
+
+━━━━━━━━━━━━━━━━━━━━━
+
+Para esclarecimentos, contacte a administração.
+
+A Administração
+Condomino Buraca 1
+```
+
+**Melhorias**:
+- ✅ Reduziu de ~37 para ~12 linhas (68% menor)
+- ✅ Tom amigável ("Olá" em vez de "Exmo(a). Sr(a).")
+- ✅ Removida checklist detalhada (não necessária no lembrete)
+- ✅ Mantido apenas prazo de impugnação (informação legal importante)
+- ✅ Mensagem concisa e direta
+
+### 📁 Ficheiros Modificados
+
+**src/lib/communicationTemplates.ts**:
+- Função `convocatoriaWhatsAppMessage()` (~30 linhas reduzidas para ~13 linhas)
+- Função `actaWhatsAppMessage()` (~30 linhas reduzidas para ~12 linhas)
+
+### ✅ Resultado Final
+
+**Estatísticas**:
+- Convocatória WhatsApp: 47 linhas → 14 linhas (70% redução)
+- Acta WhatsApp: 37 linhas → 12 linhas (68% redução)
+- Build: 5.14s
+- Container: ✅ Healthy
+
+**Cumprimento Legal**:
+- ✅ WhatsApp claramente identificado como "lembrete informal"
+- ✅ Aviso explícito: "sem valor jurídico"
+- ✅ Referência à convocatória oficial por email/correio registado
+- ✅ Mantida informação legal essencial (prazo impugnação nas actas)
+
+**User Experience**:
+- ✅ Mensagens curtas e fáceis de ler no WhatsApp
+- ✅ Tom amigável e informal apropriado ao canal
+- ✅ Apenas informação essencial (data, hora, local)
+- ✅ CTA claro: "confirme a sua presença"
+
+---
+
+**Última actualização**: 25 Outubro 2025 (23h25)
+**Versão**: v0.1.5
+**Estado**: ✅ Sprints 3-10.3 completos e testados
