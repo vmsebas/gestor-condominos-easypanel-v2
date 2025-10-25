@@ -364,6 +364,7 @@ const SendCommunicationDialog: React.FC<SendCommunicationDialogProps> = ({
         building_address: buildingAddress,
         member_name: member.name,
         member_apartment: member.apartment,
+        member_fraction: member.fraction,
         assembly_type: communicationData.assembly_type || 'ordinary',
         meeting_date: meetingDateRaw
           ? formatDatePortuguese(meetingDateRaw)
@@ -372,16 +373,24 @@ const SendCommunicationDialog: React.FC<SendCommunicationDialogProps> = ({
         first_call_time: communicationData.first_call_time || communicationData.time || '18:00',
         second_call_time: communicationData.second_call_time || 'meia hora depois',
         location: communicationData.location || 'Local a definir',
-        sender_name: 'A Administração'
+        agenda_items: communicationData.agenda_items || [],
+        convocatoria_number: communicationData.assembly_number || communicationData.convocatoria_number,
+        minute_number: communicationData.minute_number,
+        sender_name: 'A Administração',
+        sender_role: 'Administrador do Condomínio'
       };
 
       console.log('📱 Template data prepared:', templateData);
 
-      // Get WhatsApp template
-      const message = getWhatsAppTemplate(
-        communicationType === 'convocatoria' ? 'convocatoria' : 'note',
-        templateData
-      );
+      // Get WhatsApp template - map communicationType to template type
+      let whatsappType: 'convocatoria' | 'acta' | 'note' = 'note';
+      if (communicationType === 'convocatoria') {
+        whatsappType = 'convocatoria';
+      } else if (communicationType === 'acta') {
+        whatsappType = 'acta';
+      }
+
+      const message = getWhatsAppTemplate(whatsappType, templateData);
       console.log('📱 WhatsApp message generated (length):', message.length);
 
       // Log communication in database

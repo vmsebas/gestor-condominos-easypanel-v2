@@ -202,6 +202,52 @@ ${data.sender_role || 'Administrador do Condomínio'}`;
 };
 
 // ============================================================================
+// ACTA - WHATSAPP TEMPLATES
+// ============================================================================
+
+export const actaWhatsAppMessage = (data: TemplateData): string => {
+  const assemblyType = data.assembly_type === 'ordinary' ? 'Ordinária' : 'Extraordinária';
+
+  return `*${data.building_name}*
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📄 ACTA DA ASSEMBLEIA
+${data.minute_number ? `Acta n.º ${data.minute_number}` : ''}
+
+Exmo(a). Sr(a). *${data.member_name}*${data.member_apartment ? `\nFração ${data.member_apartment}` : ''}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📅 *ASSEMBLEIA REALIZADA:*
+${data.meeting_date}
+Assembleia ${assemblyType} de Condóminos
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 *CONTEÚDO DA ACTA:*
+
+✅ Registo de presenças e representações
+✅ Verificação de quórum
+✅ Deliberações sobre ordem do dia
+✅ Resultados das votações
+✅ Assinaturas validadas
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📎 *DOCUMENTO ANEXO*
+A acta completa em PDF foi enviada por email para consulta e arquivo.
+
+⚖️ *PRAZO DE IMPUGNAÇÃO*
+Nos termos do Art. 1435.º do Código Civil, as deliberações podem ser impugnadas judicialmente no prazo de 3 meses.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Para qualquer esclarecimento, não hesite em contactar.
+
+${data.sender_name || 'A Administração'}
+${data.sender_role || 'Administrador do Condomínio'}`;
+};
+
+// ============================================================================
 // ACTA - EMAIL TEMPLATES
 // ============================================================================
 
@@ -499,12 +545,14 @@ export const getEmailTemplate = (
 };
 
 export const getWhatsAppTemplate = (
-  type: 'convocatoria' | 'reminder' | 'note',
+  type: 'convocatoria' | 'acta' | 'reminder' | 'note',
   data: TemplateData
 ): string => {
   switch (type) {
     case 'convocatoria':
       return convocatoriaWhatsAppMessage(data);
+    case 'acta':
+      return actaWhatsAppMessage(data);
     case 'reminder':
       return `*${data.building_name}*\n\n📢 Lembrete: ${data.custom_message || 'Mensagem'}`;
     case 'note':

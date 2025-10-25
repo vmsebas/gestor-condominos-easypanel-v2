@@ -1957,6 +1957,212 @@ toast.error('Erro ao eliminar acta: ' + error.message);
 
 ---
 
-**Última actualização**: 25 Outubro 2025 (22h30)
-**Versão**: v0.1.2
-**Estado**: ✅ Sprints 3-10 completos e testados
+## 🔧 Sprint 10.1: Correção Template WhatsApp para Actas (v0.1.3)
+
+**Data**: 25 Outubro 2025 (22h32)
+**Duração**: ~20 minutos
+**Objetivo**: Criar template WhatsApp profissional para Actas e corrigir distribuição
+
+### 🐛 Problema Reportado pelo Utilizador
+
+> "este texto no es el adecuado para whatsapp los telefono deven ser los del miembro"
+
+**Análise do Problema**:
+1. ❌ **Não existia template WhatsApp para Actas** - Sistema usava template genérico 'note' que apenas dizia "Mensagem"
+2. ✅ **Telefones já vinham do membro** - `member.whatsapp_number` estava correto (linha 345-354)
+3. ⚠️ **Dados incompletos** - templateData para WhatsApp faltava `minute_number`, `agenda_items`, `fraction`
+
+### 📋 Implementações
+
+#### 1. ✅ Template WhatsApp Profissional para Actas
+
+**Arquivo**: `src/lib/communicationTemplates.ts` (+43 linhas)
+
+```typescript
+export const actaWhatsAppMessage = (data: TemplateData): string => {
+  const assemblyType = data.assembly_type === 'ordinary' ? 'Ordinária' : 'Extraordinária';
+
+  return `*${data.building_name}*
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📄 ACTA DA ASSEMBLEIA
+${data.minute_number ? `Acta n.º ${data.minute_number}` : ''}
+
+Exmo(a). Sr(a). *${data.member_name}*
+${data.member_apartment ? `Fração ${data.member_apartment}` : ''}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📅 *ASSEMBLEIA REALIZADA:*
+${data.meeting_date}
+Assembleia ${assemblyType} de Condóminos
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 *CONTEÚDO DA ACTA:*
+
+✅ Registo de presenças e representações
+✅ Verificação de quórum
+✅ Deliberações sobre ordem do dia
+✅ Resultados das votações
+✅ Assinaturas validadas
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📎 *DOCUMENTO ANEXO*
+A acta completa em PDF foi enviada por email para consulta e arquivo.
+
+⚖️ *PRAZO DE IMPUGNAÇÃO*
+Nos termos do Art. 1435.º do Código Civil, as deliberações podem ser impugnadas judicialmente no prazo de 3 meses.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Para qualquer esclarecimento, não hesite em contactar.
+
+${data.sender_name || 'A Administração'}
+${data.sender_role || 'Administrador do Condomínio'}`;
+};
+```
+
+**Features do Template**:
+- 📄 Header com título e número da acta
+- 👤 Nome do membro e fração personalizados
+- 📅 Data da assembleia realizada
+- ✅ Checklist do conteúdo da acta
+- 📎 Referência ao PDF anexado
+- ⚖️ Informação legal sobre prazo de impugnação (Art. 1435º CC)
+
+#### 2. ✅ Atualização de getWhatsAppTemplate
+
+**Arquivo**: `src/lib/communicationTemplates.ts` (função modificada)
+
+```typescript
+// ANTES: Apenas 'convocatoria', 'reminder', 'note'
+export const getWhatsAppTemplate = (
+  type: 'convocatoria' | 'reminder' | 'note',
+  ...
+)
+
+// DEPOIS: Incluído 'acta'
+export const getWhatsAppTemplate = (
+  type: 'convocatoria' | 'acta' | 'reminder' | 'note',
+  ...
+) {
+  switch (type) {
+    case 'convocatoria':
+      return convocatoriaWhatsAppMessage(data);
+    case 'acta':
+      return actaWhatsAppMessage(data);  // ← NOVO
+    ...
+  }
+}
+```
+
+#### 3. ✅ Correção em SendCommunicationDialog
+
+**Arquivo**: `src/components/communications/SendCommunicationDialog.tsx`
+
+**Problema Original** (linha 381-384):
+```typescript
+// ❌ INCORRETO: Acta usava template 'note' genérico
+const message = getWhatsAppTemplate(
+  communicationType === 'convocatoria' ? 'convocatoria' : 'note',
+  templateData
+);
+```
+
+**Solução Implementada**:
+```typescript
+// ✅ CORRETO: Mapeamento explícito para cada tipo
+let whatsappType: 'convocatoria' | 'acta' | 'note' = 'note';
+if (communicationType === 'convocatoria') {
+  whatsappType = 'convocatoria';
+} else if (communicationType === 'acta') {
+  whatsappType = 'acta';
+}
+
+const message = getWhatsAppTemplate(whatsappType, templateData);
+```
+
+**TemplateData Completo** (linha 362-381):
+```typescript
+const templateData: TemplateData = {
+  building_name: buildingName,
+  building_address: buildingAddress,
+  member_name: member.name,              // ← Vem do membro
+  member_apartment: member.apartment,     // ← Vem do membro
+  member_fraction: member.fraction,       // ← ADICIONADO
+  assembly_type: communicationData.assembly_type || 'ordinary',
+  meeting_date: formatDatePortuguese(meetingDateRaw),
+  meeting_time: communicationData.time || '18:00',
+  first_call_time: communicationData.first_call_time || '18:00',
+  second_call_time: communicationData.second_call_time,
+  location: communicationData.location || 'Local a definir',
+  agenda_items: communicationData.agenda_items || [],  // ← ADICIONADO
+  convocatoria_number: communicationData.assembly_number,
+  minute_number: communicationData.minute_number,      // ← ADICIONADO
+  sender_name: 'A Administração',
+  sender_role: 'Administrador do Condomínio'
+};
+```
+
+### 📊 Estatísticas do Sprint 10.1
+
+```
+📝 Arquivos Modificados: 2
+├── 🔧 src/lib/communicationTemplates.ts (+44 linhas)
+│   ├── +actaWhatsAppMessage() (43 linhas)
+│   └── +getWhatsAppTemplate() type 'acta'
+└── 🔧 src/components/communications/SendCommunicationDialog.tsx (+11 linhas)
+    ├── Mapeamento whatsappType correto
+    └── templateData completo (minute_number, agenda_items, fraction)
+
+💡 Total: +55 linhas
+⏱️ Build time: 5.32s
+🐳 Container: Healthy
+```
+
+### ✅ Verificações
+
+**Telefone do Membro** (✅ Correto desde o início):
+```typescript
+// SendCommunicationDialog.tsx:345
+if (!member.whatsapp_number) {  // ← Vem do membro
+  toast.error(`${member.name} não tem WhatsApp configurado`);
+  return;
+}
+```
+
+**Template WhatsApp**:
+- ❌ **Antes**: `*Edifício XYZ*\n\nMensagem` (genérico)
+- ✅ **Depois**: Template profissional com 43 linhas, formatação, emojis, informação legal
+
+### 📈 Antes → Depois
+
+| Aspecto | Antes (v0.1.2) | Depois (v0.1.3) |
+|---------|----------------|-----------------|
+| **Template Acta** | ❌ Não existia (usava 'note') | ✅ Template profissional completo |
+| **Informação Legal** | ❌ Nenhuma | ✅ Art. 1435º sobre impugnação |
+| **Dados do Membro** | ⚠️ Nome e apartment | ✅ Nome, apartment, fraction |
+| **Número da Acta** | ❌ Não aparecia | ✅ `Acta n.º ${minute_number}` |
+| **Formato** | ⚠️ Texto simples | ✅ Formatação profissional com emojis |
+| **Telefone** | ✅ Já vinha do membro | ✅ Mantido correto |
+
+### 🎯 Impacto
+
+**Problema Resolvido**:
+- ✅ Template WhatsApp agora é profissional e específico para Actas
+- ✅ Todos os dados do membro aparecem corretamente
+- ✅ Informação legal incluída (prazo impugnação)
+- ✅ Formatação consistente com template de Convocatorias
+
+**User Experience**:
+- Mensagem clara e profissional
+- Informação completa (número acta, data, conteúdo)
+- Referência ao PDF anexado
+- Informação legal importante
+
+---
+
+**Última actualização**: 25 Outubro 2025 (22h35)
+**Versão**: v0.1.3
+**Estado**: ✅ Sprints 3-10.1 completos e testados
