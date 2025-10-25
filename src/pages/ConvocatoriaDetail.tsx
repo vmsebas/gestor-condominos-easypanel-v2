@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { format, isPast, isToday, isFuture, parseISO } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
+import SendCommunicationDialog from '@/components/communications/SendCommunicationDialog';
 
 const ConvocatoriaDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -83,12 +84,17 @@ const ConvocatoriaDetail: React.FC = () => {
     navigate(`/actas/nova?convocatoria=${id}`);
   };
 
+  const [showDistributeDialog, setShowDistributeDialog] = useState(false);
+  const [actaToDistribute, setActaToDistribute] = useState<any>(null);
+
   const handleViewActa = (minuteId: string) => {
     navigate(`/actas/${minuteId}`);
   };
 
-  const handleDistributeActa = () => {
-    toast.info('Funcionalidade de distribuição em desenvolvimento');
+  const handleDistributeActa = (actaData: any) => {
+    // Prepare acta data for distribution
+    setActaToDistribute(actaData);
+    setShowDistributeDialog(true);
   };
 
   if (isLoading) {
@@ -304,7 +310,7 @@ const ConvocatoriaDetail: React.FC = () => {
                   Ver Acta Completa
                 </Button>
                 {data.minute_status === 'signed' && (
-                  <Button variant="outline" onClick={handleDistributeActa}>
+                  <Button variant="outline" onClick={() => handleDistributeActa(data)}>
                     <Send className="mr-2 h-4 w-4" />
                     Distribuir Acta
                   </Button>
@@ -347,6 +353,32 @@ const ConvocatoriaDetail: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* SendCommunicationDialog for Acta Distribution */}
+      {actaToDistribute && (
+        <SendCommunicationDialog
+          open={showDistributeDialog}
+          onOpenChange={setShowDistributeDialog}
+          communicationType="acta"
+          buildingId={data.building_id}
+          buildingName={data.building_name || 'Condomínio'}
+          buildingAddress={data.building_address || ''}
+          communicationData={{
+            ...actaToDistribute,
+            id: data.minute_id,
+            minute_number: data.minute_number,
+            assembly_type: data.assembly_type,
+            meeting_date: data.minute_meeting_date || data.date,
+            meeting_time: data.time,
+            location: data.location,
+            agenda_items: data.agenda_items || []
+          }}
+          onSendComplete={() => {
+            toast.success('Acta distribuída com sucesso!');
+            setShowDistributeDialog(false);
+          }}
+        />
+      )}
     </div>
   );
 };
