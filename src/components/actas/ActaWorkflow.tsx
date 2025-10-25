@@ -13,7 +13,7 @@ import VerificacionQuorumStep from '@/components/workflows/VerificacionQuorumSte
 import DesarrolloReunionStep from '@/components/workflows/DesarrolloReunionStep';
 import RedaccionActaStep from '@/components/workflows/RedaccionActaStep';
 import FirmasActaStep from '@/components/workflows/FirmasActaStep';
-import { getMinuteById, updateMinuteAgendaItems } from '@/lib/api';
+import { getMinuteById, updateMinuteAgendaItems, getConvocatoriaById } from '@/lib/api';
 import { toast } from 'sonner';
 
 interface ActaWorkflowProps {
@@ -80,6 +80,47 @@ const ActaWorkflow: React.FC<ActaWorkflowProps> = ({
 
     loadActaData();
   }, [actaId]);
+
+  // Load convocatoria data when creating new acta from convocatoria
+  useEffect(() => {
+    const loadConvocatoriaData = async () => {
+      if (convocatoriaId && !actaId && !workflowState.data.convocatoria_loaded) {
+        setIsLoadingActa(true);
+        try {
+          const result = await getConvocatoriaById(convocatoriaId);
+          const convocatoria = result.data || result;
+
+          // Pre-fill workflow with convocatoria data
+          handleStepUpdate({
+            convocatoriaId,
+            convocatoria_loaded: true,
+            agenda_items: convocatoria.agenda_items || [],
+            building_id: convocatoria.building_id,
+            building_name: convocatoria.building_name,
+            building_address: convocatoria.building_address,
+            postal_code: convocatoria.postal_code,
+            city: convocatoria.city,
+            assembly_number: convocatoria.assembly_number,
+            minute_number: convocatoria.assembly_number, // Same as assembly_number
+            meeting_date: convocatoria.date || convocatoria.meeting_date,
+            meeting_time: convocatoria.time || convocatoria.meeting_time,
+            location: convocatoria.location || convocatoria.meeting_location,
+            assembly_type: convocatoria.assembly_type,
+            administrator: convocatoria.administrator
+          });
+
+          toast.success(`Dados da convocatória #${convocatoria.assembly_number} carregados`);
+        } catch (error) {
+          console.error('Error loading convocatoria:', error);
+          toast.error('Erro ao carregar convocatória');
+        } finally {
+          setIsLoadingActa(false);
+        }
+      }
+    };
+
+    loadConvocatoriaData();
+  }, [convocatoriaId, actaId]);
 
   // Save state whenever it changes
   useEffect(() => {

@@ -503,3 +503,283 @@ Key entities include:
 - Sistema 100% funcional segundo legislação portuguesa
 
 
+
+
+## 🎯 Sprints 3, 4 & 5: Sistema Completo Convocatórias-Actas (October 25, 2025)
+
+### Overview
+Implementação completa do fluxo de trabalho desde convocatórias até actas assinadas, com integração total de dados e lógica de negócio segundo a legislação portuguesa.
+
+### Sprint 3: UI Improvements - Lista de Convocatórias ✅
+
+#### Implementações:
+1. **Indicadores Visuais de Actas Relacionadas**
+   - Ícone verde CheckCircle para actas existentes
+   - Hierarquia visual com símbolo "└─"
+   - Status da acta (assinada/rascunho)
+   - Data da reunião da acta
+
+2. **Botões Contextuais Dinâmicos**
+   - Função `getAvailableActions()` com lógica de negócio portuguesa
+   - Botões que aparecem/desaparecem segundo:
+     - Estado da convocatória (draft/sent)
+     - Data da reunião (futura/hoje/passada)
+     - Existência de acta relacionada
+     - Estado da acta (draft/signed)
+
+3. **Alertas Inteligentes**
+   - Warning em âmbar para reuniões realizadas sem acta
+   - Mensagem contextual "Reunião realizada sem acta registada"
+
+4. **Correções Técnicas**
+   - DATABASE_URL: 127.0.0.1 → host.docker.internal
+   - Adicionado porto 5173 em docker-compose.yml
+   - Eliminado badge duplicado na UI
+
+#### Arquivos Modificados:
+- `src/pages/Convocatorias.tsx` - 580 linhas (nova lógica contextual)
+- `.env` - DATABASE_URL corrigido
+- `docker-compose.yml` - Porto 5173 adicionado
+
+#### Lógica de Negócio (Legislação Portuguesa):
+```typescript
+// CONVOCATÓRIA EM RASCUNHO
+- canEdit: true
+- canSend: true
+- canDelete: true
+
+// CONVOCATÓRIA ENVIADA + REUNIÃO FUTURA
+- Apenas visualização e geração de PDF
+
+// DIA DA REUNIÃO + SEM ACTA
+- canCreateActa: true
+
+// APÓS REUNIÃO + COM ACTA
+- canViewActa: true
+- canDistributeActa: true (se assinada)
+
+// APÓS REUNIÃO + SEM ACTA
+- canCreateActa: true
+- showWarning: true ⚠️
+```
+
+---
+
+### Sprint 4: Página de Detalhe de Convocatória ✅
+
+#### Implementações:
+1. **Seção de Acta Relacionada**
+   - Card especial com borda verde
+   - Fundo verde claro (green-50/green-950)
+   - Informações completas:
+     - Número da acta
+     - Estado (assinada/rascunho/etc)
+     - Data da reunião
+     - Data de assinatura (se aplicável)
+   - Botões contextuais: "Ver Acta", "Distribuir Acta"
+
+2. **Visualização Melhorada da Agenda**
+   - Items numerados em círculos coloridos
+   - Badges para tipo (Votação/Informativo)
+   - Badges para maioria requerida (Simples/Qualificada)
+   - Cards com fundo muted/30
+
+3. **Ações Contextuais**
+   - Secção "Ações Disponíveis" com lógica dinâmica
+   - Mesma função `getAvailableActions()` do Sprint 3
+   - Mensagem informativa quando não há ações disponíveis
+
+4. **Melhorias Visuais**
+   - Badges no cabeçalho (tipo + estado)
+   - Alerta de warning em card âmbar
+   - Layout responsivo grid 1/2 colunas
+
+#### Arquivos Modificados:
+- `src/pages/ConvocatoriaDetail.tsx` - 352 linhas (+180 linhas de código novo)
+
+#### Estrutura da Página:
+```
+Header
+├── Título + Badges (tipo, estado)
+├── Edifício + morada
+└── Alerta de warning (se aplicável)
+
+Card: Informações da Assembleia
+├── Data, hora, local, tipo
+├── Administrador
+└── Ordem de Trabalhos (agenda melhorada)
+
+Card: Acta da Assembleia (se existe)
+├── Número, estado, datas
+└── Botões: Ver Acta, Distribuir
+
+Card: Ações Disponíveis
+└── Botões contextuais dinâmicos
+```
+
+---
+
+### Sprint 5: Workflow de Criação de Acta desde Convocatória ✅
+
+#### Implementações:
+1. **Carga Automática de Dados da Convocatória**
+   - useEffect em ActaWorkflow para detectar `convocatoriaId`
+   - Chamada a `getConvocatoriaById()`
+   - Pre-enchimento de todos os campos relevantes
+
+2. **Captura de Parâmetro URL**
+   - useSearchParams em Actas.tsx
+   - Detecção de `?convocatoria=id` na URL
+   - Abertura automática do workflow
+
+3. **Dados Pre-preenchidos**
+   - agenda_items (ordem de trabalhos completa)
+   - building_id, building_name, building_address
+   - postal_code, city
+   - assembly_number, minute_number
+   - meeting_date, meeting_time, location
+   - assembly_type, administrator
+
+4. **Experiência de Utilizador**
+   - Toast de confirmação: "Dados da convocatória #XX carregados"
+   - Eliminação automática do parâmetro URL ao cancelar
+   - Flag `convocatoria_loaded` para evitar recargas
+
+#### Arquivos Modificados:
+- `src/components/actas/ActaWorkflow.tsx` - +40 linhas (novo useEffect)
+- `src/pages/Actas.tsx` - +15 linhas (useSearchParams + auto-open)
+
+#### Fluxo Completo:
+```
+1. Utilizador na página de Convocatória #28
+2. Click no botão "Criar Acta"
+3. Navigate → /actas/nova?convocatoria=bedf6d4d-...
+4. Actas.tsx detecta parâmetro
+5. setShowWorkflow(true)
+6. ActaWorkflow recebe convocatoriaId
+7. useEffect carrega dados via API
+8. Workflow pre-preenchido com:
+   - 3 pontos da ordem de trabalhos
+   - Dados do edifício
+   - Data/hora/local da reunião
+   - Tipo de assembleia
+9. Utilizador apenas completa:
+   - Presenças
+   - Votações
+   - Redação final
+   - Assinaturas
+```
+
+---
+
+### 🧪 Testing
+
+#### Test Script: `scripts/test-frontend-complete.sh`
+```bash
+✅ 1. Frontend (Puerto 5173) - HTTP 200
+✅ 2. Backend (Puerto 3002) - HTTP 200
+✅ 3. Autenticación - Token obtenido
+✅ 4. API /api/convocatorias - 4 convocatorias
+✅ 5. Campos Nuevos - minute_id, minute_status presentes
+✅ 6. Datos Completos - Relación convocatoria-acta correcta
+✅ 7. Compilación TypeScript - Sin errores
+```
+
+#### Validação de Dados (Base de Dados):
+| Nº | Status | minutes_created | minute_id | minute_status | Validação |
+|----|--------|----------------|-----------|---------------|-----------|
+| 28 | sent   | ✅ true        | 2e656... | signed        | ✅ OK     |
+| 29 | sent   | ✅ true        | 9f20e... | signed        | ✅ OK     |
+| 30 | sent   | ✅ true        | 77695... | signed        | ✅ OK     |
+| 31 | draft  | ❌ false       | NULL     | NULL          | ✅ OK     |
+
+---
+
+### 📊 Estatísticas do Código
+
+#### Linhas de Código Adicionadas:
+- **Sprint 3**: ~250 linhas (Convocatorias.tsx + lógica de negócio)
+- **Sprint 4**: ~180 linhas (ConvocatoriaDetail.tsx + seção de acta)
+- **Sprint 5**: ~55 linhas (ActaWorkflow.tsx + Actas.tsx integração)
+- **Total**: ~485 linhas de código TypeScript/React
+
+#### Arquivos Modificados:
+1. `src/pages/Convocatorias.tsx`
+2. `src/pages/ConvocatoriaDetail.tsx`
+3. `src/pages/Actas.tsx`
+4. `src/components/actas/ActaWorkflow.tsx`
+5. `.env`
+6. `docker-compose.yml`
+
+#### Funcionalidades Novas:
+- ✅ Visualização de actas relacionadas em lista
+- ✅ Botões contextuais dinâmicos segundo legislação
+- ✅ Página de detalhe completa com acta
+- ✅ Visualização melhorada de agenda
+- ✅ Workflow de acta com dados pre-preenchidos
+- ✅ Integração completa convocatória → acta
+
+---
+
+### 🔧 Correções Técnicas Aplicadas
+
+1. **DATABASE_URL**
+   - Antes: `postgresql://postgres:SecurePass123@127.0.0.1:5432/gestor_condominos`
+   - Depois: `postgresql://postgres:SecurePass123@host.docker.internal:5432/gestor_condominos`
+   - Razão: Containers Docker não podem aceder 127.0.0.1
+
+2. **Porto 5173**
+   - Adicionado em docker-compose.yml
+   - Necessário para acesso directo ao frontend
+   - Anteriormente só porto 3002 estava exposto
+
+3. **Badge Duplicado**
+   - Removido badge duplicado na linha 463 de Convocatorias.tsx
+   - Mantido apenas no cabeçalho do item
+
+4. **Sintaxe JSX**
+   - Corrigido return statement em Convocatorias.tsx
+   - Adicionado `;` antes de `})` no map
+
+---
+
+### 📦 Backup da Base de Dados
+
+**Arquivo**: `backup_sprints_3_4_5_20251025.sql.gz`
+**Tamanho**: 24KB (comprimido)
+**Data**: 25 Outubro 2025, 20:43
+**Tabelas**: 27 tabelas
+**Dados**: 
+- 2 buildings
+- 9 members
+- 2 users
+- 4 convocatorias (3 com actas)
+- 3 minutes
+- 4 transactions
+
+---
+
+### 🌐 Aplicação Disponível
+
+- **Local**: http://localhost:5173 (frontend) + http://localhost:3002 (API)
+- **Pública**: https://gestor.vimasero.com
+- **Container**: gestor-condominos-app-1
+- **Estado**: ✅ Healthy
+
+---
+
+### 📝 Próximos Passos
+
+**Sprint 6**: Sistema de Distribuição de Actas
+- Análise do sistema de comunicações existente
+- Design do fluxo de distribuição
+- Backend: endpoint de distribuição
+- Frontend: UI de distribuição
+- Integração com SendCommunicationDialog
+- Tracking de distribuições (communication_logs)
+
+---
+
+**Última actualização**: 25 Outubro 2025
+**Versão**: v0.0.7
+**Estado**: ✅ Sprints 3, 4 e 5 completos e testados

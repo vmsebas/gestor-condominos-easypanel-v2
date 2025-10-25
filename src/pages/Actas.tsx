@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,10 +23,22 @@ import {
 
 
 const Actas: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const convocatoriaParam = searchParams.get('convocatoria');
+
   const [showWorkflow, setShowWorkflow] = useState(false);
+  const [convocatoriaId, setConvocatoriaId] = useState<string | null>(null);
   const [editingActa, setEditingActa] = useState<any>(null);
   const [showSendDialog, setShowSendDialog] = useState(false);
   const [actaToSend, setActaToSend] = useState<any>(null);
+
+  // Auto-open workflow when convocatoria param is present
+  useEffect(() => {
+    if (convocatoriaParam) {
+      setConvocatoriaId(convocatoriaParam);
+      setShowWorkflow(true);
+    }
+  }, [convocatoriaParam]);
 
   const { data: actasResponse, isLoading, error } = useQuery({
     queryKey: ['minutes'],
@@ -103,11 +116,18 @@ const Actas: React.FC = () => {
   if (showWorkflow) {
     return (
       <ActaWorkflow
+        convocatoriaId={convocatoriaId || undefined}
         actaId={editingActa?.id}
         onComplete={handleWorkflowComplete}
         onCancel={() => {
           setShowWorkflow(false);
+          setConvocatoriaId(null);
           setEditingActa(null);
+          // Clear URL param if present
+          if (convocatoriaParam) {
+            searchParams.delete('convocatoria');
+            setSearchParams(searchParams);
+          }
         }}
       />
     );

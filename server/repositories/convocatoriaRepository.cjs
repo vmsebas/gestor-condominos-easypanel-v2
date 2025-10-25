@@ -24,18 +24,25 @@ class ConvocatoriaRepository extends BaseRepository {
   }
 
   /**
-   * Encuentra todas las convocatorias con agenda items
+   * Encuentra todas las convocatorias con agenda items Y datos de actas relacionadas
    */
   async findAllWithAgenda(filters = {}, options = {}) {
     let query = this.db('convocatorias')
       // .whereNull('deleted_at') - convocatorias table doesn't have deleted_at column
       .join('buildings', 'convocatorias.building_id', 'buildings.id')
+      .leftJoin('minutes', 'minutes.convocatoria_id', 'convocatorias.id')
       .select(
         'convocatorias.*',
         'buildings.name as building_name',
         'buildings.address as building_address',
         'buildings.postal_code',
-        'buildings.city'
+        'buildings.city',
+        // Datos de acta relacionada (si existe)
+        'minutes.id as minute_id',
+        'minutes.minute_number',
+        'minutes.status as minute_status',
+        'minutes.meeting_date as minute_meeting_date',
+        'minutes.signed_date as minute_signed_date'
       );
     
     if (filters.buildingId) {

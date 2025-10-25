@@ -3,12 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Calendar, Clock, MapPin, Users, FileText, Download, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, MapPin, Users, FileText, Download, Edit, Trash2, CheckCircle, AlertCircle, FileSignature, Send } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getConvocatoriaById } from '@/lib/api';
-import { format } from 'date-fns';
+import { format, isPast, isToday, isFuture, parseISO } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 
 const ConvocatoriaDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +20,76 @@ const ConvocatoriaDetail: React.FC = () => {
     queryFn: () => getConvocatoriaById(id!),
     enabled: !!id,
   });
+
+  /**
+   * Determina qué acciones están disponibles según el estado de la convocatoria
+   * LÓGICA DE NEGOCIO según legislación portuguesa
+   */
+  const getAvailableActions = (data: any) => {
+    const meetingDate = parseISO(data.date);
+    const isReunionDay = isToday(meetingDate);
+    const isAfterReunion = isPast(meetingDate);
+    const hasActa = data.minutes_created && data.minute_id;
+
+    const actions = {
+      canEdit: false,
+      canSend: false,
+      canDelete: false,
+      canCreateActa: false,
+      canViewActa: false,
+      canDistributeActa: false,
+      showWarning: false,
+      warningMessage: ''
+    };
+
+    // CONVOCATORIA EN RASCUNHO
+    if (data.status === 'draft') {
+      actions.canEdit = true;
+      actions.canSend = true;
+      actions.canDelete = true;
+      return actions;
+    }
+
+    // CONVOCATORIA ENVIADA
+    if (data.status === 'sent') {
+      if (isFuture(meetingDate)) {
+        return actions; // Solo visualizar
+      }
+
+      if (isReunionDay && !hasActa) {
+        actions.canCreateActa = true;
+        return actions;
+      }
+
+      if (isAfterReunion) {
+        if (hasActa) {
+          actions.canViewActa = true;
+          if (data.minute_status === 'signed') {
+            actions.canDistributeActa = true;
+          }
+        } else {
+          actions.canCreateActa = true;
+          actions.showWarning = true;
+          actions.warningMessage = 'Reunião realizada sem acta registada';
+        }
+        return actions;
+      }
+    }
+
+    return actions;
+  };
+
+  const handleCreateActa = () => {
+    navigate(`/actas/nova?convocatoria=${id}`);
+  };
+
+  const handleViewActa = (minuteId: string) => {
+    navigate(`/actas/${minuteId}`);
+  };
+
+  const handleDistributeActa = () => {
+    toast.info('Funcionalidade de distribuição em desenvolvimento');
+  };
 
   if (isLoading) {
     return (
@@ -47,6 +118,7 @@ const ConvocatoriaDetail: React.FC = () => {
   }
 
   const data = convocatoria.data || convocatoria;
+  const actions = getAvailableActions(data);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -62,20 +134,38 @@ const ConvocatoriaDetail: React.FC = () => {
 
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold mb-2">{data.title}</h1>
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-3xl font-bold">{data.title || `Assembleia ${data.assembly_type === 'ordinary' ? 'Ordinária' : 'Extraordinária'} #${data.assembly_number}`}</h1>
+              <Badge variant={data.assembly_type === 'ordinary' ? 'default' : 'secondary'}>
+                {data.assembly_type === 'ordinary' ? 'Ordinária' : 'Extraordinária'}
+              </Badge>
+              <Badge variant={data.status === 'draft' ? 'outline' : 'default'}>
+                {data.status === 'draft' ? 'Rascunho' : data.status === 'sent' ? 'Enviada' : data.status}
+              </Badge>
+            </div>
             <p className="text-muted-foreground">
               {data.building_name} - {data.building_address}
             </p>
+
+            {/* Alerta de reunião sem acta */}
+            {actions.showWarning && (
+              <div className="mt-3 flex items-center gap-2 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 p-3 rounded-lg border border-amber-200 dark:border-amber-800">
+                <AlertCircle className="h-5 w-5" />
+                <span className="font-medium">{actions.warningMessage}</span>
+              </div>
+            )}
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm">
               <Download className="mr-2 h-4 w-4" />
               Exportar PDF
             </Button>
-            <Button variant="outline" size="sm">
-              <Edit className="mr-2 h-4 w-4" />
-              Editar
-            </Button>
+            {actions.canEdit && (
+              <Button variant="outline" size="sm">
+                <Edit className="mr-2 h-4 w-4" />
+                Editar
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -131,39 +221,128 @@ const ConvocatoriaDetail: React.FC = () => {
 
             {data.agenda_items && data.agenda_items.length > 0 && (
               <div className="pt-4 border-t">
-                <h3 className="font-semibold mb-2">Ordem de Trabalhos</h3>
-                <ol className="list-decimal list-inside space-y-2">
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Ordem de Trabalhos ({data.agenda_items.length} pontos)
+                </h3>
+                <div className="space-y-3">
                   {data.agenda_items.map((item: any, index: number) => (
-                    <li key={item.id || index} className="text-sm">
-                      <strong>{item.title}</strong>
-                      {item.description && (
-                        <p className="text-muted-foreground mt-1 ml-5">{item.description}</p>
-                      )}
-                    </li>
+                    <div key={item.id || index} className="flex gap-3 p-3 rounded-lg border bg-muted/30">
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center font-semibold text-primary">
+                        {item.item_number || index + 1}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <strong className="text-sm">{item.title}</strong>
+                          {item.type && (
+                            <Badge variant={item.type === 'votacion' ? 'default' : 'secondary'} className="text-xs">
+                              {item.type === 'votacion' ? 'Votação' : item.type === 'informativo' ? 'Informativo' : item.type}
+                            </Badge>
+                          )}
+                          {item.requiredMajority && (
+                            <Badge variant="outline" className="text-xs">
+                              {item.requiredMajority === 'simple' ? 'Maioria Simples' : 'Maioria Qualificada'}
+                            </Badge>
+                          )}
+                        </div>
+                        {item.description && (
+                          <p className="text-sm text-muted-foreground">{item.description}</p>
+                        )}
+                      </div>
+                    </div>
                   ))}
-                </ol>
+                </div>
               </div>
             )}
           </CardContent>
         </Card>
 
+        {/* Sección de Acta Relacionada */}
+        {data.minute_id && (
+          <Card className="border-green-200 dark:border-green-800">
+            <CardHeader className="bg-green-50 dark:bg-green-950/20">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  <CardTitle>Acta da Assembleia</CardTitle>
+                </div>
+                <Badge variant={data.minute_status === 'signed' ? 'default' : 'secondary'} className="bg-green-600 text-white">
+                  {data.minute_status === 'signed' ? 'Assinada' : data.minute_status === 'draft' ? 'Rascunho' : data.minute_status}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Número da Acta</p>
+                  <p className="font-semibold">Acta #{data.minute_number}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Estado</p>
+                  <p className="font-semibold capitalize">{data.minute_status === 'signed' ? 'Assinada' : data.minute_status}</p>
+                </div>
+                {data.minute_meeting_date && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Data da Reunião</p>
+                    <p className="font-semibold">
+                      {format(new Date(data.minute_meeting_date), "d 'de' MMMM 'de' yyyy", { locale: pt })}
+                    </p>
+                  </div>
+                )}
+                {data.minute_signed_date && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Data de Assinatura</p>
+                    <p className="font-semibold">
+                      {format(new Date(data.minute_signed_date), "d 'de' MMMM 'de' yyyy", { locale: pt })}
+                    </p>
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={() => handleViewActa(data.minute_id)}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  Ver Acta Completa
+                </Button>
+                {data.minute_status === 'signed' && (
+                  <Button variant="outline" onClick={handleDistributeActa}>
+                    <Send className="mr-2 h-4 w-4" />
+                    Distribuir Acta
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Ações Contextuales */}
         <Card>
           <CardHeader>
-            <CardTitle>Ações</CardTitle>
+            <CardTitle>Ações Disponíveis</CardTitle>
+            <CardDescription>Ações baseadas no estado atual da convocatória</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              <Button>
-                <FileText className="mr-2 h-4 w-4" />
-                Criar Ata
-              </Button>
-              <Button variant="outline">
-                <Users className="mr-2 h-4 w-4" />
-                Registar Presenças
-              </Button>
-              <Button variant="outline">
-                Enviar Notificações
-              </Button>
+              {actions.canCreateActa && (
+                <Button
+                  variant={actions.showWarning ? "destructive" : "default"}
+                  onClick={handleCreateActa}
+                >
+                  <FileSignature className="mr-2 h-4 w-4" />
+                  Criar Acta
+                </Button>
+              )}
+              {actions.canSend && (
+                <Button variant="default">
+                  <Send className="mr-2 h-4 w-4" />
+                  Enviar Convocatória
+                </Button>
+              )}
+              {!actions.canCreateActa && !actions.canViewActa && !actions.canSend && (
+                <div className="text-sm text-muted-foreground flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>Nenhuma ação disponível no momento. A reunião ainda não foi realizada.</span>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
