@@ -203,12 +203,12 @@ export const ACTA_WORKFLOW: WorkflowDefinition = {
     {
       id: 'votaciones',
       title: 'Registo de Votações',
-      description: 'Captura de votos, cálculo de maiorias e aprovação de acordos',
-      component: 'VotacionesStep',
+      description: 'Registo detalhado com nomes dos votantes e cálculo por permilagem',
+      component: 'VotingStep',
       estimatedTime: 15,
       legalRequirement: {
-        article: 'Art. 17 LPH',
-        description: 'Maiorias: Simples (>50% presentes), Qualificada (>2/3 total), Unanimidade',
+        article: 'Art. 1430º CC e Art. 1432º CC',
+        description: 'Maioria simples (>50%) ou qualificada (2/3) calculada por permilagem',
         mandatory: true
       }
     },

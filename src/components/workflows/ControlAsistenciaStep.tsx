@@ -6,9 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { UserCheck, UserX, Users, Search, Loader2, Pen, Download, FileText, CheckCircle2 } from 'lucide-react';
+import { UserCheck, UserX, Users, Search, Loader2, Pen, Download, FileText, CheckCircle2, Save } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { getMembers } from '@/lib/api';
+import { getMembers, getAttendanceSheetByMinute, createAttendanceSheet, updateAttendanceSheet } from '@/lib/api';
+import { toast } from 'sonner';
 import SignaturePad from '@/components/ui/signature-pad';
 
 interface Member {
@@ -48,7 +49,48 @@ const ControlAsistenciaStep: React.FC<ControlAsistenciaStepProps> = ({
   const [signatures, setSignatures] = useState<Record<string, string>>(data.signatures || {});
   const [signingMember, setSigningMember] = useState<Member | null>(null);
   const [showAttendanceSheet, setShowAttendanceSheet] = useState(false);
+  const [attendanceSheetId, setAttendanceSheetId] = useState<string | null>(data.attendance_sheet_id || null);
+  const [isSaving, setIsSaving] = useState(false);
   const attendanceSheetRef = useRef<HTMLDivElement>(null);
+
+  // Load existing attendance sheet if editing an acta
+  useEffect(() => {
+    const loadAttendanceSheet = async () => {
+      if (data.actaId && !attendanceSheetId) {
+        try {
+          const response = await getAttendanceSheetByMinute(data.actaId);
+          if (response.success && response.data) {
+            const sheet = response.data;
+            setAttendanceSheetId(sheet.id);
+
+            // Load attendees data
+            const loadedAttendance: Record<string, any> = {};
+            const loadedSignatures: Record<string, string> = {};
+
+            sheet.attendees?.forEach((attendee: any) => {
+              loadedAttendance[attendee.member_id] = {
+                present: attendee.attendance_type === 'present',
+                represented: attendee.attendance_type === 'represented',
+                representedBy: attendee.representative_name
+              };
+
+              if (attendee.signature) {
+                loadedSignatures[attendee.member_id] = attendee.signature;
+              }
+            });
+
+            setAttendanceData(loadedAttendance);
+            setSignatures(loadedSignatures);
+            toast.success('Folha de presenças carregada');
+          }
+        } catch (error) {
+          console.log('No existing attendance sheet found');
+        }
+      }
+    };
+
+    loadAttendanceSheet();
+  }, [data.actaId]);
 
   useEffect(() => {
     if (apiMembers.length > 0) {
@@ -88,9 +130,73 @@ const ControlAsistenciaStep: React.FC<ControlAsistenciaStepProps> = ({
     setSigningMember(null);
   };
 
-  const handleContinue = () => {
-    onUpdate({ attendees: attendanceData, signatures });
-    onNext();
+  const handleContinue = async () => {
+    if (!data.building_id) {
+      toast.error('ID do edifício não encontrado');
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      // Prepare attendees array
+      const attendees = apiMembers
+        .filter((member: any) => {
+          const memberData = attendanceData[member.id];
+          return memberData?.present || memberData?.represented;
+        })
+        .map((member: any) => {
+          const memberData = attendanceData[member.id];
+          return {
+            member_id: member.id,
+            member_name: member.name,
+            attendance_type: memberData.present ? 'present' : 'represented',
+            representative_name: memberData.representedBy || null,
+            signature: signatures[member.id] || null,
+            permilage: parseFloat(member.permilage) || 0
+          };
+        });
+
+      const sheetData = {
+        building_id: data.building_id,
+        minute_id: data.actaId || null,
+        convocatoria_id: data.convocatoriaId || null,
+        meeting_date: data.meeting_date || new Date().toISOString().split('T')[0],
+        total_members: apiMembers.length,
+        attendees
+      };
+
+      let sheetId = attendanceSheetId;
+
+      if (attendanceSheetId) {
+        // Update existing
+        await updateAttendanceSheet(attendanceSheetId, sheetData);
+        toast.success('Folha de presenças actualizada');
+      } else {
+        // Create new
+        const response = await createAttendanceSheet(sheetData);
+        sheetId = response.data.id;
+        setAttendanceSheetId(sheetId);
+        toast.success('Folha de presenças guardada');
+      }
+
+      // Update workflow data
+      onUpdate({
+        attendees: attendanceData,
+        signatures,
+        attendance_sheet_id: sheetId,
+        total_members: apiMembers.length,
+        present_members: attendees.filter(a => a.attendance_type === 'present').length,
+        represented_members: attendees.filter(a => a.attendance_type === 'represented').length
+      });
+
+      onNext();
+    } catch (error: any) {
+      console.error('Error saving attendance sheet:', error);
+      toast.error(`Erro ao guardar: ${error.message || 'Erro desconhecido'}`);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handlePrintAttendanceSheet = () => {
@@ -356,11 +462,22 @@ const ControlAsistenciaStep: React.FC<ControlAsistenciaStepProps> = ({
                         <span>•</span>
                         <span>Permilagem: {member.coefficient.toFixed(1)}‰</span>
                       </div>
-                      {memberData.representedBy && (
-                        <div className="mt-1">
-                          <Badge variant="outline" className="text-xs">
-                            Representado por: {memberData.representedBy}
-                          </Badge>
+                      {memberData.represented && (
+                        <div className="mt-2">
+                          <Input
+                            placeholder="Nome do representante"
+                            value={memberData.representedBy || ''}
+                            onChange={(e) => {
+                              setAttendanceData(prev => ({
+                                ...prev,
+                                [member.id]: {
+                                  ...prev[member.id],
+                                  representedBy: e.target.value
+                                }
+                              }));
+                            }}
+                            className="max-w-xs text-sm"
+                          />
                         </div>
                       )}
                       {hasSigned && (
@@ -567,11 +684,21 @@ const ControlAsistenciaStep: React.FC<ControlAsistenciaStepProps> = ({
       </Card>
 
       <div className="flex justify-between pt-4">
-        <Button variant="outline" onClick={onPrevious}>
+        <Button variant="outline" onClick={onPrevious} disabled={isSaving}>
           Anterior
         </Button>
-        <Button onClick={handleContinue} variant="workflow" size="lg">
-          Continuar com verificação
+        <Button onClick={handleContinue} variant="workflow" size="lg" disabled={isSaving}>
+          {isSaving ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              A guardar folha de presenças...
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Guardar e Continuar
+            </>
+          )}
         </Button>
       </div>
     </div>

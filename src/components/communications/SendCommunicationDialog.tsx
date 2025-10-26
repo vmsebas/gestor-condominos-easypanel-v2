@@ -715,6 +715,7 @@ const SendCommunicationDialog: React.FC<SendCommunicationDialogProps> = ({
         buildingAddress={buildingAddress}
         assemblyDate={communicationData.meeting_date || communicationData.date}
         assemblyType={communicationData.assembly_type}
+        communicationType={communicationType}
         onSendConfirm={confirmSendEmail}
         onDownloadPDF={communicationType === 'convocatoria' || communicationType === 'acta' ? downloadConvocatoriaPDF : undefined}
         onDownloadProcuracao={communicationType === 'convocatoria' ? downloadProcuracao : undefined}

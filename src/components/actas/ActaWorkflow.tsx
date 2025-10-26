@@ -11,6 +11,7 @@ import PreparacionReunionStep from '@/components/workflows/PreparacionReunionSte
 import ControlAsistenciaStep from '@/components/workflows/ControlAsistenciaStep';
 import VerificacionQuorumStep from '@/components/workflows/VerificacionQuorumStep';
 import DesarrolloReunionStep from '@/components/workflows/DesarrolloReunionStep';
+import VotingStep from '@/components/workflows/VotingStep';
 import RedaccionActaStep from '@/components/workflows/RedaccionActaStep';
 import FirmasActaStep from '@/components/workflows/FirmasActaStep';
 import { getMinuteById, updateMinuteAgendaItems, getConvocatoriaById } from '@/lib/api';
@@ -188,6 +189,8 @@ const ActaWorkflow: React.FC<ActaWorkflowProps> = ({
         return <VerificacionQuorumStep {...commonProps} />;
       case 'DesarrolloReunionStep':
         return <DesarrolloReunionStep {...commonProps} />;
+      case 'VotingStep':
+        return <VotingStep {...commonProps} />;
       case 'RedaccionActaStep':
         return <RedaccionActaStep {...commonProps} />;
       case 'FirmasActaStep':

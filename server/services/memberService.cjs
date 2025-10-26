@@ -189,9 +189,97 @@ class MemberService {
   /**
    * Importa miembros desde un archivo CSV
    */
-  async importMembersFromCSV(buildingId, csvData) {
-    // TODO: Implementar importación desde CSV
-    throw new AppError('Funcionalidade não implementada', 501, null);
+  async importMembersFromCSV(buildingId, csvContent) {
+    const lines = csvContent.trim().split('\n');
+
+    if (lines.length < 2) {
+      throw new AppError('CSV vazio ou inválido', 400, null);
+    }
+
+    // Parse header
+    const header = lines[0].split(',').map(h => h.trim());
+
+    // Validate required columns
+    const requiredColumns = ['name'];
+    const missingColumns = requiredColumns.filter(col => !header.includes(col));
+    if (missingColumns.length > 0) {
+      throw new AppError(`Colunas obrigatórias em falta: ${missingColumns.join(', ')}`, 400, null);
+    }
+
+    const created = [];
+    const updated = [];
+    const errors = [];
+
+    // Process each row
+    for (let i = 1; i < lines.length; i++) {
+      try {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        // Simple CSV parser (handles quoted values)
+        const values = [];
+        let currentValue = '';
+        let insideQuotes = false;
+
+        for (let char of line) {
+          if (char === '"') {
+            insideQuotes = !insideQuotes;
+          } else if (char === ',' && !insideQuotes) {
+            values.push(currentValue.trim());
+            currentValue = '';
+          } else {
+            currentValue += char;
+          }
+        }
+        values.push(currentValue.trim());
+
+        // Map values to object
+        const memberData = {};
+        header.forEach((key, index) => {
+          const value = values[index] || '';
+          memberData[key] = value === '' ? null : value;
+        });
+
+        // Convert boolean and numeric fields
+        if (memberData.is_owner !== null) {
+          memberData.is_owner = memberData.is_owner === 'true' || memberData.is_owner === '1';
+        }
+        if (memberData.ownership_percentage !== null) {
+          memberData.ownership_percentage = parseFloat(memberData.ownership_percentage) || 0;
+        }
+        if (memberData.permilage !== null) {
+          memberData.permilage = parseFloat(memberData.permilage) || 0;
+        }
+        if (memberData.votes !== null) {
+          memberData.votes = parseInt(memberData.votes) || 0;
+        }
+
+        // Add building_id
+        memberData.building_id = buildingId;
+
+        // For now, always create new members
+        // TODO: Implement duplicate detection by email/apartment
+        const newMember = await memberRepository.create(memberData);
+        created.push(newMember);
+      } catch (error) {
+        errors.push({
+          row: i + 1,
+          error: error.message
+        });
+      }
+    }
+
+    return {
+      success: true,
+      created: created.length,
+      updated: updated.length,
+      errors: errors.length,
+      details: {
+        created,
+        updated,
+        errors
+      }
+    };
   }
 
   /**
@@ -208,9 +296,51 @@ class MemberService {
    */
   async exportMembersToCSV(buildingId) {
     const { members } = await this.getMembersByBuilding(buildingId);
-    
-    // TODO: Convertir a CSV
-    return members;
+
+    // CSV Header
+    const headers = [
+      'name',
+      'email',
+      'phone',
+      'whatsapp_number',
+      'apartment',
+      'fraction',
+      'ownership_percentage',
+      'permilage',
+      'votes',
+      'is_owner',
+      'notes'
+    ];
+
+    // Convert members to CSV rows
+    const rows = members.map(member => [
+      member.name || '',
+      member.email || '',
+      member.phone || '',
+      member.whatsapp_number || '',
+      member.apartment || '',
+      member.fraction || '',
+      member.ownership_percentage || '',
+      member.permilage || '',
+      member.votes || '',
+      member.is_owner ? 'true' : 'false',
+      member.notes || ''
+    ]);
+
+    // Combine header and rows
+    const csvLines = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => {
+        // Escape cells that contain commas or quotes
+        const cellStr = String(cell);
+        if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+          return `"${cellStr.replace(/"/g, '""')}"`;
+        }
+        return cellStr;
+      }).join(','))
+    ];
+
+    return csvLines.join('\n');
   }
 }
 

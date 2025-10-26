@@ -85,10 +85,22 @@ class ConvocatoriaRepository extends BaseRepository {
   }
 
   /**
-   * Encuentra una convocatoria por ID con agenda items
+   * Encuentra una convocatoria por ID con agenda items Y datos de acta relacionada
    */
   async findByIdWithAgenda(id) {
-    const convocatoria = await this.findById(id);
+    const convocatoria = await this.db('convocatorias')
+      .leftJoin('minutes', 'minutes.convocatoria_id', 'convocatorias.id')
+      .select(
+        'convocatorias.*',
+        // Datos de acta relacionada (si existe)
+        'minutes.id as minute_id',
+        'minutes.minute_number',
+        'minutes.status as minute_status',
+        'minutes.meeting_date as minute_meeting_date',
+        'minutes.signed_date as minute_signed_date'
+      )
+      .where('convocatorias.id', id)
+      .first();
 
     if (!convocatoria) {
       return null;

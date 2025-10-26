@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Calendar, Clock, MapPin, Users, FileText, Download, Edit, Trash2, CheckCircle, AlertCircle, FileSignature, Send } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, MapPin, Users, FileText, Download, Edit, Trash2, CheckCircle, AlertCircle, FileSignature, Send, Printer } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getConvocatoriaById } from '@/lib/api';
 import { format, isPast, isToday, isFuture, parseISO } from 'date-fns';
@@ -11,6 +11,8 @@ import { pt } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import SendCommunicationDialog from '@/components/communications/SendCommunicationDialog';
+import ConvocatoriaPrintView from '@/components/convocatorias/ConvocatoriaPrintView';
+import { printReactComponent } from '@/utils/printHelper';
 
 const ConvocatoriaDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -43,45 +45,35 @@ const ConvocatoriaDetail: React.FC = () => {
       warningMessage: ''
     };
 
+    // SEMPRE permite criar acta se ainda não existe
+    if (!hasActa) {
+      actions.canCreateActa = true;
+
+      // Avisos contextuais
+      if (isAfterReunion) {
+        actions.showWarning = true;
+        actions.warningMessage = 'Reunião realizada sem acta registada';
+      }
+    } else {
+      // Se já tem acta, permite visualizar
+      actions.canViewActa = true;
+      if (data.minute_status === 'signed') {
+        actions.canDistributeActa = true;
+      }
+    }
+
     // CONVOCATORIA EN RASCUNHO
     if (data.status === 'draft') {
       actions.canEdit = true;
       actions.canSend = true;
       actions.canDelete = true;
-      return actions;
-    }
-
-    // CONVOCATORIA ENVIADA
-    if (data.status === 'sent') {
-      if (isFuture(meetingDate)) {
-        return actions; // Solo visualizar
-      }
-
-      if (isReunionDay && !hasActa) {
-        actions.canCreateActa = true;
-        return actions;
-      }
-
-      if (isAfterReunion) {
-        if (hasActa) {
-          actions.canViewActa = true;
-          if (data.minute_status === 'signed') {
-            actions.canDistributeActa = true;
-          }
-        } else {
-          actions.canCreateActa = true;
-          actions.showWarning = true;
-          actions.warningMessage = 'Reunião realizada sem acta registada';
-        }
-        return actions;
-      }
     }
 
     return actions;
   };
 
   const handleCreateActa = () => {
-    navigate(`/actas/nova?convocatoria=${id}`);
+    navigate(`/actas?convocatoria=${id}`);
   };
 
   const [showDistributeDialog, setShowDistributeDialog] = useState(false);
@@ -95,6 +87,32 @@ const ConvocatoriaDetail: React.FC = () => {
     // Prepare acta data for distribution
     setActaToDistribute(actaData);
     setShowDistributeDialog(true);
+  };
+
+  const handlePrint = () => {
+    if (!convocatoria?.data) {
+      console.error('No convocatoria data');
+      return;
+    }
+
+    const data = convocatoria.data;
+
+    const printData = {
+      convocatoria_number: data.assembly_number,
+      assembly_type: data.assembly_type,
+      building_name: data.building_name,
+      building_address: data.building_address,
+      meeting_date: data.meeting_date || data.date,
+      meeting_time: data.time,
+      first_call_time: data.time,
+      second_call_time: data.second_call_time || '18h30',
+      location: data.location || data.meeting_location || 'Hall do Prédio',
+      agenda_items: data.agenda_items || [],
+      sender_name: data.administrator || 'A Administração',
+      sender_role: 'Administrador',
+    };
+
+    printReactComponent(<ConvocatoriaPrintView data={printData} />);
   };
 
   if (isLoading) {
@@ -162,9 +180,9 @@ const ConvocatoriaDetail: React.FC = () => {
             )}
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              <Download className="mr-2 h-4 w-4" />
-              Exportar PDF
+            <Button variant="outline" size="sm" onClick={handlePrint}>
+              <Printer className="mr-2 h-4 w-4" />
+              Imprimir PDF
             </Button>
             {actions.canEdit && (
               <Button variant="outline" size="sm">

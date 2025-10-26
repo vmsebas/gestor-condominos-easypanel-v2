@@ -137,18 +137,23 @@ class MemberController {
    */
   importMembers = asyncHandler(async (req, res) => {
     const { buildingId } = req.body;
-    const csvData = req.file; // Asumiendo que se usa multer
-    
+    const csvFile = req.file; // From multer middleware
+
     if (!buildingId) {
+      const { AppError } = require('../utils/errors.cjs');
       throw new AppError('ID do edifício é obrigatório', 400, null);
     }
-    
-    if (!csvData) {
+
+    if (!csvFile) {
+      const { AppError } = require('../utils/errors.cjs');
       throw new AppError('Ficheiro CSV é obrigatório', 400, null);
     }
-    
-    const result = await memberService.importMembersFromCSV(buildingId, csvData);
-    
+
+    // Convert buffer to string
+    const csvContent = csvFile.buffer.toString('utf-8');
+
+    const result = await memberService.importMembersFromCSV(buildingId, csvContent);
+
     successResponse(res, result, 'Membros importados com sucesso');
   });
 

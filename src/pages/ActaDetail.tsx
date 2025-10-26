@@ -3,18 +3,23 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Calendar, Clock, MapPin, Users, FileText, Download, Edit, Printer, CheckCircle, ThumbsUp, ThumbsDown, Minus } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, MapPin, Users, FileText, Download, Edit, Printer, CheckCircle, ThumbsUp, ThumbsDown, Minus, Send } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getMinuteById } from '@/lib/api';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 import ActaWorkflow from '@/components/actas/ActaWorkflow';
+import ActaPrintView from '@/components/actas/ActaPrintView';
+import { printReactComponent } from '@/utils/printHelper';
+import SendCommunicationDialog from '@/components/communications/SendCommunicationDialog';
 
 const ActaDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [showEditWorkflow, setShowEditWorkflow] = useState(false);
+  const [showDistributeDialog, setShowDistributeDialog] = useState(false);
 
   const { data: acta, isLoading, error } = useQuery({
     queryKey: ['minute', id],
@@ -64,6 +69,40 @@ const ActaDetail: React.FC = () => {
     }
   };
 
+  const handlePrint = () => {
+    if (!acta?.data) {
+      console.error('No acta data');
+      return;
+    }
+
+    const data = acta.data;
+
+    const printData = {
+      minute_number: data.minute_number || data.assembly_number || 'S/N',
+      assembly_type: data.assembly_type,
+      building_name: data.building_name,
+      building_address: data.building_address,
+      meeting_date: data.meeting_date || data.date,
+      meeting_time: data.meeting_time || data.time,
+      location: data.location || data.meeting_location || 'Não especificado',
+      president_name: data.president_name || data.president || 'Não designado',
+      secretary_name: data.secretary_name || data.secretary || 'Não designado',
+      agenda_items: data.agenda_items || [],
+      notes: data.notes || '',
+      quorum_info: data.quorum_info || undefined,
+    };
+
+    printReactComponent(<ActaPrintView data={printData} />);
+  };
+
+  const handleDistributeActa = () => {
+    if (data.status !== 'signed' && data.status !== 'approved') {
+      toast.error('Apenas actas assinadas podem ser distribuídas');
+      return;
+    }
+    setShowDistributeDialog(true);
+  };
+
   if (showEditWorkflow) {
     return (
       <ActaWorkflow
@@ -100,11 +139,11 @@ const ActaDetail: React.FC = () => {
           </div>
           <div className="flex gap-2">
             {getStatusBadge(data.status)}
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={handlePrint}>
               <Download className="mr-2 h-4 w-4" />
               Exportar PDF
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={handlePrint}>
               <Printer className="mr-2 h-4 w-4" />
               Imprimir
             </Button>
@@ -239,30 +278,79 @@ const ActaDetail: React.FC = () => {
           </CardContent>
         </Card>
 
-        {data.status !== 'approved' && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Ações</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                <Button onClick={() => setShowEditWorkflow(true)}>
-                  <Edit className="mr-2 h-4 w-4" />
-                  Editar Ata
-                </Button>
-                <Button variant="outline">
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Aprovar Ata
-                </Button>
-                <Button variant="outline">
-                  <FileText className="mr-2 h-4 w-4" />
-                  Adicionar Anexos
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        <Card>
+          <CardHeader>
+            <CardTitle>Ações</CardTitle>
+            <CardDescription>
+              {data.status === 'signed' || data.status === 'approved'
+                ? 'Ações de distribuição e arquivo'
+                : 'Ações de edição e aprovação'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {/* Ações para actas NÃO assinadas */}
+              {data.status !== 'signed' && data.status !== 'approved' && (
+                <>
+                  <Button onClick={() => setShowEditWorkflow(true)}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Editar Ata
+                  </Button>
+                  <Button variant="outline">
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Aprovar Ata
+                  </Button>
+                  <Button variant="outline">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Adicionar Anexos
+                  </Button>
+                </>
+              )}
+
+              {/* Ações para actas ASSINADAS/APROVADAS */}
+              {(data.status === 'signed' || data.status === 'approved') && (
+                <>
+                  <Button onClick={handleDistributeActa}>
+                    <Send className="mr-2 h-4 w-4" />
+                    Distribuir Acta aos Condóminos
+                  </Button>
+                  <Button variant="outline">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Ver Histórico de Envios
+                  </Button>
+                </>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* SendCommunicationDialog for Acta Distribution */}
+      <SendCommunicationDialog
+        open={showDistributeDialog}
+        onOpenChange={setShowDistributeDialog}
+        communicationType="acta"
+        buildingId={data.building_id}
+        buildingName={data.building_name || 'Condomínio'}
+        buildingAddress={data.building_address || ''}
+        communicationData={{
+          id: data.id,
+          minute_number: data.minute_number,
+          assembly_type: data.assembly_type,
+          meeting_date: data.meeting_date || data.date,
+          meeting_time: data.meeting_time || data.time,
+          location: data.location,
+          president_name: data.president_name,
+          secretary_name: data.secretary_name,
+          agenda_items: data.agenda_items || [],
+          notes: data.notes,
+          quorum_info: data.quorum_info
+        }}
+        onSendComplete={() => {
+          toast.success('Acta distribuída com sucesso!');
+          setShowDistributeDialog(false);
+        }}
+      />
     </div>
   );
 };

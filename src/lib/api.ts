@@ -59,6 +59,27 @@ export const deleteMember = async (id: string) => {
   return response.data;
 };
 
+export const exportMembersCSV = async (buildingId: string) => {
+  const response = await api.get('/members/export', {
+    params: { buildingId },
+    responseType: 'blob' // Important for file download
+  });
+  return response.data;
+};
+
+export const importMembersCSV = async (buildingId: string, file: File) => {
+  const formData = new FormData();
+  formData.append('buildingId', buildingId);
+  formData.append('file', file);
+
+  const response = await api.post('/members/import', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
+  return response.data;
+};
+
 // Transactions
 export const getTransactions = async (params?: {
   buildingId?: string;
