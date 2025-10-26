@@ -2571,3 +2571,119 @@ Condomino Buraca 1
 **Última actualização**: 25 Outubro 2025 (23h25)
 **Versão**: v0.1.5
 **Estado**: ✅ Sprints 3-10.3 completos e testados
+
+## 🔧 WORKFLOW FIXES & NAVIGATION (v0.1.7 - October 26, 2025)
+
+### Critical Issues Fixed:
+
+#### 1. "Criar Acta" Button Not Appearing
+**Problem**: Button only showed if meeting date was today OR past, not for future meetings
+**Solution**: Changed logic to ALWAYS show button if no acta exists (regardless of date)
+**File**: `src/pages/ConvocatoriaDetail.tsx` (lines 48-72)
+
+```typescript
+// SEMPRE permite criar acta se ainda não existe
+if (!hasActa) {
+  actions.canCreateActa = true;
+
+  // Avisos contextuais
+  if (isAfterReunion) {
+    actions.showWarning = true;
+    actions.warningMessage = 'Reunião realizada sem acta registada';
+  }
+}
+```
+
+#### 2. UUID Parsing Error on Navigation
+**Problem**: `navigate('/actas/nova?convocatoria=${id}')` matched route `/actas/:id` where id="nova"
+**Error**: "invalid input syntax for type uuid: 'nova'" (401/400 errors)
+**Solution**: Changed to `navigate('/actas?convocatoria=${id}')` to trigger workflow in Actas.tsx
+**File**: `src/pages/ConvocatoriaDetail.tsx` (line 76)
+
+#### 3. Representative Name Field Blocked
+**Problem**: When marking "Representado", no input field appeared for representative name
+**Solution**: Added dynamic Input component that renders when checkbox is marked
+**File**: `src/components/workflows/ControlAsistenciaStep.tsx` (lines 465-482)
+
+#### 4. DesarrolloReunionStep Showing Voting
+**Problem**: Step showed voting UI (votes in favor/against/abstentions) but VotingStep was separated
+**Solution**: Completely rewrote component (322 lines) to focus only on discussion and notes
+**File**: `src/components/workflows/DesarrolloReunionStep.tsx`
+
+**Removed**: All voting fields, voting result calculations, quorum validation
+**Kept**: Discussion textarea, Notes textarea, Progress tracking
+
+#### 5. API Not Returning minute_id
+**Problem**: `findByIdWithAgenda` didn't do LEFT JOIN with minutes table
+**Solution**: Added LEFT JOIN to return minute-related fields
+**File**: `server/repositories/convocatoriaRepository.cjs` (lines 90-112)
+
+#### 6. SQL Column Name Error
+**Problem**: Query used `minutes.signed_at` but actual column is `minutes.signed_date`
+**Error**: "column minutes.signed_at does not exist"
+**Solution**: Changed to `minutes.signed_date as minute_signed_date`
+
+### New Components Added:
+
+1. **VotingStep.tsx** - Dedicated voting interface with names and permilage
+2. **ActaPrintView.tsx** - PDF generation for actas
+3. **AttendanceSheetPrintView.tsx** - Print view for attendance sheets
+4. **ConvocatoriaPrintView.tsx** - PDF generation for convocatorias
+5. **printHelper.tsx** - Utility functions for printing React components
+
+### Testing Performed:
+
+```bash
+# Build frontend
+npm run build ✅ Success (5.63s)
+
+# Rebuild Docker container
+docker-compose up -d --build gestor-condominos ✅ Image rebuilt
+
+# Verify API endpoint
+curl http://localhost:3002/api/convocatorias/xxx ✅ Returns minute_id
+
+# Check container health
+docker ps --filter "name=gestor-condominos" ✅ Status: Up (healthy)
+```
+
+### Deployment Details:
+
+**Commit**: 8833b39 - fix: correção completa do workflow de actas e navegação
+**Files Changed**: 22
+**Insertions**: 3,447 lines
+**Deletions**: 510 lines
+**New Files**: 5
+
+**Container Files Verified**:
+- ConvocatoriaDetail-CAhOdTHE.js (35.0K, Oct 26 02:20)
+- index-DvRN-5ZU.js (154.4K, Oct 26 02:20)
+
+### User Flow Now Working:
+
+1. ✅ Visit Convocatória #31 detail page
+2. ✅ See "Criar Acta" button (always visible if no acta exists)
+3. ✅ Click button → navigates to `/actas?convocatoria=${id}`
+4. ✅ Workflow opens automatically in Actas.tsx
+5. ✅ Step 1 (Preparação) → Checklist
+6. ✅ Step 2 (Presenças) → Mark attendance + representative name input
+7. ✅ Step 3 (Quórum) → Verify quorum
+8. ✅ Step 4 (Desenvolvimento) → Discussion and notes ONLY
+9. ✅ Step 5 (Votações) → Dedicated voting with names + permilage
+10. ✅ Step 6 (Redação) → Generate document
+11. ✅ Step 7 (Assinaturas) → Digital signatures
+
+### Legal Compliance Maintained:
+
+- ✅ Código Civil Português - Art. 1430º-1432º
+- ✅ Lei da Propriedade Horizontal (LPH) - Dec-Lei 267/94
+- ✅ RGPD compliance for data handling
+- ✅ Digital signatures validity (Dec-Lei 290-D/99)
+
+---
+
+**Última actualização**: 26 Outubro 2025 (02h20)
+**Versão**: v0.1.7
+**Estado**: ✅ Workflow completo funcional com navegação corrigida
+**Tag**: v0.1.7
+**Commit**: 8833b39
