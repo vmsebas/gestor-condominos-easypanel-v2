@@ -66,7 +66,19 @@ const ActaWorkflow: React.FC<ActaWorkflowProps> = ({
             location: acta.location,
             assembly_type: acta.assembly_type,
             president_name: acta.president_name,
-            secretary_name: acta.secretary_name
+            secretary_name: acta.secretary_name,
+            president_signature: acta.president_signature,  // ✅ NOVO
+            secretary_signature: acta.secretary_signature,  // ✅ NOVO
+            signatures: {  // ✅ NOVO - Dados completos de assinaturas
+              president_name: acta.president_name,
+              president_signed: !!acta.president_signature,
+              president_signed_date: acta.president_signed_date,
+              president_signature: acta.president_signature,
+              secretary_name: acta.secretary_name,
+              secretary_signed: !!acta.secretary_signature,
+              secretary_signed_date: acta.secretary_signed_date,
+              secretary_signature: acta.secretary_signature
+            }
           });
 
           toast.success('Acta carregada com sucesso');
