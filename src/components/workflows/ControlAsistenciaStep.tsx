@@ -98,6 +98,8 @@ const ControlAsistenciaStep: React.FC<ControlAsistenciaStepProps> = ({
         id: member.id,
         name: member.name,
         apartment: member.fraction || `Fração ${index + 1}`,
+        fraction: member.fraction || '-',
+        permilage: parseFloat(member.permilage) || 0,
         coefficient: parseFloat(member.permilage) || 0,
         present: attendanceData[member.id]?.present || false,
         represented: attendanceData[member.id]?.represented || false,
@@ -105,6 +107,13 @@ const ControlAsistenciaStep: React.FC<ControlAsistenciaStepProps> = ({
         signature: signatures[member.id]
       }));
       setMembers(transformedMembers);
+
+      // Guardar lista de members no workflow state para uso posterior (VotingStep)
+      onUpdate({
+        attendance: attendanceData,
+        signatures,
+        members: transformedMembers
+      });
     }
   }, [apiMembers, attendanceData, signatures]);
 
@@ -117,7 +126,7 @@ const ControlAsistenciaStep: React.FC<ControlAsistenciaStepProps> = ({
       }
     };
     setAttendanceData(updatedData);
-    onUpdate({ attendance: updatedData, signatures });
+    onUpdate({ attendance: updatedData, signatures, members });
   };
 
   const handleSignature = (memberId: string, signatureData: string) => {
@@ -126,7 +135,7 @@ const ControlAsistenciaStep: React.FC<ControlAsistenciaStepProps> = ({
       [memberId]: signatureData
     };
     setSignatures(updatedSignatures);
-    onUpdate({ attendance: attendanceData, signatures: updatedSignatures });
+    onUpdate({ attendance: attendanceData, signatures: updatedSignatures, members });
     setSigningMember(null);
   };
 

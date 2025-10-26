@@ -71,17 +71,17 @@ const VotingStep: React.FC<VotingStepProps> = ({ data, onUpdate, onPrevious, onN
   // Carregar dados ao montar componente
   useEffect(() => {
     // Carregar condóminos presentes da folha de presenças
-    if (data.attendees) {
-      const present: Member[] = Object.entries(data.attendees)
-        .filter(([_, attendance]: [string, any]) => attendance.present)
+    if (data.attendance && data.members) {
+      const present: Member[] = Object.entries(data.attendance)
+        .filter(([_, attendance]: [string, any]) => attendance.present || attendance.represented)
         .map(([memberId, attendance]: [string, any]) => {
           // Buscar info completa do membro
-          const memberInfo = data.members?.find((m: any) => m.id === memberId);
+          const memberInfo = data.members.find((m: any) => m.id === memberId);
           return {
             id: memberId,
-            name: attendance.name || memberInfo?.name || 'Sem nome',
-            fraction: memberInfo?.fraction || '-',
-            permilage: parseFloat(memberInfo?.permilage || '0')
+            name: memberInfo?.name || 'Sem nome',
+            fraction: memberInfo?.fraction || memberInfo?.apartment || '-',
+            permilage: parseFloat(memberInfo?.permilage || memberInfo?.coefficient || '0')
           };
         });
 
