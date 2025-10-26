@@ -2801,3 +2801,295 @@ VotingStep (Step 5)
 **Estado**: ✅ VotingStep corrigido, dados de condóminos aparecem corretamente
 **Tag**: v0.1.8
 **Commit**: feec410 - fix: corrigir dados de condóminos no VotingStep
+
+## 🗳️ NEW: Sistema de Votação Inline + Base para Assinaturas Legais (Outubro 26, 2025)
+
+### Versão: v0.1.9
+**Commit**: ed819c9 - feat: sistema de votação inline + base para assinaturas legais
+
+### 1. Sistema de Votação Inline (COMPLETO ✅)
+
+#### Problema Resolvido:
+- ❌ **Antes**: VotingStep separado (redundante)
+- ❌ **Antes**: Votação não guardada na BD
+- ❌ **Antes**: Sem formato legal português
+
+#### Solução Implementada:
+- ✅ **Agora**: Votação inline em DesarrolloReunionStep
+- ✅ **Agora**: Persistência completa na BD
+- ✅ **Agora**: Formato legal português Art. 1430º-1432º CC
+
+#### Componentes Criados:
+
+**VotingDialog.tsx** (305 linhas)
+```typescript
+// Modal de votação inline
+- Lista nominal de condóminos presentes
+- Opções: A Favor / Contra / Abstenção
+- Botão "Guardar como Unanimidade"
+- Cálculo automático de permilagem
+- Maioria simples (>50%) ou qualificada (≥66.67%)
+```
+
+**DesarrolloReunionStep.tsx** (Modificado)
+```typescript
+// Agora inclui votação inline
+- Discussão + Notas para cada ponto
+- Botão "Votar" em pontos tipo 'votacion'
+- Guarda localmente + BD automaticamente
+- Toast: "Votação guardada na BD: Aprovado"
+```
+
+#### Backend API:
+
+**Endpoint**: `POST /api/minutes/:minuteId/agenda-items/:itemId/votes`
+
+```javascript
+// Guarda votação completa:
+{
+  "voting_result": {
+    "votes": { "member-id": "favor"|"contra"|"abstencao" },
+    "isUnanimous": true|false,
+    "votersInFavor": ["Nome1", "Nome2"],
+    "votersAgainst": ["Nome3"],
+    "votersAbstained": [],
+    "permilageInFavor": 650.5,
+    "permilageAgainst": 150.2,
+    "permilageAbstained": 0,
+    "totalVotingPermilage": 800.7,
+    "passed": true|false
+  }
+}
+```
+
+**O que guarda na BD**:
+1. **member_votes**: Voto individual de cada membro
+   - member_id, vote, voting_power (permilage)
+2. **voting_results**: Resultado agregado
+   - total_votes, votes_in_favor, is_approved, quorum_percentage
+3. **minute_agenda_items**: Totais
+   - votes_in_favor, votes_against, abstentions, is_approved
+
+#### RedaccionActaStep (Modificado)
+
+**Formato Legal Português**:
+
+```typescript
+// UNANIMIDADE:
+"Aprovado por unanimidade dos votos dos Condóminos e Representantes 
+presentes, representando 800.70‰ do valor total do capital investido."
+
+// VOTAÇÃO NOMINAL:
+"✅ APROVADO
+
+Votos a favor: 650.50‰ (5 votos)
+João Silva, Maria Santos, António Pereira, Carlos Rodrigues, Ana Costa
+
+Votos contra: 150.20‰ (1 voto)
+Pedro Oliveira
+
+Abstenções: 0.00‰ (0 votos)"
+```
+
+#### Workflow Simplificado:
+
+**Antes** (7 passos):
+```
+1. Preparação
+2. Controlo Asistência
+3. Verificação Quórum
+4. Desenvolvimento (só discussão)
+5. VotingStep ❌ REDUNDANTE
+6. Geração Acta
+7. Assinaturas
+```
+
+**Agora** (6 passos):
+```
+1. Preparação
+2. Controlo Asistência
+3. Verificação Quórum
+4. Desenvolvimento (discussão + votação inline) ✅
+5. Geração Acta
+6. Assinaturas
+```
+
+#### ActaWorkflow (Modificado)
+
+**Mudança Crítica**:
+```typescript
+// ANTES ❌
+useEffect(() => {
+  loadConvocatoria();
+  // agenda_items SEM IDs da BD!
+});
+
+// AGORA ✅
+useEffect(() => {
+  // 1. Cria acta na BD
+  const newActa = await createMinuteFromConvocatoria(convocatoriaId);
+  
+  // 2. agenda_items COM IDs da BD!
+  handleStepUpdate({
+    actaId: newActa.id,
+    agenda_items: newActa.agenda_items // ✅ Têm IDs!
+  });
+});
+```
+
+### 2. Base para Assinaturas Legais (INICIADO 📋)
+
+#### Requisitos Legais Portugueses:
+
+**Obrigatório** (Art. 19º LPH):
+- ✅ Presidente da Mesa (assinatura completa + rubrica)
+- ✅ Secretário da Mesa (assinatura completa + rubrica)
+
+**Páginas Múltiplas**:
+- 📄 Numeração: "Página 1 de 5", "Página 2 de 5"...
+- ✍️ Rubricas: Presidente + Secretário em TODAS as páginas intermédias
+- 📝 Assinatura completa: Presidente + Secretário na ÚLTIMA página
+
+#### Tabela BD Criada:
+
+```sql
+CREATE TABLE minute_signatures (
+  id UUID PRIMARY KEY,
+  minute_id UUID NOT NULL,
+  member_id UUID,
+  
+  signer_type VARCHAR(50), -- 'president', 'secretary', 'member'
+  signer_name VARCHAR(255),
+  
+  signature TEXT, -- Base64 PNG (assinatura completa - última página)
+  rubric TEXT,    -- Base64 PNG (rubrica - páginas intermédias)
+  
+  -- Suporte para Chave Móvel Digital (CMD)
+  cmd_signature TEXT,
+  cmd_timestamp TIMESTAMP,
+  cmd_certificate TEXT,
+  
+  -- Segurança
+  signed_at TIMESTAMP,
+  ip_address VARCHAR(45),
+  user_agent TEXT
+);
+```
+
+#### Componente Criado:
+
+**rubric-pad.tsx** (181 linhas)
+```typescript
+// Canvas para criar rubrica (menor que assinatura)
+- Tamanho: 600x150px (vs 500x200 da assinatura)
+- Touch support (iPad/tablet)
+- Guarda como Base64 PNG
+- Usado para páginas intermédias
+```
+
+#### Documentação Criada:
+
+**LEGAL-SIGNATURES.md** (250+ linhas)
+- Requisitos legais completos
+- Fluxograma de assinatura
+- Exemplos de formato legal
+- Base legal (CC, LPH, eIDAS, RGPD)
+- Checklist de implementação
+
+### 3. O Que Falta Implementar (TODO)
+
+#### Fase 1: Integrar Rubricas no FirmasActaStep ⏳
+```typescript
+// Adicionar:
+1. Botão "Criar Rubrica" para Presidente
+2. Botão "Criar Rubrica" para Secretário
+3. Preview da rubrica criada
+4. Guardar rubrica na BD via API
+```
+
+#### Fase 2: Geração de PDF Legal ⏳
+```typescript
+// Implementar:
+1. Calcular número total de páginas
+2. Adicionar "Página X de Y" em cada página
+3. Inserir rubricas no rodapé (páginas 1 a N-1)
+4. Inserir assinaturas completas na última página
+5. Hash SHA-256 para integridade
+```
+
+#### Fase 3: Chave Móvel Digital (CMD) ⏳
+```typescript
+// Integração com autenticacao.gov.pt
+1. Credenciais de produção
+2. Fluxo OAuth2
+3. Validação de certificados
+4. Timestamp qualificado
+```
+
+### Files Changed:
+
+**Novos**:
+- `src/components/workflows/VotingDialog.tsx` (305 linhas)
+- `src/components/ui/rubric-pad.tsx` (181 linhas)
+- `migrations/20251026_add_minute_signatures.sql`
+- `LEGAL-SIGNATURES.md` (documentação completa)
+
+**Modificados**:
+- `src/components/workflows/DesarrolloReunionStep.tsx` (+40 linhas)
+- `src/components/workflows/RedaccionActaStep.tsx` (+75 linhas)
+- `src/components/actas/ActaWorkflow.tsx` (create acta no início)
+- `src/lib/workflows.ts` (VotingStep eliminado)
+- `src/lib/api.ts` (+15 linhas - saveMinuteItemVotes)
+- `server/routes/minutes.cjs` (+142 linhas - endpoint votes)
+
+**Estatísticas**:
+- 10 files changed
+- 1,177 insertions(+)
+- 63 deletions(-)
+
+### Testing:
+
+**Manual Testing Checklist**:
+```bash
+✅ 1. Criar acta desde convocatória
+✅ 2. Workflow: 6 passos (VotingStep eliminado)
+✅ 3. Passo 4: Ver botão "Votar" em pontos de votação
+✅ 4. Modal VotingDialog abre
+✅ 5. Votar como unanimidade
+✅ 6. Toast: "Votação guardada na BD: Aprovado por unanimidade"
+✅ 7. Passo 5: Acta gerada com formato legal português
+⏳ 8. Rubricas (pendente implementar)
+⏳ 9. PDF com numeração (pendente implementar)
+```
+
+### Legal Compliance:
+
+**Legislação Cumprida**:
+- ✅ **Código Civil Art. 1430º**: Maiorias calculadas por permilagem
+- ✅ **Código Civil Art. 1431º**: Deliberações da assembleia
+- ✅ **LPH Art. 16º**: Competências da assembleia
+- ✅ **LPH Art. 17º**: Quórum de assembleia
+- ⏳ **LPH Art. 19º**: Assinaturas (parcialmente - falta rubricas)
+- ⏳ **Regulamento eIDAS**: Assinaturas eletrónicas (falta CMD)
+
+### Next Steps:
+
+1. **Curto Prazo** (Próxima sessão):
+   - Integrar rubricas no FirmasActaStep
+   - Endpoint API para guardar rubricas
+   
+2. **Médio Prazo**:
+   - Geração de PDF com numeração de páginas
+   - Rubricas em rodapé de cada página
+   
+3. **Longo Prazo**:
+   - Integração com Chave Móvel Digital (CMD)
+   - Certificados digitais qualificados
+
+---
+
+**Última actualização**: 26 Outubro 2025 (03h30)
+**Versão**: v0.1.9
+**Estado**: ✅ Votação inline completa + Base de assinaturas criada
+**Tag**: v0.1.9
+**Commit**: ed819c9 - feat: sistema de votação inline + base para assinaturas legais
