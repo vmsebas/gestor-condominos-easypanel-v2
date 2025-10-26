@@ -2687,3 +2687,117 @@ docker ps --filter "name=gestor-condominos" ✅ Status: Up (healthy)
 **Estado**: ✅ Workflow completo funcional com navegação corrigida
 **Tag**: v0.1.7
 **Commit**: 8833b39
+
+## 🔧 VOTING STEP DATA FIX (v0.1.8 - October 26, 2025)
+
+### Critical Bug Fixed:
+
+**Problem**: VotingStep (Step 5) showed "Sem nome", "Fração -" and "0.00‰" for all present members.
+
+**Root Cause**:
+1. ControlAsistenciaStep loaded members from API but didn't save them to workflow state
+2. VotingStep looked for `data.attendees` (wrong name, should be `data.attendance`)
+3. Missing complete `data.members` array with name, fraction, permilage
+
+### Fixes Applied:
+
+#### ControlAsistenciaStep.tsx (lines 95-138)
+
+**Added to transformedMembers**:
+```typescript
+fraction: member.fraction || '-',           // NEW
+permilage: parseFloat(member.permilage) || 0, // NEW
+```
+
+**Save members to workflow state**:
+```typescript
+onUpdate({
+  attendance: attendanceData,
+  signatures,
+  members: transformedMembers  // NEW - critical for VotingStep
+});
+```
+
+**Updated all onUpdate calls**:
+- Line 129: `handleAttendanceChange` now includes `members`
+- Line 138: `handleSignature` now includes `members`
+
+#### VotingStep.tsx (lines 72-89)
+
+**BEFORE**:
+```typescript
+if (data.attendees) {  // WRONG
+  const present: Member[] = Object.entries(data.attendees)
+    .filter(([_, attendance]) => attendance.present)
+    .map(([memberId, attendance]) => {
+      return {
+        name: attendance.name || 'Sem nome', // attendance doesn't have name
+```
+
+**AFTER**:
+```typescript
+if (data.attendance && data.members) {  // CORRECT
+  const present: Member[] = Object.entries(data.attendance)
+    .filter(([_, attendance]) => 
+      attendance.present || attendance.represented  // Both can vote
+    )
+    .map(([memberId, attendance]) => {
+      const memberInfo = data.members.find((m: any) => m.id === memberId);
+      return {
+        name: memberInfo?.name || 'Sem nome',  // From memberInfo
+        fraction: memberInfo?.fraction || memberInfo?.apartment || '-',
+        permilage: parseFloat(memberInfo?.permilage || memberInfo?.coefficient || '0')
+```
+
+### Data Flow Fixed:
+
+```
+ControlAsistenciaStep (Step 2)
+  ↓
+  Loads members via API: getMembers()
+  ↓
+  Transforms to array: { id, name, fraction, permilage, ... }
+  ↓
+  onUpdate({ attendance, signatures, members }) ✅ NEW
+  ↓
+VotingStep (Step 5)
+  ↓
+  Reads data.attendance + data.members ✅ CORRECT
+  ↓
+  Filters present/represented members
+  ↓
+  Displays name, fraction, permilage ✅ WORKS
+  ↓
+  Calculates votes by permilage ✅ ACCURATE
+```
+
+### Testing Results:
+
+```bash
+✅ Build: 5.32s
+✅ Docker rebuild: 10.1s
+✅ Container: healthy
+✅ ActaWorkflow-DUlDUWzP.js: 167.1K
+```
+
+**Manual Testing**:
+1. Create acta from Convocatória #31
+2. Step 2: Mark 2-3 members as present
+3. Step 5: Members now show:
+   - ✅ Real name (not "Sem nome")
+   - ✅ Correct fraction (not "Fração -")
+   - ✅ Correct permilage (not "0.00‰")
+4. Vote on items: Permilage calculations work correctly
+
+### Files Changed:
+
+- src/components/workflows/ControlAsistenciaStep.tsx (18 insertions, 9 deletions)
+- src/components/workflows/VotingStep.tsx (corrected data sources)
+
+---
+
+**Última actualização**: 26 Outubro 2025 (02h35)
+**Versão**: v0.1.8
+**Estado**: ✅ VotingStep corrigido, dados de condóminos aparecem corretamente
+**Tag**: v0.1.8
+**Commit**: feec410 - fix: corrigir dados de condóminos no VotingStep
