@@ -14,7 +14,7 @@ import DesarrolloReunionStep from '@/components/workflows/DesarrolloReunionStep'
 import VotingStep from '@/components/workflows/VotingStep';
 import RedaccionActaStep from '@/components/workflows/RedaccionActaStep';
 import FirmasActaStep from '@/components/workflows/FirmasActaStep';
-import { getMinuteById, updateMinuteAgendaItems, getConvocatoriaById } from '@/lib/api';
+import { getMinuteById, updateMinuteAgendaItems, getConvocatoriaById, createMinuteFromConvocatoria } from '@/lib/api';
 import { toast } from 'sonner';
 
 interface ActaWorkflowProps {
@@ -100,32 +100,38 @@ const ActaWorkflow: React.FC<ActaWorkflowProps> = ({
       if (convocatoriaId && !actaId && !workflowState.data.convocatoria_loaded) {
         setIsLoadingActa(true);
         try {
-          const result = await getConvocatoriaById(convocatoriaId);
-          const convocatoria = result.data || result;
+          // 1. Criar acta na BD a partir da convocatória
+          const createResult = await createMinuteFromConvocatoria(convocatoriaId);
+          const newActa = createResult.data || createResult;
 
-          // Pre-fill workflow with convocatoria data
+          // 2. Pre-fill workflow with acta data (COM agenda_items que TÊM IDs da BD!)
           handleStepUpdate({
+            actaId: newActa.id,  // ✅ IMPORTANTE: Guardar ID da acta
             convocatoriaId,
             convocatoria_loaded: true,
-            agenda_items: convocatoria.agenda_items || [],
-            building_id: convocatoria.building_id,
-            building_name: convocatoria.building_name,
-            building_address: convocatoria.building_address,
-            postal_code: convocatoria.postal_code,
-            city: convocatoria.city,
-            assembly_number: convocatoria.assembly_number,
-            minute_number: convocatoria.assembly_number, // Same as assembly_number
-            meeting_date: convocatoria.date || convocatoria.meeting_date,
-            meeting_time: convocatoria.time || convocatoria.meeting_time,
-            location: convocatoria.location || convocatoria.meeting_location,
-            assembly_type: convocatoria.assembly_type,
-            administrator: convocatoria.administrator
+            agenda_items: newActa.agenda_items || [],  // ✅ Agenda items DA ACTA (com IDs!)
+            building_id: newActa.building_id,
+            building_name: newActa.building_name,
+            building_address: newActa.building_address,
+            assembly_number: newActa.minute_number,
+            minute_number: newActa.minute_number,
+            meeting_date: newActa.meeting_date,
+            meeting_time: newActa.meeting_time,
+            location: newActa.location,
+            assembly_type: newActa.assembly_type
           });
 
-          toast.success(`Dados da convocatória #${convocatoria.assembly_number} carregados`);
-        } catch (error) {
+          toast.success(`Acta #${newActa.minute_number} criada com sucesso`);
+        } catch (error: any) {
           console.error('Error loading convocatoria:', error);
-          toast.error('Erro ao carregar convocatória');
+          // Se já existe acta, tentar carregar
+          if (error.response?.status === 409) {
+            toast.info('Acta já existe, a carregar dados existentes...');
+            // Recarregar a acta existente
+            window.location.reload();
+          } else {
+            toast.error('Erro ao criar acta: ' + (error.response?.data?.message || error.message));
+          }
         } finally {
           setIsLoadingActa(false);
         }

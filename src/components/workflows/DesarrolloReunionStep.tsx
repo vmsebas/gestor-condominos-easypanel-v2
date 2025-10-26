@@ -1,8 +1,8 @@
 /**
  * DesarrolloReunionStep.tsx - Passo de Desenvolvimento da Reunião
  *
- * Foco: Registo de DISCUSSÃO e NOTAS de cada ponto
- * NÃO inclui votações (isso é feito no VotingStep)
+ * Foco: Registo de DISCUSSÃO e NOTAS + VOTAÇÃO INLINE de cada ponto
+ * Votações são feitas diretamente em cada ponto (modal popup)
  */
 
 import React, { useState, useEffect } from 'react';
@@ -17,9 +17,12 @@ import {
   ChevronDown,
   ChevronUp,
   MessageSquare,
-  FileText
+  FileText,
+  Vote
 } from 'lucide-react';
 import { toast } from 'sonner';
+import VotingDialog from './VotingDialog';
+import { saveMinuteItemVotes } from '@/lib/api';
 
 interface AgendaItem {
   id?: string;
@@ -27,8 +30,22 @@ interface AgendaItem {
   title: string;
   description?: string;
   type?: 'votacion' | 'informativo' | 'discussion';
+  requiredMajority?: 'simple' | 'cualificada';
   discussion?: string;
   notes?: string;
+  // Campos de votação
+  voting_result?: {
+    votes: Record<string, string>;
+    isUnanimous: boolean;
+    votersInFavor: string[];
+    votersAgainst: string[];
+    votersAbstained: string[];
+    permilageInFavor: number;
+    permilageAgainst: number;
+    permilageAbstained: number;
+    totalVotingPermilage: number;
+    passed: boolean;
+  };
 }
 
 interface DesarrolloReunionStepProps {
@@ -47,6 +64,15 @@ const DesarrolloReunionStep: React.FC<DesarrolloReunionStepProps> = ({
   const [agendaItems, setAgendaItems] = useState<AgendaItem[]>([]);
   const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set([0])); // Primeiro item expandido
   const [hasChanges, setHasChanges] = useState(false);
+  const [votingItemIndex, setVotingItemIndex] = useState<number | null>(null);
+
+  // Obter condóminos presentes para votação
+  const presentMembers = data.members
+    ? data.members.filter((m: any) => {
+        const attendance = data.attendance?.[m.id];
+        return attendance?.present || attendance?.represented;
+      })
+    : [];
 
   // Inicializar agenda items desde data
   useEffect(() => {
@@ -57,8 +83,10 @@ const DesarrolloReunionStep: React.FC<DesarrolloReunionStepProps> = ({
         title: item.title || '',
         description: item.description || '',
         type: item.type || 'discussion',
+        requiredMajority: item.requiredMajority || 'simple',
         discussion: item.discussion || '',
-        notes: item.notes || ''
+        notes: item.notes || '',
+        voting_result: item.voting_result // Carregar votação existente
       })));
     }
   }, [data.agenda_items]);
@@ -113,6 +141,52 @@ const DesarrolloReunionStep: React.FC<DesarrolloReunionStepProps> = ({
       case 'discussion':
       default:
         return 'Discussão';
+    }
+  };
+
+  const handleOpenVoting = (index: number) => {
+    setVotingItemIndex(index);
+  };
+
+  const handleSaveVoting = async (votingResult: any) => {
+    if (votingItemIndex === null) return;
+
+    const currentItem = agendaItems[votingItemIndex];
+
+    // Atualizar estado local
+    const newItems = [...agendaItems];
+    newItems[votingItemIndex] = {
+      ...newItems[votingItemIndex],
+      voting_result: votingResult
+    };
+    setAgendaItems(newItems);
+    setVotingItemIndex(null);
+    setHasChanges(true);
+
+    // Guardar na base de dados se temos actaId e agendaItemId
+    if (data.actaId && currentItem.id) {
+      try {
+        await saveMinuteItemVotes(data.actaId, currentItem.id, votingResult);
+        toast.success(
+          votingResult.isUnanimous
+            ? 'Votação guardada na BD: Aprovado por unanimidade'
+            : votingResult.passed
+            ? 'Votação guardada na BD: Aprovado'
+            : 'Votação guardada na BD: Rejeitado'
+        );
+      } catch (error) {
+        console.error('Erro ao guardar votação na BD:', error);
+        toast.error('Erro ao guardar votação na base de dados');
+      }
+    } else {
+      // Apenas guardado localmente (workflow state)
+      toast.success(
+        votingResult.isUnanimous
+          ? 'Votação guardada localmente: Aprovado por unanimidade'
+          : votingResult.passed
+          ? 'Votação guardada localmente: Aprovado'
+          : 'Votação guardada localmente: Rejeitado'
+      );
     }
   };
 
@@ -265,13 +339,62 @@ const DesarrolloReunionStep: React.FC<DesarrolloReunionStepProps> = ({
                       />
                     </div>
 
-                    {/* Type indicator */}
+                    {/* Votação - Botão e Resultado */}
                     {item.type === 'votacion' && (
-                      <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-md p-3">
-                        <p className="text-sm text-blue-800 dark:text-blue-200">
-                          <strong>Ponto de Votação:</strong> A votação detalhada (com nomes e permilagem)
-                          será registada no próximo passo.
-                        </p>
+                      <div className="space-y-3">
+                        {item.voting_result ? (
+                          // Mostrar resultado da votação
+                          <div className={`rounded-md p-4 border-2 ${
+                            item.voting_result.passed
+                              ? 'bg-green-50 dark:bg-green-950/20 border-green-300 dark:border-green-800'
+                              : 'bg-red-50 dark:bg-red-950/20 border-red-300 dark:border-red-800'
+                          }`}>
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <CheckCircle className={`h-5 w-5 ${item.voting_result.passed ? 'text-green-600' : 'text-red-600'}`} />
+                                <span className={`font-semibold ${item.voting_result.passed ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'}`}>
+                                  {item.voting_result.isUnanimous
+                                    ? 'Aprovado por Unanimidade'
+                                    : item.voting_result.passed
+                                    ? 'Aprovado'
+                                    : 'Rejeitado'}
+                                </span>
+                              </div>
+                              <Button size="sm" variant="outline" onClick={() => handleOpenVoting(index)}>
+                                Editar Votação
+                              </Button>
+                            </div>
+                            {item.voting_result.isUnanimous ? (
+                              <p className="text-sm text-green-700 dark:text-green-300">
+                                Todos os condóminos presentes votaram a favor ({item.voting_result.totalVotingPermilage.toFixed(2)}‰)
+                              </p>
+                            ) : (
+                              <div className="text-sm space-y-1 text-gray-700 dark:text-gray-300">
+                                <p><strong>A Favor:</strong> {item.voting_result.permilageInFavor.toFixed(2)}‰ ({item.voting_result.votersInFavor.length} votos)</p>
+                                <p><strong>Contra:</strong> {item.voting_result.permilageAgainst.toFixed(2)}‰ ({item.voting_result.votersAgainst.length} votos)</p>
+                                <p><strong>Abstenções:</strong> {item.voting_result.permilageAbstained.toFixed(2)}‰ ({item.voting_result.votersAbstained.length} votos)</p>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          // Botão para votar
+                          <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-md p-3">
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm text-blue-800 dark:text-blue-200">
+                                <strong>Ponto de Votação:</strong> Clique em "Votar" para registar os votos
+                              </p>
+                              <Button
+                                size="sm"
+                                variant="default"
+                                onClick={() => handleOpenVoting(index)}
+                                className="ml-4"
+                              >
+                                <Vote className="h-4 w-4 mr-2" />
+                                Votar
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </CardContent>
@@ -314,6 +437,18 @@ const DesarrolloReunionStep: React.FC<DesarrolloReunionStepProps> = ({
           Continuar para Votações
         </Button>
       </div>
+
+      {/* VotingDialog Modal */}
+      {votingItemIndex !== null && (
+        <VotingDialog
+          open={votingItemIndex !== null}
+          onClose={() => setVotingItemIndex(null)}
+          onSave={handleSaveVoting}
+          agendaItem={agendaItems[votingItemIndex]}
+          presentMembers={presentMembers}
+          existingVotes={agendaItems[votingItemIndex]?.voting_result?.votes || {}}
+        />
+      )}
     </div>
   );
 };

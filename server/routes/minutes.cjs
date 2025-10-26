@@ -429,6 +429,150 @@ router.post('/from-convocatoria/:convocatoriaId', authenticate, async (req, res,
   }
 });
 
+// POST /api/minutes/:minuteId/agenda-items/:itemId/votes - Guardar votação completa
+router.post('/:minuteId/agenda-items/:itemId/votes', authenticate, async (req, res, next) => {
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    const { minuteId, itemId } = req.params;
+    const { voting_result } = req.body;
+
+    if (!voting_result) {
+      return errorResponse(res, 'voting_result é obrigatório', 400);
+    }
+
+    // Verificar que minute_agenda_item existe
+    const itemCheck = await client.query(
+      'SELECT id, minutes_id, building_id FROM minute_agenda_items WHERE id = $1',
+      [itemId]
+    );
+
+    if (itemCheck.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return errorResponse(res, 'Ponto da agenda não encontrado', 404);
+    }
+
+    const agendaItem = itemCheck.rows[0];
+
+    // 1. Limpar votos anteriores deste item (se houver)
+    await client.query(
+      'DELETE FROM member_votes WHERE minute_agenda_item_id = $1',
+      [itemId]
+    );
+
+    await client.query(
+      'DELETE FROM voting_results WHERE minute_agenda_item_id = $1',
+      [itemId]
+    );
+
+    // 2. Guardar votos individuais em member_votes
+    const memberVotes = [];
+    for (const [memberId, vote] of Object.entries(voting_result.votes)) {
+      // Buscar informação do membro
+      const memberInfo = await client.query(
+        'SELECT name, apartment, permilage FROM members WHERE id = $1',
+        [memberId]
+      );
+
+      if (memberInfo.rows.length === 0) continue;
+
+      const member = memberInfo.rows[0];
+
+      // Mapear 'favor' → 'favor', 'contra' → 'against', 'abstencao' → 'abstention'
+      const voteValue = vote === 'favor' ? 'favor' :
+                        vote === 'contra' ? 'against' : 'abstention';
+
+      const voteResult = await client.query(`
+        INSERT INTO member_votes (
+          minute_agenda_item_id,
+          member_id,
+          building_id,
+          member_name,
+          apartment,
+          vote,
+          voting_power,
+          vote_timestamp
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+        RETURNING *
+      `, [
+        itemId,
+        memberId,
+        agendaItem.building_id,
+        member.name,
+        member.apartment || 'N/A',
+        voteValue,
+        member.permilage || 1
+      ]);
+
+      memberVotes.push(voteResult.rows[0]);
+    }
+
+    // 3. Guardar resultado agregado em voting_results
+    const votingResultRecord = await client.query(`
+      INSERT INTO voting_results (
+        minute_agenda_item_id,
+        total_votes,
+        votes_in_favor,
+        votes_against,
+        abstentions,
+        quorum_percentage,
+        is_approved
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING *
+    `, [
+      itemId,
+      voting_result.votersInFavor.length + voting_result.votersAgainst.length + voting_result.votersAbstained.length,
+      voting_result.votersInFavor.length,
+      voting_result.votersAgainst.length,
+      voting_result.votersAbstained.length,
+      (voting_result.totalVotingPermilage > 0
+        ? (voting_result.permilageInFavor / voting_result.totalVotingPermilage * 100).toFixed(2)
+        : 0),
+      voting_result.passed
+    ]);
+
+    // 4. Atualizar minute_agenda_items com totais
+    await client.query(`
+      UPDATE minute_agenda_items
+      SET
+        votes_in_favor = $1,
+        votes_against = $2,
+        abstentions = $3,
+        is_approved = $4,
+        updated_at = NOW()
+      WHERE id = $5
+    `, [
+      voting_result.votersInFavor.length,
+      voting_result.votersAgainst.length,
+      voting_result.votersAbstained.length,
+      voting_result.passed,
+      itemId
+    ]);
+
+    // 5. Atualizar updated_at do acta
+    await client.query(
+      'UPDATE minutes SET updated_at = NOW() WHERE id = $1',
+      [minuteId]
+    );
+
+    await client.query('COMMIT');
+
+    return successResponse(res, {
+      message: 'Votação guardada com sucesso',
+      member_votes: memberVotes,
+      voting_result: votingResultRecord.rows[0]
+    }, 201);
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    next(error);
+  } finally {
+    client.release();
+  }
+});
+
 // DELETE /api/minutes/:id - Eliminar acta
 router.delete('/:id', authenticate, async (req, res, next) => {
   try {

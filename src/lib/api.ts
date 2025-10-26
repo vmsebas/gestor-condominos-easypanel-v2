@@ -223,6 +223,19 @@ export const createMinuteFromConvocatoria = async (convocatoriaId: string) => {
   return response.data;
 };
 
+// Save complete voting result for an agenda item
+export const saveMinuteItemVotes = async (
+  minuteId: string,
+  agendaItemId: string,
+  votingResult: any
+) => {
+  const response = await api.post(
+    `/minutes/${minuteId}/agenda-items/${agendaItemId}/votes`,
+    { voting_result: votingResult }
+  );
+  return response.data;
+};
+
 // Attendance Sheets
 export const getAttendanceSheets = async (params?: {
   buildingId?: string;
