@@ -35,13 +35,13 @@ router.get('/', authenticate, async (req, res, next) => {
     const effectiveBuildingId = buildingId || req.user?.building_id;
     
     let query = `
-      SELECT 
+      SELECT
         m.*,
         c.title as convocatoria_title,
         c.date as convocatoria_date
       FROM minutes m
       LEFT JOIN convocatorias c ON m.convocatoria_id = c.id
-      WHERE 1=1
+      WHERE m.deleted_at IS NULL
     `;
     
     const params = [];
@@ -83,9 +83,22 @@ router.get('/:id', authenticate, async (req, res, next) => {
                 'description', mai.description,
                 'decision', mai.decision,
                 'discussion', mai.discussion,
+                'notes', mai.decision,
+                'vote_type', mai.vote_type,
+                'type', CASE
+                  WHEN mai.vote_type = 'informativo' THEN 'informativo'
+                  WHEN mai.vote_type IN ('simple', 'qualified') THEN 'votacion'
+                  ELSE 'discussion'
+                END,
+                'requiredMajority', CASE
+                  WHEN mai.vote_type = 'simple' THEN 'simple'
+                  WHEN mai.vote_type = 'qualified' THEN 'cualificada'
+                  ELSE 'simple'
+                END,
                 'votes_in_favor', COALESCE(mai.votes_in_favor, 0),
                 'votes_against', COALESCE(mai.votes_against, 0),
-                'abstentions', COALESCE(mai.abstentions, 0)
+                'abstentions', COALESCE(mai.abstentions, 0),
+                'voting_result', mai.decision
               ) ORDER BY mai.item_number
             )
             FROM minute_agenda_items mai
@@ -96,7 +109,7 @@ router.get('/:id', authenticate, async (req, res, next) => {
       FROM minutes m
       LEFT JOIN convocatorias c ON m.convocatoria_id = c.id
       LEFT JOIN buildings b ON m.building_id = b.id
-      WHERE m.id = $1
+      WHERE m.id = $1 AND m.deleted_at IS NULL
     `, [id]);
 
     if (result.rows.length === 0) {
@@ -307,20 +320,7 @@ router.post('/from-convocatoria/:convocatoriaId', authenticate, async (req, res,
         c.*,
         b.name as building_name,
         b.address as building_address,
-        COALESCE(
-          (
-            SELECT json_agg(
-              json_build_object(
-                'title', mai.title,
-                'description', mai.description,
-                'item_number', mai.item_number
-              ) ORDER BY mai.item_number
-            )
-            FROM minute_agenda_items mai
-            WHERE mai.convocatoria_id = c.id
-          ),
-          '[]'
-        ) as agenda_items
+        COALESCE(c.agenda_items, '[]'::jsonb) as agenda_items
       FROM convocatorias c
       LEFT JOIN buildings b ON c.building_id = b.id
       WHERE c.id = $1
@@ -376,9 +376,31 @@ router.post('/from-convocatoria/:convocatoriaId', authenticate, async (req, res,
     const minute = minuteResult.rows[0];
 
     // Copiar agenda items de la convocatoria al acta
-    const agendaItems = convocatoria.agenda_items;
+    let agendaItems = convocatoria.agenda_items;
+
+    // Parse if string (safety check)
+    if (typeof agendaItems === 'string') {
+      try {
+        agendaItems = JSON.parse(agendaItems);
+      } catch (e) {
+        agendaItems = [];
+      }
+    }
+
     if (Array.isArray(agendaItems) && agendaItems.length > 0) {
       for (const item of agendaItems) {
+        // Map requiredMajority to vote_type
+        let voteType = null;
+        if (item.type === 'votacion' || item.type === 'votación') {
+          if (item.requiredMajority === 'simple') {
+            voteType = 'simple';
+          } else if (item.requiredMajority === 'cualificada' || item.requiredMajority === 'qualified') {
+            voteType = 'qualified';
+          }
+        } else if (item.type === 'informativo') {
+          voteType = 'informativo';
+        }
+
         await client.query(`
           INSERT INTO minute_agenda_items (
             minutes_id,
@@ -386,18 +408,20 @@ router.post('/from-convocatoria/:convocatoriaId', authenticate, async (req, res,
             item_number,
             title,
             description,
+            vote_type,
             votes_in_favor,
             votes_against,
             abstentions,
             created_at,
             updated_at
-          ) VALUES ($1, $2, $3, $4, $5, 0, 0, 0, NOW(), NOW())
+          ) VALUES ($1, $2, $3, $4, $5, $6, 0, 0, 0, NOW(), NOW())
         `, [
           minute.id,
           convocatoria.building_id,
           item.item_number,
           item.title,
-          item.description || ''
+          item.description || '',
+          voteType
         ]);
       }
     }
@@ -410,7 +434,32 @@ router.post('/from-convocatoria/:convocatoriaId', authenticate, async (req, res,
         m.*,
         COALESCE(
           (
-            SELECT json_agg(mai.* ORDER BY mai.item_number)
+            SELECT json_agg(
+              json_build_object(
+                'id', mai.id,
+                'item_number', mai.item_number,
+                'title', mai.title,
+                'description', mai.description,
+                'decision', mai.decision,
+                'discussion', mai.discussion,
+                'notes', mai.decision,
+                'vote_type', mai.vote_type,
+                'type', CASE
+                  WHEN mai.vote_type = 'informativo' THEN 'informativo'
+                  WHEN mai.vote_type IN ('simple', 'qualified') THEN 'votacion'
+                  ELSE 'discussion'
+                END,
+                'requiredMajority', CASE
+                  WHEN mai.vote_type = 'simple' THEN 'simple'
+                  WHEN mai.vote_type = 'qualified' THEN 'cualificada'
+                  ELSE 'simple'
+                END,
+                'votes_in_favor', COALESCE(mai.votes_in_favor, 0),
+                'votes_against', COALESCE(mai.votes_against, 0),
+                'abstentions', COALESCE(mai.abstentions, 0),
+                'voting_result', mai.decision
+              ) ORDER BY mai.item_number
+            )
             FROM minute_agenda_items mai
             WHERE mai.minutes_id = m.id
           ),
@@ -573,21 +622,45 @@ router.post('/:minuteId/agenda-items/:itemId/votes', authenticate, async (req, r
   }
 });
 
-// DELETE /api/minutes/:id - Eliminar acta
+// DELETE /api/minutes/:id - Eliminar acta (Soft Delete)
 router.delete('/:id', authenticate, async (req, res, next) => {
   try {
     const { id } = req.params;
+    let userId = req.user?.id;
 
+    // Verificar se o userId existe na tabela users
+    if (userId) {
+      const userCheck = await pool.query(
+        'SELECT id FROM users WHERE id = $1',
+        [userId]
+      );
+
+      if (userCheck.rows.length === 0) {
+        // User do token não existe na BD, usar NULL
+        userId = null;
+      }
+    }
+
+    // Soft delete: marca como eliminado em vez de apagar fisicamente
     const result = await pool.query(
-      'DELETE FROM minutes WHERE id = $1 RETURNING id',
-      [id]
+      `UPDATE minutes
+       SET deleted_at = NOW(), deleted_by = $2
+       WHERE id = $1 AND deleted_at IS NULL
+       RETURNING id, minute_number, building_name`,
+      [id, userId]
     );
 
     if (result.rows.length === 0) {
-      return errorResponse(res, 'Ata não encontrada', 404);
+      return errorResponse(res, 'Acta não encontrada ou já foi eliminada', 404);
     }
 
-    return successResponse(res, { message: 'Ata eliminada com sucesso' });
+    const minute = result.rows[0];
+
+    return successResponse(res, {
+      message: `Acta #${minute.minute_number} movida para o histórico`,
+      info: 'Pode restaurar a acta a partir do menu Histórico',
+      item: minute
+    });
   } catch (error) {
     next(error);
   }

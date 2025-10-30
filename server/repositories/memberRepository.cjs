@@ -13,13 +13,13 @@ class MemberRepository extends BaseRepository {
    */
   async findByBuilding(buildingId, options = {}) {
     let query = this.db('members')
-      .where('building_id', buildingId);
-      // .whereNull('deleted_at') - members table doesn't have deleted_at column
-    
+      .where('building_id', buildingId)
+      .whereNull('deleted_at');
+
     if (options.isActive !== undefined) {
       query = query.where('is_active', options.isActive);
     }
-    
+
     if (options.search) {
       query = query.where(function() {
         this.whereRaw('LOWER(name) LIKE LOWER(?)', [`%${options.search}%`])
@@ -27,7 +27,7 @@ class MemberRepository extends BaseRepository {
           .orWhereRaw('LOWER(email) LIKE LOWER(?)', [`%${options.search}%`]);
       });
     }
-    
+
     return query.orderBy('apartment');
   }
 
@@ -41,14 +41,15 @@ class MemberRepository extends BaseRepository {
     const orderDesc = options.orderDesc || false;
     const offset = (page - 1) * pageSize;
 
-    // Build base query
+    // Build base query - Filter out soft-deleted members
     let query = this.db('members')
-      .where('building_id', buildingId);
-    
+      .where('building_id', buildingId)
+      .whereNull('deleted_at');
+
     if (options.isActive !== undefined) {
       query = query.where('is_active', options.isActive);
     }
-    
+
     if (options.search) {
       query = query.where(function() {
         this.whereRaw('LOWER(name) LIKE LOWER(?)', [`%${options.search}%`])
@@ -98,13 +99,14 @@ class MemberRepository extends BaseRepository {
     const orderDesc = options.orderDesc || false;
     const offset = (page - 1) * pageSize;
 
-    // Build base query
-    let query = this.db('members');
-    
+    // Build base query - Filter out soft-deleted members
+    let query = this.db('members')
+      .whereNull('deleted_at');
+
     if (options.isActive !== undefined) {
       query = query.where('is_active', options.isActive);
     }
-    
+
     if (options.search) {
       query = query.where(function() {
         this.whereRaw('LOWER(name) LIKE LOWER(?)', [`%${options.search}%`])
@@ -233,7 +235,7 @@ class MemberRepository extends BaseRepository {
   async getBuildingMemberStats(buildingId) {
     const result = await this.db('members')
       .where('building_id', buildingId)
-      // .whereNull('deleted_at') - members table doesn't have deleted_at column
+      .whereNull('deleted_at')
       .select(
         this.db.raw('COUNT(*) as total'),
         this.db.raw('COUNT(CASE WHEN is_active = true THEN 1 END) as active'),
@@ -260,7 +262,6 @@ class MemberRepository extends BaseRepository {
       .leftJoin(
         this.db('payment_month_assignments as pma')
           .where('pma.is_paid', false)
-          // .whereNull('pma.deleted_at') - payment_month_assignments table doesn't have deleted_at column
           .select('member_id', this.db.raw('COUNT(*) as unpaid_months'))
           .groupBy('member_id')
           .as('pma'),
@@ -268,7 +269,7 @@ class MemberRepository extends BaseRepository {
         'm.id'
       )
       .where('m.building_id', buildingId)
-      // .whereNull('m.deleted_at') - members table doesn't have deleted_at column
+      .whereNull('m.deleted_at')
       .where('m.is_active', true)
       .whereNotNull('pma.unpaid_months')
       .select(
@@ -277,7 +278,7 @@ class MemberRepository extends BaseRepository {
         this.db.raw('m.new_monthly_fee * pma.unpaid_months as total_debt')
       )
       .orderBy('pma.unpaid_months', 'desc');
-    
+
     return result;
   }
 }

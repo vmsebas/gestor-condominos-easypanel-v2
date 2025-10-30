@@ -96,10 +96,11 @@ class MemberController {
    */
   deleteMember = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    
-    await memberService.deleteMember(id);
-    
-    successResponse(res, null, 'Membro eliminado com sucesso');
+    const userId = req.user?.id || null;
+
+    await memberService.deleteMember(id, userId);
+
+    successResponse(res, null, 'Membro movido para o histórico');
   });
 
   /**

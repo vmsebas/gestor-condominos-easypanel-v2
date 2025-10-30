@@ -125,12 +125,11 @@ router.put(
 /**
  * @route   DELETE /api/members/:id
  * @desc    Eliminar miembro
- * @access  Private (admin)
+ * @access  Private (authenticated)
  */
 router.delete(
   '/:id',
-  // ⚠️ TEMPORALMENTE DESHABILITADO PARA DEBUGGING
-  // authorize('super_admin', 'admin'),
+  authenticate,
   validate(schemas.idParam, 'params'),
   memberController.deleteMember
 );

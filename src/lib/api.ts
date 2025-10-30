@@ -454,4 +454,99 @@ export const getTaskStats = async (buildingId: string) => {
   return response.data;
 };
 
+// ===== MINUTE SIGNATURES =====
+
+/**
+ * Get all signatures for a minute
+ */
+export const getMinuteSignatures = async (minuteId: string) => {
+  const response = await api.get(`/minutes/${minuteId}/signatures`);
+  return response.data;
+};
+
+/**
+ * Check signature status (President + Secretary signed?)
+ */
+export const checkSignatureStatus = async (minuteId: string) => {
+  const response = await api.get(`/minutes/${minuteId}/signatures/status`);
+  return response.data;
+};
+
+/**
+ * Create a new signature
+ * @param minuteId - UUID of the minute
+ * @param data - Signature data
+ */
+export const createMinuteSignature = async (
+  minuteId: string,
+  data: {
+    signer_type: 'president' | 'secretary' | 'member';
+    signer_name: string;
+    signature: string; // Base64 PNG
+    rubric?: string; // Base64 PNG
+    member_id?: string; // UUID (for members)
+    cmd_signature?: string;
+    cmd_timestamp?: string;
+    cmd_certificate?: string;
+  }
+) => {
+  const response = await api.post(`/minutes/${minuteId}/signatures`, data);
+  return response.data;
+};
+
+/**
+ * Upsert signature (create if not exists, update if exists)
+ * Útil para quando se reabre o workflow
+ */
+export const upsertMinuteSignature = async (
+  minuteId: string,
+  data: {
+    signer_type: 'president' | 'secretary' | 'member';
+    signer_name: string;
+    signature: string;
+    rubric?: string;
+    member_id?: string;
+    cmd_signature?: string;
+    cmd_timestamp?: string;
+    cmd_certificate?: string;
+  }
+) => {
+  const response = await api.post(`/minutes/${minuteId}/signatures/upsert`, data);
+  return response.data;
+};
+
+/**
+ * Update an existing signature
+ */
+export const updateMinuteSignature = async (
+  minuteId: string,
+  signatureId: string,
+  data: {
+    signature?: string;
+    rubric?: string;
+    cmd_signature?: string;
+    cmd_timestamp?: string;
+    cmd_certificate?: string;
+  }
+) => {
+  const response = await api.put(`/minutes/${minuteId}/signatures/${signatureId}`, data);
+  return response.data;
+};
+
+/**
+ * Delete a signature
+ */
+export const deleteMinuteSignature = async (minuteId: string, signatureId: string) => {
+  const response = await api.delete(`/minutes/${minuteId}/signatures/${signatureId}`);
+  return response.data;
+};
+
+/**
+ * Get signature statistics for a building
+ */
+export const getBuildingSignatureStats = async (buildingId: string) => {
+  const response = await api.get(`/buildings/${buildingId}/signature-stats`);
+  return response.data;
+};
+
 export default api;

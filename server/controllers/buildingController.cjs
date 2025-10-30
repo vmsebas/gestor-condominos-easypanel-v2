@@ -93,13 +93,14 @@ class BuildingController {
   deleteBuilding = asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { force } = req.query;
-    
-    await buildingService.deleteBuilding(id, force === 'true');
-    
+    const userId = req.user?.id || null;
+
+    await buildingService.deleteBuilding(id, force === 'true', userId);
+
     return successResponse(
-      res, 
-      null, 
-      'Building deleted successfully'
+      res,
+      null,
+      'Edifício movido para o histórico'
     );
   });
 

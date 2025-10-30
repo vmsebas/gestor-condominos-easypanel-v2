@@ -1,6 +1,6 @@
 const express = require('express');
 const documentController = require('../controllers/documentController.cjs');
-const { authorize, optionalAuth } = require('../middleware/auth.cjs');
+const { authenticate, authorize, optionalAuth } = require('../middleware/auth.cjs');
 const { validate, schemas } = require('../middleware/validation.cjs');
 const { uploadMemory } = require('../middleware/upload.cjs');
 
@@ -36,7 +36,7 @@ router.put('/:id',
 );
 
 router.delete('/:id',
-  authorize('super_admin', 'admin', 'manager'),
+  authenticate,
   validate(schemas.common.idParam, 'params'),
   documentController.delete
 );

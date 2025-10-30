@@ -190,21 +190,33 @@ class ConvocatoriaService {
   /**
    * Elimina una convocatoria
    */
-  async deleteConvocatoria(id) {
-    const convocatoria = await convocatoriaRepository.findById(id);
-    
+  async deleteConvocatoria(id, userId = null) {
+    // Verificar si tiene acta creada (necesitamos hacer query sin filtro de deleted_at)
+    const convocatoria = await convocatoriaRepository.db('convocatorias')
+      .where('id', id)
+      .first();
+
     if (!convocatoria) {
       throw new AppError('Convocatória não encontrada', 404, null);
     }
 
+    // Si ya está eliminada, devolver error amigable
+    if (convocatoria.deleted_at) {
+      throw new AppError('Convocatória já foi eliminada', 400, null);
+    }
+
     // No permitir eliminar si tiene acta creada
     if (convocatoria.minutes_created) {
-      throw new AppError('No se puede eliminar una convocatoria que tiene acta creada', 400, null);
+      throw new AppError('Não é possível eliminar convocatória com acta criada', 400, null);
     }
 
     // Eliminar (soft delete)
-    await convocatoriaRepository.delete(id);
-    
+    const deleted = await convocatoriaRepository.delete(id, userId);
+
+    if (!deleted) {
+      throw new AppError('Erro ao eliminar convocatória', 500, null);
+    }
+
     return true;
   }
 

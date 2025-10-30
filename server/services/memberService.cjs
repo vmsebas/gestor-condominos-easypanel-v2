@@ -110,14 +110,8 @@ class MemberService {
   /**
    * Elimina un miembro
    */
-  async deleteMember(id) {
-    const member = await memberRepository.findById(id);
-    
-    if (!member) {
-      throw new AppError('Membro não encontrado', 404, null);
-    }
-
-    // Verificar si tiene transacciones asociadas
+  async deleteMember(id, userId = null) {
+    // Verificar si tiene transacciones asociadas (sin filtrar por deleted_at)
     const hasTransactions = await this.checkMemberTransactions(id);
     if (hasTransactions) {
       throw new AppError(
@@ -127,9 +121,13 @@ class MemberService {
       );
     }
 
-    // Eliminar el miembro (soft delete)
-    await memberRepository.delete(id);
-    
+    // Eliminar el miembro (soft delete) - devuelve null si ya estaba eliminado
+    const deleted = await memberRepository.delete(id, userId);
+
+    if (!deleted) {
+      throw new AppError('Membro não encontrado ou já foi eliminado', 404, null);
+    }
+
     return true;
   }
 

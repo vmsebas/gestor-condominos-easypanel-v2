@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const buildingController = require('../controllers/buildingController.cjs');
+const { authenticate } = require('../middleware/auth.cjs');
 const { validate, schemas } = require('../middleware/validation.cjs');
 
 /**
@@ -94,10 +95,11 @@ router.put(
 /**
  * @route   DELETE /api/buildings/:id
  * @desc    Eliminar edificio
- * @access  Public (debería ser protegido)
+ * @access  Private (authenticated)
  */
 router.delete(
   '/:id',
+  authenticate,
   validate(schemas.idParam, 'params'),
   buildingController.deleteBuilding
 );

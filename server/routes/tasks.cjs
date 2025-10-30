@@ -254,21 +254,40 @@ router.put('/:id/complete', authenticate, async (req, res, next) => {
   }
 });
 
-// DELETE /api/tasks/:id - Eliminar tarea
+// DELETE /api/tasks/:id - Eliminar tarea (Soft Delete)
 router.delete('/:id', authenticate, async (req, res, next) => {
   try {
     const { id } = req.params;
-    
-    const result = await pool.query(
-      'DELETE FROM tasks WHERE id = $1 RETURNING id',
-      [id]
-    );
-    
-    if (result.rows.length === 0) {
-      return errorResponse(res, 'Tarefa não encontrada', 404);
+    let userId = req.user?.id || null;
+
+    // Verificar si el usuario existe
+    if (userId) {
+      const userCheck = await pool.query(
+        'SELECT id FROM users WHERE id = $1',
+        [userId]
+      );
+      if (userCheck.rows.length === 0) {
+        userId = null;
+      }
     }
-    
-    return successResponse(res, { message: 'Tarefa eliminada com sucesso' });
+
+    // Soft delete: marca como eliminado en vez de apagar fisicamente
+    const result = await pool.query(
+      `UPDATE tasks
+       SET deleted_at = NOW(), deleted_by = $2
+       WHERE id = $1 AND deleted_at IS NULL
+       RETURNING id`,
+      [id, userId]
+    );
+
+    if (result.rows.length === 0) {
+      return errorResponse(res, 'Tarefa não encontrada ou já foi eliminada', 404);
+    }
+
+    return successResponse(res, {
+      message: 'Tarefa movida para o histórico',
+      info: 'Pode restaurar a tarefa a partir do menu Histórico'
+    });
   } catch (error) {
     next(error);
   }

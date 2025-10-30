@@ -109,10 +109,11 @@ class ConvocatoriaController {
    */
   deleteConvocatoria = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    
-    await convocatoriaService.deleteConvocatoria(id);
-    
-    successResponse(res, null, 'Convocatória eliminada com sucesso');
+    const userId = req.user?.id || null;
+
+    await convocatoriaService.deleteConvocatoria(id, userId);
+
+    successResponse(res, null, 'Convocatória movida para o histórico');
   });
 
   /**

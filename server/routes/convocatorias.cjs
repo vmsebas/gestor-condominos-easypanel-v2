@@ -4,9 +4,8 @@ const convocatoriaController = require('../controllers/convocatoriaController.cj
 const { validate, schemas } = require('../middleware/validation.cjs');
 const { authenticate, authorize, authorizeBuilding } = require('../middleware/auth.cjs');
 
-// ⚠️ AUTENTICACIÓN TEMPORALMENTE DESHABILITADA PARA DEBUGGING
 // Todas las rutas requieren autenticación
-// router.use(authenticate);
+router.use(authenticate);
 
 /**
  * @route   GET /api/convocatorias
@@ -130,11 +129,11 @@ router.put(
 /**
  * @route   DELETE /api/convocatorias/:id
  * @desc    Eliminar convocatoria
- * @access  Private (admin)
+ * @access  Private (authenticated)
  */
 router.delete(
   '/:id',
-  authorize('super_admin', 'admin'),
+  authenticate,
   validate(schemas.idParam, 'params'),
   convocatoriaController.deleteConvocatoria
 );

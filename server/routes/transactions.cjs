@@ -245,21 +245,40 @@ router.put('/:id', authenticate, validate(transactionSchema), async (req, res, n
   }
 });
 
-// DELETE /api/transactions/:id - Eliminar transacción
+// DELETE /api/transactions/:id - Eliminar transacción (Soft Delete)
 router.delete('/:id', authenticate, async (req, res, next) => {
   try {
     const { id } = req.params;
-    
-    const result = await pool.query(
-      'DELETE FROM transactions WHERE id = $1 RETURNING id',
-      [id]
-    );
-    
-    if (result.rows.length === 0) {
-      return errorResponse(res, 'Transação não encontrada', 404);
+    let userId = req.user?.id || null;
+
+    // Verificar si el usuario existe
+    if (userId) {
+      const userCheck = await pool.query(
+        'SELECT id FROM users WHERE id = $1',
+        [userId]
+      );
+      if (userCheck.rows.length === 0) {
+        userId = null;
+      }
     }
 
-    return successResponse(res, { message: 'Transação eliminada com sucesso' });
+    // Soft delete: marca como eliminado en vez de apagar fisicamente
+    const result = await pool.query(
+      `UPDATE transactions
+       SET deleted_at = NOW(), deleted_by = $2
+       WHERE id = $1 AND deleted_at IS NULL
+       RETURNING id`,
+      [id, userId]
+    );
+
+    if (result.rows.length === 0) {
+      return errorResponse(res, 'Transação não encontrada ou já foi eliminada', 404);
+    }
+
+    return successResponse(res, {
+      message: 'Transação movida para o histórico',
+      info: 'Pode restaurar a transação a partir do menu Histórico'
+    });
   } catch (error) {
     next(error);
   }

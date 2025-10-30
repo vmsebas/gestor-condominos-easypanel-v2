@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FileText, Download, Eye, CheckCircle } from 'lucide-react';
+import { generateActaCompletaPDF } from '@/lib/actaGenerator';
+import { toast } from 'sonner';
 
 interface RedaccionActaStepProps {
   data: any;
@@ -62,6 +64,88 @@ const RedaccionActaStep: React.FC<RedaccionActaStepProps> = ({
     };
   }, [data]);
 
+  // Handler para gerar e descarregar PDF
+  const handleDownloadPDF = () => {
+    try {
+      // Preparar dados completos para o PDF
+      const pdfData = {
+        // Header info
+        minute_number: data?.minute_number || 'XX',
+        assembly_type: data?.assembly_type || 'ordinary',
+        building_name: data?.building_name || 'Nome do Edifício',
+        building_address: data?.building_address || '',
+        meeting_date: data?.meeting_date,
+        meeting_time: data?.meeting_time || data?.time || '19:00',
+        location: data?.location || 'Local não especificado',
+
+        // Attendance/Quorum
+        quorum: data?.quorum || {},
+        attendance: data?.attendance || [],
+
+        // Agenda items with voting results
+        agenda_items: data?.agenda_items || [],
+
+        // Mesa da assembleia
+        president_name: data?.president_name || 'A definir',
+        secretary_name: data?.secretary_name || 'A definir',
+
+        // Signatures (if already exist from previous steps)
+        president_signature: data?.president_signature,
+        secretary_signature: data?.secretary_signature,
+        member_signatures: data?.member_signatures || {},
+
+        // Document integrity
+        document_code: data?.document_code || data?.actaId || `DOC-${Date.now()}`,
+        document_hash: data?.document_hash || 'Será gerado',
+
+        // Timestamps
+        signed_date: data?.signed_date,
+        created_at: data?.created_at || new Date().toISOString()
+      };
+
+      // Gerar PDF (download = true)
+      generateActaCompletaPDF(pdfData, true);
+      toast.success('PDF descarregado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      toast.error('Erro ao gerar PDF. Verifique os dados.');
+    }
+  };
+
+  // Handler para pré-visualizar PDF (abre em nova janela)
+  const handlePreviewPDF = () => {
+    try {
+      const pdfData = {
+        minute_number: data?.minute_number || 'XX',
+        assembly_type: data?.assembly_type || 'ordinary',
+        building_name: data?.building_name || 'Nome do Edifício',
+        building_address: data?.building_address || '',
+        meeting_date: data?.meeting_date,
+        meeting_time: data?.meeting_time || data?.time || '19:00',
+        location: data?.location || 'Local não especificado',
+        quorum: data?.quorum || {},
+        attendance: data?.attendance || [],
+        agenda_items: data?.agenda_items || [],
+        president_name: data?.president_name || 'A definir',
+        secretary_name: data?.secretary_name || 'A definir',
+        president_signature: data?.president_signature,
+        secretary_signature: data?.secretary_signature,
+        member_signatures: data?.member_signatures || {},
+        document_code: data?.document_code || data?.actaId || `DOC-${Date.now()}`,
+        document_hash: data?.document_hash || 'Será gerado',
+        signed_date: data?.signed_date,
+        created_at: data?.created_at || new Date().toISOString()
+      };
+
+      // Gerar PDF (download = false = preview)
+      generateActaCompletaPDF(pdfData, false);
+      toast.success('PDF aberto para pré-visualização');
+    } catch (error) {
+      console.error('Erro ao pré-visualizar PDF:', error);
+      toast.error('Erro ao pré-visualizar PDF. Verifique os dados.');
+    }
+  };
+
   const handleContinue = () => {
     // Guardar la generación del acta
     onUpdate({
@@ -97,18 +181,18 @@ const RedaccionActaStep: React.FC<RedaccionActaStepProps> = ({
         <AlertDescription>
           <strong>Sobre os botões:</strong>
           <ul className="list-disc list-inside text-sm mt-2 space-y-1">
-            <li><strong>Pré-visualizar PDF:</strong> Abre a acta em formato PDF para verificação antes de assinar (em desenvolvimento)</li>
-            <li><strong>Descarregar Rascunho:</strong> Faz download da acta como rascunho PDF sem assinaturas (em desenvolvimento)</li>
+            <li><strong>Pré-visualizar PDF:</strong> Abre a acta em formato PDF numa nova janela para verificação antes de assinar</li>
+            <li><strong>Descarregar Rascunho:</strong> Faz download da acta como rascunho PDF (sem assinaturas ainda)</li>
           </ul>
         </AlertDescription>
       </Alert>
 
       <div className="flex space-x-3">
-        <Button variant="outline" className="flex-1" disabled>
+        <Button variant="outline" className="flex-1" onClick={handlePreviewPDF}>
           <Eye className="mr-2 h-4 w-4" />
           Pré-visualizar PDF
         </Button>
-        <Button variant="outline" className="flex-1" disabled>
+        <Button variant="outline" className="flex-1" onClick={handleDownloadPDF}>
           <Download className="mr-2 h-4 w-4" />
           Descarregar Rascunho
         </Button>

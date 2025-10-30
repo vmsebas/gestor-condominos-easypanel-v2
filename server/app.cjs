@@ -47,6 +47,7 @@ app.use('/api/members', require('./routes/members.cjs'));
 app.use('/api/convocatorias', require('./routes/convocatorias.cjs'));
 app.use('/api/documents', require('./routes/documents.cjs'));
 app.use('/api/attendance-sheets', require('./routes/attendanceSheets.cjs'));
+app.use('/api', require('./routes/minuteSignatures.cjs')); // Signatures API
 
 // Rutas duplicadas para manejar el problema de proxy de Cloudflare
 app.use('/auth', require('./routes/auth.cjs'));
@@ -64,6 +65,7 @@ app.use('/tasks', require('./routes/tasks.cjs'));
 app.use('/communications', require('./routes/communications.cjs'));
 app.use('/finance', require('./routes/finance.cjs'));
 app.use('/arrears', require('./routes/arrears.cjs'));
+app.use('/', require('./routes/minuteSignatures.cjs')); // Signatures API (Cloudflare proxy)
 
 // Rutas adicionales
 app.use('/api/transactions', require('./routes/transactions.cjs'));
@@ -76,6 +78,7 @@ app.use('/api/tasks', require('./routes/tasks.cjs'));
 app.use('/api/communications', require('./routes/communications.cjs'));
 app.use('/api/finance', require('./routes/finance.cjs'));
 app.use('/api/arrears', require('./routes/arrears.cjs'));
+app.use('/api/history', require('./routes/history.cjs'));
 // app.use('/api/letters', require('./routes/letters.cjs'));
 
 // Ruta de health check
