@@ -1,5 +1,46 @@
 # CLAUDE.md
 
+## 🏢 PROJECT IDENTIFICATION
+
+**⚠️ IMPORTANT: THIS IS THE PRODUCTION VERSION - "gestor-condominos-dark" v2.2.0**
+
+### Repository Details:
+- **Name**: `gestor-condominos-dark`
+- **Version**: `2.2.0`
+- **GitHub**: `github.com/vmsebas/gestor-condominos-easypanel-v2`
+- **Location**: `/Users/mini-server/docker-apps/apps/gestor-condominos`
+- **Docker Container**: `gestor-condominos-app-1`
+- **Ports**: 3002 (API), 5173 (Frontend)
+
+### Key Features (THIS VERSION):
+- ✅ **Soft Delete System** - All entities support soft delete (convocatorias, members, minutes, etc.)
+- ✅ **Dark Theme by Default** - No more "black pages" issue
+- ✅ **PostgreSQL Docker** - Running on `postgres-master` container
+- ✅ **Attendance Sheets** - Digital signature system for assembly meetings
+- ✅ **Communication Logs** - Email + WhatsApp consent tracking (RGPD compliant)
+- ✅ **Workflows de Actas** - Complete 6-step workflow for meeting minutes
+
+### How to Identify You're in the Right Repo:
+```bash
+# Check package.json
+cat package.json | grep -E '"name"|"version"|"description"'
+# Should show: "gestor-condominos-dark" v2.2.0
+
+# Check GitHub remote
+git remote -v
+# Should show: gestor-condominos-easypanel-v2
+
+# Check Docker container
+docker ps --filter "name=gestor-condominos-app-1"
+# Should show: gestor-condominos-app-1
+```
+
+### Other Known Versions (DO NOT CONFUSE):
+- `gestor-condominos_OLD` - Deprecated old version
+- Any other "gestor-condominos" without "-dark" suffix - Different version
+
+---
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## ⚠️ IMPORTANT: Code Cleanup and Fixes (July 21, 2025)

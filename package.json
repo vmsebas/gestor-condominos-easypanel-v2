@@ -1,8 +1,13 @@
 {
   "name": "gestor-condominos-dark",
+  "description": "🏢 Gestor de Condóminos v2.2 - PRODUCTION VERSION with Soft Delete, Dark Theme, PostgreSQL Docker",
   "private": true,
   "version": "2.2.0",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vmsebas/gestor-condominos-easypanel-v2.git"
+  },
   "scripts": {
     "dev": "vite",
     "dev:server": "node server/app.cjs",
