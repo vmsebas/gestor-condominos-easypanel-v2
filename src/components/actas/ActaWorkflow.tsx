@@ -11,9 +11,10 @@ import PreparacionReunionStep from '@/components/workflows/PreparacionReunionSte
 import ControlAsistenciaStep from '@/components/workflows/ControlAsistenciaStep';
 import VerificacionQuorumStep from '@/components/workflows/VerificacionQuorumStep';
 import DesarrolloReunionStep from '@/components/workflows/DesarrolloReunionStep';
+import VotingStep from '@/components/workflows/VotingStep';
 import RedaccionActaStep from '@/components/workflows/RedaccionActaStep';
 import FirmasActaStep from '@/components/workflows/FirmasActaStep';
-import { getMinuteById, updateMinuteAgendaItems } from '@/lib/api';
+import { getMinuteById, updateMinuteAgendaItems, getConvocatoriaById, createMinuteFromConvocatoria } from '@/lib/api';
 import { toast } from 'sonner';
 
 interface ActaWorkflowProps {
@@ -65,7 +66,19 @@ const ActaWorkflow: React.FC<ActaWorkflowProps> = ({
             location: acta.location,
             assembly_type: acta.assembly_type,
             president_name: acta.president_name,
-            secretary_name: acta.secretary_name
+            secretary_name: acta.secretary_name,
+            president_signature: acta.president_signature,  // ✅ NOVO
+            secretary_signature: acta.secretary_signature,  // ✅ NOVO
+            signatures: {  // ✅ NOVO - Dados completos de assinaturas
+              president_name: acta.president_name,
+              president_signed: !!acta.president_signature,
+              president_signed_date: acta.president_signed_date,
+              president_signature: acta.president_signature,
+              secretary_name: acta.secretary_name,
+              secretary_signed: !!acta.secretary_signature,
+              secretary_signed_date: acta.secretary_signed_date,
+              secretary_signature: acta.secretary_signature
+            }
           });
 
           toast.success('Acta carregada com sucesso');
@@ -80,6 +93,53 @@ const ActaWorkflow: React.FC<ActaWorkflowProps> = ({
 
     loadActaData();
   }, [actaId]);
+
+  // Load convocatoria data when creating new acta from convocatoria
+  useEffect(() => {
+    const loadConvocatoriaData = async () => {
+      if (convocatoriaId && !actaId && !workflowState.data.convocatoria_loaded) {
+        setIsLoadingActa(true);
+        try {
+          // 1. Criar acta na BD a partir da convocatória
+          const createResult = await createMinuteFromConvocatoria(convocatoriaId);
+          const newActa = createResult.data || createResult;
+
+          // 2. Pre-fill workflow with acta data (COM agenda_items que TÊM IDs da BD!)
+          handleStepUpdate({
+            actaId: newActa.id,  // ✅ IMPORTANTE: Guardar ID da acta
+            convocatoriaId,
+            convocatoria_loaded: true,
+            agenda_items: newActa.agenda_items || [],  // ✅ Agenda items DA ACTA (com IDs!)
+            building_id: newActa.building_id,
+            building_name: newActa.building_name,
+            building_address: newActa.building_address,
+            assembly_number: newActa.minute_number,
+            minute_number: newActa.minute_number,
+            meeting_date: newActa.meeting_date,
+            meeting_time: newActa.meeting_time,
+            location: newActa.location,
+            assembly_type: newActa.assembly_type
+          });
+
+          toast.success(`Acta #${newActa.minute_number} criada com sucesso`);
+        } catch (error: any) {
+          console.error('Error loading convocatoria:', error);
+          // Se já existe acta, tentar carregar
+          if (error.response?.status === 409) {
+            toast.info('Acta já existe, a carregar dados existentes...');
+            // Recarregar a acta existente
+            window.location.reload();
+          } else {
+            toast.error('Erro ao criar acta: ' + (error.response?.data?.message || error.message));
+          }
+        } finally {
+          setIsLoadingActa(false);
+        }
+      }
+    };
+
+    loadConvocatoriaData();
+  }, [convocatoriaId, actaId]);
 
   // Save state whenever it changes
   useEffect(() => {
@@ -147,6 +207,8 @@ const ActaWorkflow: React.FC<ActaWorkflowProps> = ({
         return <VerificacionQuorumStep {...commonProps} />;
       case 'DesarrolloReunionStep':
         return <DesarrolloReunionStep {...commonProps} />;
+      case 'VotingStep':
+        return <VotingStep {...commonProps} />;
       case 'RedaccionActaStep':
         return <RedaccionActaStep {...commonProps} />;
       case 'FirmasActaStep':
@@ -198,6 +260,28 @@ const ActaWorkflow: React.FC<ActaWorkflowProps> = ({
                 <FileSignature className="h-8 w-8 text-primary" />
                 <span>{ACTA_WORKFLOW.name}</span>
               </CardTitle>
+
+              {/* Informação Contextual: Número e Edifício */}
+              <div className="flex items-center gap-2 mt-3">
+                {(workflowState.data.minute_number || workflowState.data.assembly_number) && (
+                  <Badge variant="default" className="text-base px-3 py-1">
+                    {workflowState.data.minute_number
+                      ? `Acta #${workflowState.data.minute_number}`
+                      : `Convocatória #${workflowState.data.assembly_number}`}
+                  </Badge>
+                )}
+                {workflowState.data.building_name && (
+                  <Badge variant="outline" className="text-sm">
+                    {workflowState.data.building_name}
+                  </Badge>
+                )}
+                {workflowState.data.assembly_type && (
+                  <Badge variant="secondary" className="text-sm">
+                    {workflowState.data.assembly_type === 'ordinary' ? 'Ordinária' : 'Extraordinária'}
+                  </Badge>
+                )}
+              </div>
+
               <CardDescription className="mt-2">
                 {ACTA_WORKFLOW.description}
               </CardDescription>

@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FileText, Download, Eye, CheckCircle } from 'lucide-react';
+import { generateActaCompletaPDF } from '@/lib/actaGenerator';
+import { toast } from 'sonner';
 
 interface RedaccionActaStepProps {
   data: any;
@@ -62,6 +64,88 @@ const RedaccionActaStep: React.FC<RedaccionActaStepProps> = ({
     };
   }, [data]);
 
+  // Handler para gerar e descarregar PDF
+  const handleDownloadPDF = () => {
+    try {
+      // Preparar dados completos para o PDF
+      const pdfData = {
+        // Header info
+        minute_number: data?.minute_number || 'XX',
+        assembly_type: data?.assembly_type || 'ordinary',
+        building_name: data?.building_name || 'Nome do Edifício',
+        building_address: data?.building_address || '',
+        meeting_date: data?.meeting_date,
+        meeting_time: data?.meeting_time || data?.time || '19:00',
+        location: data?.location || 'Local não especificado',
+
+        // Attendance/Quorum
+        quorum: data?.quorum || {},
+        attendance: data?.attendance || [],
+
+        // Agenda items with voting results
+        agenda_items: data?.agenda_items || [],
+
+        // Mesa da assembleia
+        president_name: data?.president_name || 'A definir',
+        secretary_name: data?.secretary_name || 'A definir',
+
+        // Signatures (if already exist from previous steps)
+        president_signature: data?.president_signature,
+        secretary_signature: data?.secretary_signature,
+        member_signatures: data?.member_signatures || {},
+
+        // Document integrity
+        document_code: data?.document_code || data?.actaId || `DOC-${Date.now()}`,
+        document_hash: data?.document_hash || 'Será gerado',
+
+        // Timestamps
+        signed_date: data?.signed_date,
+        created_at: data?.created_at || new Date().toISOString()
+      };
+
+      // Gerar PDF (download = true)
+      generateActaCompletaPDF(pdfData, true);
+      toast.success('PDF descarregado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      toast.error('Erro ao gerar PDF. Verifique os dados.');
+    }
+  };
+
+  // Handler para pré-visualizar PDF (abre em nova janela)
+  const handlePreviewPDF = () => {
+    try {
+      const pdfData = {
+        minute_number: data?.minute_number || 'XX',
+        assembly_type: data?.assembly_type || 'ordinary',
+        building_name: data?.building_name || 'Nome do Edifício',
+        building_address: data?.building_address || '',
+        meeting_date: data?.meeting_date,
+        meeting_time: data?.meeting_time || data?.time || '19:00',
+        location: data?.location || 'Local não especificado',
+        quorum: data?.quorum || {},
+        attendance: data?.attendance || [],
+        agenda_items: data?.agenda_items || [],
+        president_name: data?.president_name || 'A definir',
+        secretary_name: data?.secretary_name || 'A definir',
+        president_signature: data?.president_signature,
+        secretary_signature: data?.secretary_signature,
+        member_signatures: data?.member_signatures || {},
+        document_code: data?.document_code || data?.actaId || `DOC-${Date.now()}`,
+        document_hash: data?.document_hash || 'Será gerado',
+        signed_date: data?.signed_date,
+        created_at: data?.created_at || new Date().toISOString()
+      };
+
+      // Gerar PDF (download = false = preview)
+      generateActaCompletaPDF(pdfData, false);
+      toast.success('PDF aberto para pré-visualização');
+    } catch (error) {
+      console.error('Erro ao pré-visualizar PDF:', error);
+      toast.error('Erro ao pré-visualizar PDF. Verifique os dados.');
+    }
+  };
+
   const handleContinue = () => {
     // Guardar la generación del acta
     onUpdate({
@@ -92,12 +176,23 @@ const RedaccionActaStep: React.FC<RedaccionActaStepProps> = ({
       </div>
 
       {/* Ações */}
+      <Alert className="mb-4">
+        <FileText className="h-4 w-4" />
+        <AlertDescription>
+          <strong>Sobre os botões:</strong>
+          <ul className="list-disc list-inside text-sm mt-2 space-y-1">
+            <li><strong>Pré-visualizar PDF:</strong> Abre a acta em formato PDF numa nova janela para verificação antes de assinar</li>
+            <li><strong>Descarregar Rascunho:</strong> Faz download da acta como rascunho PDF (sem assinaturas ainda)</li>
+          </ul>
+        </AlertDescription>
+      </Alert>
+
       <div className="flex space-x-3">
-        <Button variant="outline" className="flex-1">
+        <Button variant="outline" className="flex-1" onClick={handlePreviewPDF}>
           <Eye className="mr-2 h-4 w-4" />
           Pré-visualizar PDF
         </Button>
-        <Button variant="outline" className="flex-1">
+        <Button variant="outline" className="flex-1" onClick={handleDownloadPDF}>
           <Download className="mr-2 h-4 w-4" />
           Descarregar Rascunho
         </Button>
@@ -180,30 +275,85 @@ const RedaccionActaStep: React.FC<RedaccionActaStepProps> = ({
                           <p className="text-sm">{item.discussion}</p>
                         </div>
                       )}
-                      <div className="grid grid-cols-3 gap-2 text-sm mb-2">
-                        <div>
-                          <span className="font-medium">Votos a favor:</span> {item.votes_in_favor}
-                        </div>
-                        <div>
-                          <span className="font-medium">Votos contra:</span> {item.votes_against}
-                        </div>
-                        <div>
-                          <span className="font-medium">Abstenções:</span> {item.abstentions}
-                        </div>
-                      </div>
-                      {item.decision && (
-                        <div className="mt-2">
-                          <Badge
-                            variant={
-                              item.decision.includes('APROVADO') ? 'success' :
-                              item.decision.includes('REJEITADO') ? 'destructive' :
-                              'default'
-                            }
-                          >
-                            {item.decision}
-                          </Badge>
+                      {item.notes && (
+                        <div className="mb-3">
+                          <p className="text-sm font-medium">Notas:</p>
+                          <p className="text-sm text-muted-foreground">{item.notes}</p>
                         </div>
                       )}
+
+                      {/* Votação - Formato Legal Português */}
+                      {item.type === 'votacion' && item.voting_result ? (
+                        <div className="mt-3 p-3 rounded-md bg-gray-100 dark:bg-gray-700">
+                          {item.voting_result.isUnanimous ? (
+                            // Formato Unanimidade
+                            <div>
+                              <Badge variant="success" className="mb-2">
+                                APROVADO POR UNANIMIDADE
+                              </Badge>
+                              <p className="text-sm">
+                                Aprovado por unanimidade dos votos dos Condóminos e Representantes presentes,
+                                representando <strong>{item.voting_result.totalVotingPermilage.toFixed(2)}‰</strong> do
+                                valor total do capital investido.
+                              </p>
+                            </div>
+                          ) : (
+                            // Formato Votação Nominal
+                            <div className="space-y-2">
+                              <div className="mb-2">
+                                <Badge
+                                  variant={item.voting_result.passed ? 'success' : 'destructive'}
+                                >
+                                  {item.voting_result.passed ? 'APROVADO' : 'REJEITADO'}
+                                </Badge>
+                              </div>
+
+                              {item.voting_result.votersInFavor.length > 0 && (
+                                <div className="text-sm">
+                                  <span className="font-medium">Votos a favor:</span>{' '}
+                                  <strong>{item.voting_result.permilageInFavor.toFixed(2)}‰</strong>{' '}
+                                  ({item.voting_result.votersInFavor.length} votos)
+                                  <br />
+                                  <span className="text-xs text-muted-foreground">
+                                    {item.voting_result.votersInFavor.join(', ')}
+                                  </span>
+                                </div>
+                              )}
+
+                              {item.voting_result.votersAgainst.length > 0 && (
+                                <div className="text-sm">
+                                  <span className="font-medium">Votos contra:</span>{' '}
+                                  <strong>{item.voting_result.permilageAgainst.toFixed(2)}‰</strong>{' '}
+                                  ({item.voting_result.votersAgainst.length} votos)
+                                  <br />
+                                  <span className="text-xs text-muted-foreground">
+                                    {item.voting_result.votersAgainst.join(', ')}
+                                  </span>
+                                </div>
+                              )}
+
+                              {item.voting_result.votersAbstained.length > 0 && (
+                                <div className="text-sm">
+                                  <span className="font-medium">Abstenções:</span>{' '}
+                                  <strong>{item.voting_result.permilageAbstained.toFixed(2)}‰</strong>{' '}
+                                  ({item.voting_result.votersAbstained.length} votos)
+                                  <br />
+                                  <span className="text-xs text-muted-foreground">
+                                    {item.voting_result.votersAbstained.join(', ')}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ) : item.type === 'votacion' ? (
+                        // Ponto de votação sem votos registados
+                        <div className="mt-3 p-3 rounded-md bg-amber-50 dark:bg-amber-900/20">
+                          <p className="text-sm text-amber-800 dark:text-amber-200">
+                            ⚠️ Ponto de votação sem votos registados
+                          </p>
+                        </div>
+                      ) : null}
                     </div>
                   ))}
                 </div>

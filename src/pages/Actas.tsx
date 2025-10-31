@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import ActaWorkflow from '@/components/actas/ActaWorkflow';
 import SendCommunicationDialog from '@/components/communications/SendCommunicationDialog';
 import { ScrollText, Plus, Calendar, Users, FileText, Clock, CheckCircle, Loader2, Home, Eye, Download, Edit2, Trash2, MoreVertical, Send } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { getMinutes } from '@/lib/api';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getMinutes, deleteActa } from '@/lib/api';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { generateActaCompletaPDF } from '@/lib/actaGenerator';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,18 +20,58 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 
 
 const Actas: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const convocatoriaParam = searchParams.get('convocatoria');
+  const queryClient = useQueryClient();
+
   const [showWorkflow, setShowWorkflow] = useState(false);
+  const [convocatoriaId, setConvocatoriaId] = useState<string | null>(null);
   const [editingActa, setEditingActa] = useState<any>(null);
   const [showSendDialog, setShowSendDialog] = useState(false);
   const [actaToSend, setActaToSend] = useState<any>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [actaToDelete, setActaToDelete] = useState<any>(null);
+
+  // Auto-open workflow when convocatoria param is present
+  useEffect(() => {
+    if (convocatoriaParam) {
+      setConvocatoriaId(convocatoriaParam);
+      setShowWorkflow(true);
+    }
+  }, [convocatoriaParam]);
 
   const { data: actasResponse, isLoading, error } = useQuery({
     queryKey: ['minutes'],
     queryFn: () => getMinutes(),
+  });
+
+  // Delete mutation
+  const deleteActaMutation = useMutation({
+    mutationFn: (actaId: string) => deleteActa(actaId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['minutes'] });
+      toast.success('Acta eliminada com sucesso');
+      setShowDeleteDialog(false);
+      setActaToDelete(null);
+    },
+    onError: (error: any) => {
+      console.error('Error deleting acta:', error);
+      toast.error('Erro ao eliminar acta: ' + (error.message || 'Erro desconhecido'));
+    },
   });
 
   const actasData = actasResponse?.data || [];
@@ -78,9 +120,23 @@ const Actas: React.FC = () => {
     window.location.href = `/actas/${acta.id}`;
   };
 
-  const handleGeneratePDF = (acta: any) => {
-    console.log('Gerar PDF da acta:', acta);
-    // TODO: Implementar geração de PDF
+  const handleGeneratePDF = async (acta: any) => {
+    try {
+      // Find original data with all fields
+      const originalActa = actasData?.find(a => a.id === acta.id);
+
+      if (!originalActa) {
+        toast.error('Dados da acta não encontrados');
+        return;
+      }
+
+      // Generate PDF with complete data
+      generateActaCompletaPDF(originalActa, true);
+      toast.success('PDF gerado com sucesso!');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Erro ao gerar PDF da acta');
+    }
   };
 
   const handleEditActa = (acta: any) => {
@@ -89,8 +145,14 @@ const Actas: React.FC = () => {
   };
 
   const handleDeleteActa = (acta: any) => {
-    console.log('Eliminar acta:', acta);
-    // TODO: Implementar eliminação
+    setActaToDelete(acta);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteActa = () => {
+    if (actaToDelete?.id) {
+      deleteActaMutation.mutate(actaToDelete.id);
+    }
   };
 
   const handleSendActa = (acta: any) => {
@@ -103,11 +165,18 @@ const Actas: React.FC = () => {
   if (showWorkflow) {
     return (
       <ActaWorkflow
+        convocatoriaId={convocatoriaId || undefined}
         actaId={editingActa?.id}
         onComplete={handleWorkflowComplete}
         onCancel={() => {
           setShowWorkflow(false);
+          setConvocatoriaId(null);
           setEditingActa(null);
+          // Clear URL param if present
+          if (convocatoriaParam) {
+            searchParams.delete('convocatoria');
+            setSearchParams(searchParams);
+          }
         }}
       />
     );
@@ -319,6 +388,42 @@ const Actas: React.FC = () => {
           }}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar Acta?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem a certeza que deseja eliminar a acta <strong>#{actaToDelete?.minute_number}</strong>?
+              <br />
+              <br />
+              <span className="text-red-600 font-medium">
+                Esta ação é irreversível e todos os dados da acta serão permanentemente eliminados.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteActaMutation.isPending}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteActa}
+              disabled={deleteActaMutation.isPending}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              {deleteActaMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  A eliminar...
+                </>
+              ) : (
+                'Eliminar'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

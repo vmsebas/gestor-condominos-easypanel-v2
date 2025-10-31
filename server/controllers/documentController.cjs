@@ -143,10 +143,10 @@ const documentController = {
   delete: asyncHandler(async (req, res) => {
     const user = resolveUser(req);
     await documentService.delete(req.params.id, user);
-    
+
     res.json({
       success: true,
-      message: 'Documento eliminado com sucesso'
+      message: 'Documento movido para o histórico'
     });
   }),
 

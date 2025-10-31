@@ -10,30 +10,30 @@ const authenticate = async (req, res, next) => {
   try {
     // Extraer token del header
     const token = extractTokenFromHeader(req.headers.authorization);
-    
+
     if (!token) {
       return errorResponse(res, 'Token de autenticação não fornecido', null, 401);
     }
-    
+
     // Verificar token
     const decoded = verifyToken(token);
-    
+
     // Buscar usuario en la base de datos
     const user = await db('users')
       .where('id', decoded.userId)
       .whereNull('deleted_at')
       .where('is_active', true)
       .first();
-    
+
     if (!user) {
       return errorResponse(res, 'Utilizador não encontrado ou inativo', null, 401);
     }
-    
+
     // Verificar si la cuenta está bloqueada
     if (user.locked_until && new Date(user.locked_until) > new Date()) {
       return errorResponse(res, 'Conta bloqueada temporariamente', null, 403);
     }
-    
+
     // Agregar usuario a la request
     req.user = {
       id: user.id,
@@ -44,7 +44,7 @@ const authenticate = async (req, res, next) => {
       memberId: user.member_id,
       permissions: user.permissions || {}
     };
-    
+
     next();
   } catch (error) {
     if (error.message === 'Token expired') {

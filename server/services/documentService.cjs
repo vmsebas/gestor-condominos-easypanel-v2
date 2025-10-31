@@ -157,23 +157,38 @@ class DocumentService {
   }
 
   async delete(id, user) {
-    const document = await documentRepository.findById(id);
-    
+    // Buscar documento sin filtrar por deleted_at
+    const document = await documentRepository.db('documents')
+      .where('id', id)
+      .first();
+
     if (!document) {
       throw new Error('Documento não encontrado');
     }
-    
+
+    // Si ya está eliminado
+    if (document.deleted_at) {
+      throw new Error('Documento já foi eliminado');
+    }
+
     // Check permissions
     if (!this.canDeleteDocument(document, user)) {
       throw new Error('Acesso negado');
     }
-    
+
     // Delete file from storage - reconstruct full path
     const fullFilePath = path.join(process.cwd(), 'uploads', 'documents', document.file_path);
     await fileStorageService.deleteFile(fullFilePath);
-    
+
     // Soft delete from database
-    return documentRepository.delete(id);
+    const userId = user?.id || null;
+    const deleted = await documentRepository.delete(id, userId);
+
+    if (!deleted) {
+      throw new Error('Erro ao eliminar documento');
+    }
+
+    return deleted;
   }
 
   async download(id, user) {

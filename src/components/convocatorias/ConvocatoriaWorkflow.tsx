@@ -142,6 +142,26 @@ const ConvocatoriaWorkflow: React.FC<ConvocatoriaWorkflowProps> = ({
                 <FileText className="h-8 w-8 text-primary" />
                 <span>{CONVOCATORIA_WORKFLOW.name}</span>
               </CardTitle>
+
+              {/* Informação Contextual: Número e Edifício */}
+              <div className="flex items-center gap-2 mt-3">
+                {workflowState.data.assembly_number && (
+                  <Badge variant="default" className="text-base px-3 py-1">
+                    Convocatória #{workflowState.data.assembly_number}
+                  </Badge>
+                )}
+                {workflowState.data.building_name && (
+                  <Badge variant="outline" className="text-sm">
+                    {workflowState.data.building_name}
+                  </Badge>
+                )}
+                {workflowState.data.assembly_type && (
+                  <Badge variant="secondary" className="text-sm">
+                    {workflowState.data.assembly_type === 'ordinary' ? 'Ordinária' : 'Extraordinária'}
+                  </Badge>
+                )}
+              </div>
+
               <CardDescription className="mt-2">
                 {CONVOCATORIA_WORKFLOW.description}
               </CardDescription>

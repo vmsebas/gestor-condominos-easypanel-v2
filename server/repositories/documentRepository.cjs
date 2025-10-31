@@ -26,7 +26,7 @@ class DocumentRepository {
         this.on('d.building_id', '=', 'dc.building_id')
           .andOn('d.category', '=', 'dc.name');
       })
-      ; // .where('d.deleted_at', null); // documents table doesn't have deleted_at column
+      .whereNull('d.deleted_at');
 
     // Apply filters
     if (filters.building_id) {
@@ -118,7 +118,7 @@ class DocumentRepository {
       })
       .leftJoin('users as u', 'd.uploaded_by', 'u.id')
       .where('d.id', id)
-      // .where('d.deleted_at', null) // documents table doesn't have deleted_at column
+      .whereNull('d.deleted_at')
       .first();
   }
 
@@ -163,7 +163,7 @@ class DocumentRepository {
 
     return this.knex('documents')
       .where('id', id)
-      // .where('deleted_at', null) // documents table doesn't have deleted_at column
+      .whereNull('deleted_at')
       .update(updateData)
       .returning('*')
       .then(rows => rows[0]);
@@ -189,14 +189,14 @@ class DocumentRepository {
   async findVersions(parentDocumentId) {
     return this.knex('documents')
       .where('parent_document_id', parentDocumentId)
-      // .where('deleted_at', null) // documents table doesn't have deleted_at column
+      .whereNull('deleted_at')
       .orderBy('version', 'desc');
   }
 
   async findLatestVersion(parentDocumentId) {
     return this.knex('documents')
       .where('parent_document_id', parentDocumentId)
-      // .where('deleted_at', null) // documents table doesn't have deleted_at column
+      .whereNull('deleted_at')
       .orderBy('version', 'desc')
       .first();
   }
@@ -318,7 +318,7 @@ class DocumentRepository {
   async getStats(buildingId) {
     const stats = await this.knex('documents')
       .where('building_id', buildingId)
-      // .where('deleted_at', null) // documents table doesn't have deleted_at column
+      .whereNull('deleted_at')
       .select(
         this.knex.raw('COUNT(*) as total_documents'),
         this.knex.raw('SUM(file_size) as total_size'),
@@ -329,7 +329,7 @@ class DocumentRepository {
 
     const byCategory = await this.knex('documents')
       .where('building_id', buildingId)
-      // .where('deleted_at', null) // documents table doesn't have deleted_at column
+      .whereNull('deleted_at')
       .groupBy('category')
       .select(
         'category',
@@ -357,7 +357,7 @@ class DocumentRepository {
   // Count for pagination
   async count(filters = {}) {
     const query = this.knex('documents as d')
-      // .where('d.deleted_at', null) // documents table doesn't have deleted_at column
+      .whereNull('d.deleted_at')
       .count('* as count');
 
     // Apply same filters as findAll but without joins for performance

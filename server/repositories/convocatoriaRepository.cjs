@@ -14,7 +14,7 @@ class ConvocatoriaRepository extends BaseRepository {
   async findByBuildingWithAgenda(buildingId) {
     const convocatorias = await this.db('convocatorias')
       .where('building_id', buildingId)
-      // .whereNull('deleted_at') - convocatorias table doesn't have deleted_at column
+      .whereNull('deleted_at')
       .orderBy('date', 'desc');
 
     // Agenda items are already in the JSONB column
@@ -24,18 +24,28 @@ class ConvocatoriaRepository extends BaseRepository {
   }
 
   /**
-   * Encuentra todas las convocatorias con agenda items
+   * Encuentra todas las convocatorias con agenda items Y datos de actas relacionadas
    */
   async findAllWithAgenda(filters = {}, options = {}) {
     let query = this.db('convocatorias')
-      // .whereNull('deleted_at') - convocatorias table doesn't have deleted_at column
+      .whereNull('convocatorias.deleted_at')
       .join('buildings', 'convocatorias.building_id', 'buildings.id')
+      .leftJoin('minutes', function() {
+        this.on('minutes.convocatoria_id', '=', 'convocatorias.id')
+            .andOnNull('minutes.deleted_at');
+      })
       .select(
         'convocatorias.*',
         'buildings.name as building_name',
         'buildings.address as building_address',
         'buildings.postal_code',
-        'buildings.city'
+        'buildings.city',
+        // Datos de acta relacionada (si existe)
+        'minutes.id as minute_id',
+        'minutes.minute_number',
+        'minutes.status as minute_status',
+        'minutes.meeting_date as minute_meeting_date',
+        'minutes.signed_date as minute_signed_date'
       );
     
     if (filters.buildingId) {
@@ -78,10 +88,26 @@ class ConvocatoriaRepository extends BaseRepository {
   }
 
   /**
-   * Encuentra una convocatoria por ID con agenda items
+   * Encuentra una convocatoria por ID con agenda items Y datos de acta relacionada
    */
   async findByIdWithAgenda(id) {
-    const convocatoria = await this.findById(id);
+    const convocatoria = await this.db('convocatorias')
+      .leftJoin('minutes', function() {
+        this.on('minutes.convocatoria_id', '=', 'convocatorias.id')
+            .andOnNull('minutes.deleted_at');
+      })
+      .select(
+        'convocatorias.*',
+        // Datos de acta relacionada (si existe)
+        'minutes.id as minute_id',
+        'minutes.minute_number',
+        'minutes.status as minute_status',
+        'minutes.meeting_date as minute_meeting_date',
+        'minutes.signed_date as minute_signed_date'
+      )
+      .where('convocatorias.id', id)
+      .whereNull('convocatorias.deleted_at')
+      .first();
 
     if (!convocatoria) {
       return null;
@@ -98,24 +124,25 @@ class ConvocatoriaRepository extends BaseRepository {
    */
   async count(filters = {}) {
     let query = this.db('convocatorias')
+      .whereNull('deleted_at')
       .count('* as count');
-    
+
     if (filters.buildingId) {
       query = query.where('building_id', filters.buildingId);
     }
-    
+
     if (filters.assemblyType) {
       query = query.where('assembly_type', filters.assemblyType);
     }
-    
+
     if (filters.fromDate) {
       query = query.where('date', '>=', filters.fromDate);
     }
-    
+
     if (filters.toDate) {
       query = query.where('date', '<=', filters.toDate);
     }
-    
+
     const result = await query.first();
     return parseInt(result.count || 0);
   }
@@ -159,7 +186,7 @@ class ConvocatoriaRepository extends BaseRepository {
       // Actualizar convocatoria
       const convocatoria = await trx('convocatorias')
         .where('id', id)
-        // .whereNull('deleted_at') - convocatorias table doesn't have deleted_at column
+        .whereNull('deleted_at')
         .update({
           ...convocatoriaData,
           updated_at: new Date()
@@ -204,17 +231,16 @@ class ConvocatoriaRepository extends BaseRepository {
     const result = await this.db('convocatorias')
       .where('building_id', buildingId)
       .where('date', '>=', new Date())
-      // .whereNull('deleted_at') - table doesn't have deleted_at column
+      .whereNull('deleted_at')
       .orderBy('date', 'asc')
       .first();
-    
+
     if (result) {
       result.agenda_items = await this.db('minute_agenda_items')
         .where('convocatoria_id', result.id)
-        // .whereNull('deleted_at') - table doesn't have deleted_at column
         .orderBy('order_number', 'asc');
     }
-    
+
     return result;
   }
 
@@ -225,10 +251,10 @@ class ConvocatoriaRepository extends BaseRepository {
     const convocatorias = await this.db('convocatorias')
       .where('building_id', buildingId)
       .where('date', '<', new Date())
-      // .whereNull('deleted_at') - table doesn't have deleted_at column
+      .whereNull('deleted_at')
       .orderBy('date', 'desc')
       .limit(limit);
-    
+
     return convocatorias;
   }
 
@@ -238,11 +264,11 @@ class ConvocatoriaRepository extends BaseRepository {
   async countByType(buildingId) {
     const result = await this.db('convocatorias')
       .where('building_id', buildingId)
-      // .whereNull('deleted_at') - table doesn't have deleted_at column
+      .whereNull('deleted_at')
       .select('assembly_type')
       .count('* as count')
       .groupBy('assembly_type');
-    
+
     return result;
   }
 
@@ -253,12 +279,12 @@ class ConvocatoriaRepository extends BaseRepository {
     let query = this.db('convocatorias')
       .where('building_id', buildingId)
       .where('assembly_number', assemblyNumber)
-      // .whereNull('deleted_at') - table doesn't have deleted_at column;
-    
+      .whereNull('deleted_at');
+
     if (excludeId) {
       query = query.whereNot('id', excludeId);
     }
-    
+
     const result = await query.count('* as count');
     return parseInt(result[0].count) > 0;
   }

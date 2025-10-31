@@ -19,19 +19,19 @@ const PDF_CONFIG = {
   orientation: 'portrait' as const,
   unit: 'mm' as const,
   margins: {
-    top: 20,
-    right: 20,
-    bottom: 20,
-    left: 20
+    top: 15,
+    right: 15,
+    bottom: 15,
+    left: 15
   },
   pageWidth: 210, // A4 width in mm
   pageHeight: 297, // A4 height in mm
-  lineHeight: 6,
+  lineHeight: 4.5,
   fontSize: {
     title: 16,
-    subtitle: 14,
-    heading: 12,
-    body: 10,
+    subtitle: 12,
+    heading: 11,
+    body: 9,
     small: 8
   },
   colors: {
@@ -245,120 +245,180 @@ export class ConvocatoriaPDFGenerator extends BasePDFGenerator {
    */
   public generate(data: TemplateData): void {
     const assemblyType = data.assembly_type === 'ordinary' ? 'Ordinária' : 'Extraordinária';
-    const assemblyTypeFull = `Assembleia ${assemblyType} de Condóminos`;
+    const assemblyNumber = data.convocatoria_number || '';
 
-    // Header
-    this.addHeader(data.building_name, data.building_address);
+    // Simple header (one line)
+    this.doc.setFontSize(PDF_CONFIG.fontSize.small);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.text('ADMINISTRAÇÃO DO PRÉDIO.', this.margins.left, this.currentY);
+    const headerRight = `${data.building_address}`;
+    const headerRightWidth = this.doc.getTextWidth(headerRight);
+    this.doc.text(headerRight, this.pageWidth - this.margins.right - headerRightWidth, this.currentY);
+    this.addSpacing(7);
 
-    // Title
-    this.addTitle('CONVOCATÓRIA');
-    this.addSpacing(3);
-    this.addTitle(assemblyTypeFull.toUpperCase(), PDF_CONFIG.fontSize.subtitle);
-    this.addSpacing(10);
+    // Title - CONVOCATÓRIA (large, centered, blue)
+    this.doc.setFontSize(PDF_CONFIG.fontSize.title);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.setTextColor(0, 0, 255);
+    const titleWidth = this.doc.getTextWidth('CONVOCATÓRIA');
+    this.doc.text('CONVOCATÓRIA', (this.pageWidth - titleWidth) / 2, this.currentY);
+    this.addSpacing(5);
 
-    // Convocatória number if available
-    if (data.convocatoria_number) {
-      this.doc.setFontSize(PDF_CONFIG.fontSize.body);
-      this.doc.setFont('helvetica', 'bold');
-      this.doc.text(`Convocatória n.º ${data.convocatoria_number}`, this.margins.left, this.currentY);
-      this.addSpacing(8);
-    }
+    // Subtitle - Assembly type (centered, blue, italic)
+    const subtitle = `${assemblyNumber}ª ASSEMBLEIA GERAL ${assemblyType.toUpperCase()} DE CONDÓMINOS`;
+    this.doc.setFontSize(PDF_CONFIG.fontSize.subtitle);
+    this.doc.setFont('helvetica', 'bolditalic');
+    const subtitleWidth = this.doc.getTextWidth(subtitle);
+    this.doc.text(subtitle, (this.pageWidth - subtitleWidth) / 2, this.currentY);
+    this.addSpacing(7);
 
-    // Legal reference
-    this.addText(
-      'Nos termos e para os efeitos do disposto nos artigos 1432.º e seguintes do Código Civil, ' +
-      'convocam-se todos os condóminos do edifício acima identificado para a assembleia com a seguinte ordem de trabalhos:',
-      PDF_CONFIG.fontSize.body
-    );
-    this.addSpacing(8);
+    // Reset color to black
+    this.doc.setTextColor(0, 0, 0);
 
-    // Meeting details box
+    // Greeting
+    this.doc.setFontSize(PDF_CONFIG.fontSize.body);
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.text('Exmos. Senhores Condóminos,', this.margins.left, this.currentY);
+    this.addSpacing(5);
+
+    // Legal reference paragraph (compact)
+    const legalText = `Conforme o disposto no artigo 1432.º do Código Civil e de acordo com as normas que regulam o regime da propriedade horizontal, convoca-se V. Exa. para participar na ${assemblyNumber}ª Assembleia Geral ${assemblyType} de Condóminos do prédio sito na:`;
+    const legalLines = this.doc.splitTextToSize(legalText, this.contentWidth);
+    legalLines.forEach((line: string) => {
+      this.doc.text(line, this.margins.left, this.currentY);
+      this.currentY += PDF_CONFIG.lineHeight;
+    });
+    this.addSpacing(4);
+
+    // Building address (highlighted in magenta/purple)
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.setTextColor(128, 0, 128);
+    this.doc.text(`${data.building_address}. (${data.location || 'Hall do Prédio.'})`, this.margins.left, this.currentY);
+    this.addSpacing(4);
+    this.doc.setTextColor(0, 0, 0);
+
+    // Date and Time (simple, highlighted)
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.setTextColor(0, 100, 0);
+    this.doc.text(`Data: ${data.meeting_date}`, this.margins.left, this.currentY);
+    this.addSpacing(4);
+
     const firstCallTime = data.first_call_time || data.meeting_time;
-    const secondCallTime = data.second_call_time || 'meia hora depois';
+    this.doc.setTextColor(0, 0, 255);
+    this.doc.text(`Hora: ${firstCallTime}`, this.margins.left, this.currentY);
+    this.addSpacing(6);
+    this.doc.setTextColor(0, 0, 0);
 
-    const meetingDetails = `DATA: ${data.meeting_date}\n\n` +
-      `HORA (1ª Convocatória): ${firstCallTime}\n` +
-      `(É necessário quórum de mais de 50% dos coeficientes)\n\n` +
-      `HORA (2ª Convocatória): ${secondCallTime}\n` +
-      `(É necessário quórum de mais de 25% dos coeficientes)\n\n` +
-      `LOCAL: ${data.location}`;
+    // ORDEM DE TRABALHOS (centered, italic)
+    this.doc.setFont('helvetica', 'bolditalic');
+    this.doc.setFontSize(PDF_CONFIG.fontSize.heading);
+    const otTitle = 'ORDEM DE TRABALHOS';
+    const otWidth = this.doc.getTextWidth(otTitle);
+    this.doc.text(otTitle, (this.pageWidth - otWidth) / 2, this.currentY);
+    this.addSpacing(4);
 
-    this.addBox(meetingDetails, { r: 245, g: 247, b: 250 });
-    this.addSpacing(10);
-
-    // Ordem do Dia
-    this.addSubtitle('ORDEM DO DIA');
-    this.addSpacing(3);
-
+    // Agenda items (simpler - only title, no descriptions)
     if (data.agenda_items && data.agenda_items.length > 0) {
+      this.doc.setFontSize(PDF_CONFIG.fontSize.body);
       data.agenda_items.forEach((item) => {
-        this.checkPageBreak(15);
-
-        // Item number and title
-        this.doc.setFontSize(PDF_CONFIG.fontSize.body);
         this.doc.setFont('helvetica', 'bold');
-        this.doc.text(`${item.item_number}. ${item.title}`, this.margins.left, this.currentY);
+        const itemText = `${item.item_number}. ${item.title}`;
+        this.doc.text(itemText, this.margins.left, this.currentY);
         this.currentY += PDF_CONFIG.lineHeight;
 
-        // Item description if available
+        // Description in same line or next line if too long
         if (item.description) {
           this.doc.setFont('helvetica', 'normal');
-          const descLines = this.doc.splitTextToSize(item.description, this.contentWidth - 10);
+          const descLines = this.doc.splitTextToSize(item.description, this.contentWidth - 5);
           descLines.forEach((line: string) => {
-            this.doc.text(line, this.margins.left + 5, this.currentY);
+            this.doc.text(line, this.margins.left, this.currentY);
             this.currentY += PDF_CONFIG.lineHeight;
           });
         }
-
-        this.addSpacing(5);
+        this.addSpacing(2);
       });
-    } else {
-      this.addText('(Consultar convocatória ou administração)', PDF_CONFIG.fontSize.body);
     }
+    this.addSpacing(5);
 
-    this.addSpacing(10);
-
-    // Important information box
-    this.addSubtitle('INFORMAÇÕES IMPORTANTES');
+    // DISPOSIÇÕES SOBRE QUÓRUM (centered, italic)
+    this.doc.setFont('helvetica', 'bolditalic');
+    this.doc.setFontSize(PDF_CONFIG.fontSize.heading);
+    const quorumTitle = 'DISPOSIÇÕES SOBRE QUÓRUM';
+    const quorumWidth = this.doc.getTextWidth(quorumTitle);
+    this.doc.text(quorumTitle, (this.pageWidth - quorumWidth) / 2, this.currentY);
     this.addSpacing(3);
 
-    const importantInfo =
-      '• Caso não possa comparecer, poderá fazer-se representar por qualquer pessoa, mediante procuração escrita (Art. 1433.º do Código Civil).\n\n' +
-      '• A procuração deve ser apresentada no início da assembleia.\n\n' +
-      '• A sua presença ou representação é muito importante para a boa gestão do condomínio.\n\n' +
-      '• As deliberações são tomadas por maioria, salvo disposição legal em contrário.';
+    // Quorum text (compact)
+    const secondCallTime = data.second_call_time || '18h30';
+    const quorumText = `Caso, na data e hora designadas, não estejam presentes ou representados condóminos que, em conjunto, representem a maioria do valor total do prédio, ou não seja possível constituir o quórum mínimo previsto no n.º 4 do artigo 1432.º do Código Civil, fica desde já convocada uma segunda reunião da Assembleia Geral, a realizar-se em:`;
 
-    this.addBox(importantInfo);
-    this.addSpacing(15);
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.setFontSize(PDF_CONFIG.fontSize.body);
+    const quorumLines = this.doc.splitTextToSize(quorumText, this.contentWidth);
+    quorumLines.forEach((line: string) => {
+      this.doc.text(line, this.margins.left, this.currentY);
+      this.currentY += PDF_CONFIG.lineHeight;
+    });
+    this.addSpacing(3);
 
-    // Signature section
-    this.checkPageBreak(40);
+    // Second call details
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.text(`Data Alternativa: ${data.meeting_date}`, this.margins.left, this.currentY);
+    this.addSpacing(3);
+    this.doc.text(`Hora Alternativa: ${secondCallTime}`, this.margins.left, this.currentY);
+    this.addSpacing(3);
 
+    // Second call text
+    this.doc.setFont('helvetica', 'normal');
+    const secondCallText = 'Nesta segunda convocatória, a assembleia deliberará com base na maioria dos votos dos condóminos presentes ou representados, desde que estes representem, no mínimo, um quarto do valor total do prédio, conforme previsto no referido artigo.';
+    const secondCallLines = this.doc.splitTextToSize(secondCallText, this.contentWidth);
+    secondCallLines.forEach((line: string) => {
+      this.doc.text(line, this.margins.left, this.currentY);
+      this.currentY += PDF_CONFIG.lineHeight;
+    });
+    this.addSpacing(4);
+
+    // NOTAS IMPORTANTES (centered, italic)
+    this.doc.setFont('helvetica', 'bolditalic');
+    this.doc.setFontSize(PDF_CONFIG.fontSize.heading);
+    const notesTitle = 'NOTAS IMPORTANTES';
+    const notesWidth = this.doc.getTextWidth(notesTitle);
+    this.doc.text(notesTitle, (this.pageWidth - notesWidth) / 2, this.currentY);
+    this.addSpacing(3);
+
+    // Important notes (only 2)
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.setFontSize(PDF_CONFIG.fontSize.body);
+    const note1 = '- A presente convocatória é emitida em estrita conformidade com os dispositivos do Código Civil (art. 1432.º e seguintes), bem como com as normas aplicáveis ao regime de propriedade horizontal em Portugal.';
+    const note1Lines = this.doc.splitTextToSize(note1, this.contentWidth);
+    note1Lines.forEach((line: string) => {
+      this.doc.text(line, this.margins.left, this.currentY);
+      this.currentY += PDF_CONFIG.lineHeight;
+    });
+    this.addSpacing(2);
+
+    const note2 = '- A participação de todos os condóminos é fundamental para a gestão e manutenção do nosso patrimônio comum.';
+    const note2Lines = this.doc.splitTextToSize(note2, this.contentWidth);
+    note2Lines.forEach((line: string) => {
+      this.doc.text(line, this.margins.left, this.currentY);
+      this.currentY += PDF_CONFIG.lineHeight;
+    });
+    this.addSpacing(5);
+
+    // Date and signatures
     const date = new Date();
     const todayFormatted = formatDatePortuguese(date);
+    const city = data.building_address?.split(',')[0] || 'Buraca';
 
-    this.addText(`${data.building_address}, ${todayFormatted}`, PDF_CONFIG.fontSize.body);
-    this.addSpacing(15);
+    this.doc.setFont('helvetica', 'italic');
+    this.doc.text(`${city}, ${todayFormatted}`, this.margins.left, this.currentY);
+    this.addSpacing(5);
 
-    this.doc.setFont('helvetica', 'bold');
-    this.doc.text(data.sender_name || 'A Administração', this.margins.left, this.currentY);
-    this.currentY += PDF_CONFIG.lineHeight;
-    this.doc.setFont('helvetica', 'normal');
-    this.doc.text(data.sender_role || 'Administrador do Condomínio', this.margins.left, this.currentY);
+    this.doc.setFont('helvetica', 'italic');
+    this.doc.text(`*Administrador, ${data.sender_name || 'Vítor Rodrigues'}*`, this.margins.left, this.currentY);
+    this.addSpacing(5);
 
-    if (data.sender_email || data.sender_phone) {
-      this.currentY += PDF_CONFIG.lineHeight * 2;
-      if (data.sender_email) {
-        this.doc.text(`Email: ${data.sender_email}`, this.margins.left, this.currentY);
-        this.currentY += PDF_CONFIG.lineHeight;
-      }
-      if (data.sender_phone) {
-        this.doc.text(`Telefone: ${data.sender_phone}`, this.margins.left, this.currentY);
-      }
-    }
-
-    // Footer
-    this.addFooter(1, 1, 'Documento gerado eletronicamente - Válido sem assinatura');
+    this.doc.text('* Secretário, João Longo*', this.margins.left, this.currentY);
   }
 }
 

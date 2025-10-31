@@ -133,15 +133,23 @@ class BuildingService {
   /**
    * Elimina un edificio
    */
-  async deleteBuilding(id, force = false) {
+  async deleteBuilding(id, force = false, userId = null) {
     if (!id) {
       throw new ValidationError('ID do edifício é obrigatório');
     }
 
-    // Verificar que el edificio existe
-    const building = await buildingRepository.findById(id);
+    // Verificar que el edificio existe (sin filtrar deleted_at)
+    const building = await buildingRepository.db('buildings')
+      .where('id', id)
+      .first();
+
     if (!building) {
       throw new NotFoundError('Edifício não encontrado');
+    }
+
+    // Si ya está eliminado
+    if (building.deleted_at) {
+      throw new ValidationError('Edifício já foi eliminado');
     }
 
     // Verificar si tiene registros relacionados
@@ -150,14 +158,18 @@ class BuildingService {
 
     if (hasRelated && !force) {
       throw new ValidationError(
-        'Cannot delete building with related records', 
+        'Cannot delete building with related records',
         relatedRecords.filter(r => r.count > 0)
       );
     }
 
     // Eliminar (soft delete por defecto)
-    const deletedBuilding = await buildingRepository.delete(id);
-    
+    const deletedBuilding = await buildingRepository.delete(id, userId);
+
+    if (!deletedBuilding) {
+      throw new ValidationError('Erro ao eliminar edifício');
+    }
+
     return deletedBuilding;
   }
 

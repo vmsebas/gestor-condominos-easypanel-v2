@@ -9,7 +9,17 @@ class BaseRepository {
     this.tableName = tableName;
     this.db = db;
     // Define which tables support soft deletes
-    this.supportsSoftDelete = ['users'].includes(tableName);
+    this.supportsSoftDelete = [
+      'users',
+      'convocatorias',
+      'minutes',
+      'members',
+      'transactions',
+      'communication_logs',
+      'documents',
+      'tasks',
+      'buildings'
+    ].includes(tableName);
   }
 
   /**
@@ -150,17 +160,30 @@ class BaseRepository {
   /**
    * Elimina un registro (soft delete if supported, hard delete otherwise)
    * @param {string} id - ID del registro
+   * @param {string} userId - ID del usuario que elimina (opcional)
    */
-  async delete(id) {
+  async delete(id, userId = null) {
     try {
       if (this.supportsSoftDelete) {
+        // Verificar si el usuario existe antes de asignar deleted_by
+        let validUserId = null;
+        if (userId) {
+          const userExists = await this.db('users')
+            .where('id', userId)
+            .first();
+          validUserId = userExists ? userId : null;
+        }
+
         // Soft delete for tables with deleted_at column
         const result = await this.db(this.tableName)
           .where('id', id)
           .where(function() {
             this.whereNull('deleted_at').orWhere('deleted_at', '>', new Date());
           })
-          .update({ deleted_at: new Date() })
+          .update({
+            deleted_at: new Date(),
+            deleted_by: validUserId
+          })
           .returning('*');
         return result[0] || null;
       } else {

@@ -267,20 +267,41 @@ router.get('/stats/:building_id', async (req, res, next) => {
 
 /**
  * DELETE /api/communications/logs/:id
- * Delete a communication log
+ * Delete a communication log (Soft Delete)
  */
 router.delete('/logs/:id', async (req, res, next) => {
   const { id } = req.params;
+  let userId = req.user?.id || null;
 
   try {
-    const query = 'DELETE FROM communication_logs WHERE id = $1 RETURNING *';
-    const result = await pool.query(query, [id]);
-
-    if (result.rows.length === 0) {
-      return errorResponse(res, 'Communication log not found', 404);
+    // Verificar si el usuario existe
+    if (userId) {
+      const userCheck = await pool.query(
+        'SELECT id FROM users WHERE id = $1',
+        [userId]
+      );
+      if (userCheck.rows.length === 0) {
+        userId = null;
+      }
     }
 
-    return successResponse(res, result.rows[0]);
+    // Soft delete: marca como eliminado en vez de apagar fisicamente
+    const query = `
+      UPDATE communication_logs
+      SET deleted_at = NOW(), deleted_by = $2
+      WHERE id = $1 AND deleted_at IS NULL
+      RETURNING *
+    `;
+    const result = await pool.query(query, [id, userId]);
+
+    if (result.rows.length === 0) {
+      return errorResponse(res, 'Log de comunicação não encontrado ou já foi eliminado', 404);
+    }
+
+    return successResponse(res, {
+      message: 'Log de comunicação movido para o histórico',
+      info: 'Pode restaurar o log a partir do menu Histórico'
+    });
   } catch (error) {
     next(error);
   }

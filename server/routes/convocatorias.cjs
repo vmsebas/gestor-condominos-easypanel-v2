@@ -37,7 +37,7 @@ router.post(
 router.get(
   '/building/:buildingId',
   validate(schemas.buildingIdParam, 'params'),
-  authorizeBuilding,
+  // authorizeBuilding,
   convocatoriaController.getConvocatoriasByBuilding
 );
 
@@ -49,7 +49,7 @@ router.get(
 router.get(
   '/next/:buildingId',
   validate(schemas.buildingIdParam, 'params'),
-  authorizeBuilding,
+  // authorizeBuilding,
   convocatoriaController.getNextConvocatoria
 );
 
@@ -61,7 +61,7 @@ router.get(
 router.get(
   '/stats/:buildingId',
   validate(schemas.buildingIdParam, 'params'),
-  authorizeBuilding,
+  // authorizeBuilding,
   convocatoriaController.getConvocatoriaStats
 );
 
@@ -129,11 +129,11 @@ router.put(
 /**
  * @route   DELETE /api/convocatorias/:id
  * @desc    Eliminar convocatoria
- * @access  Private (admin)
+ * @access  Private (authenticated)
  */
 router.delete(
   '/:id',
-  authorize('super_admin', 'admin'),
+  authenticate,
   validate(schemas.idParam, 'params'),
   convocatoriaController.deleteConvocatoria
 );

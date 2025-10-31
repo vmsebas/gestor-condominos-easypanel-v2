@@ -19,6 +19,7 @@ export interface ConvocatoriaData {
   secretary?: string;
   legal_reference?: string;
   status: string;
+  minutes_created: boolean; // Flag indicando si tiene acta
   building_name?: string;
   building_address?: string;
   postal_code?: string;
@@ -26,6 +27,12 @@ export interface ConvocatoriaData {
   agenda_items?: any[];
   created_at: string;
   updated_at: string;
+  // Datos de acta relacionada (si existe)
+  minute_id?: string | null;
+  minute_number?: string | null;
+  minute_status?: 'draft' | 'pending_signatures' | 'signed' | 'distributed' | null;
+  minute_meeting_date?: string | null;
+  minute_signed_date?: string | null;
 }
 
 export interface ConvocatoriasResponse {

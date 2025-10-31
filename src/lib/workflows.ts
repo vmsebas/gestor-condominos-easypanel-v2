@@ -196,19 +196,12 @@ export const ACTA_WORKFLOW: WorkflowDefinition = {
     {
       id: 'desarrollo-reunion',
       title: 'Desenvolvimento da Reunião',
-      description: 'Tratamento ponto por ponto da ordem do dia',
+      description: 'Discussão e votação de cada ponto da ordem do dia',
       component: 'DesarrolloReunionStep',
-      estimatedTime: 60
-    },
-    {
-      id: 'votaciones',
-      title: 'Registo de Votações',
-      description: 'Captura de votos, cálculo de maiorias e aprovação de acordos',
-      component: 'VotacionesStep',
-      estimatedTime: 15,
+      estimatedTime: 75,  // Aumentado para incluir votações inline
       legalRequirement: {
-        article: 'Art. 17 LPH',
-        description: 'Maiorias: Simples (>50% presentes), Qualificada (>2/3 total), Unanimidade',
+        article: 'Art. 1430º CC e Art. 1432º CC',
+        description: 'Maioria simples (>50%) ou qualificada (2/3) calculada por permilagem. Votação nominal obrigatória.',
         mandatory: true
       }
     },

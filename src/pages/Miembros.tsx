@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, UserPlus, Mail, Phone, Home, Loader2, User, Euro, Eye, Edit3, Trash2, MoreVertical } from 'lucide-react';
+import { Users, UserPlus, Mail, Phone, Home, Loader2, User, Euro, Eye, Edit3, Trash2, MoreVertical, Download, Upload } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
@@ -16,7 +16,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getMembers } from '@/lib/api';
+import { getMembers, exportMembersCSV, importMembersCSV } from '@/lib/api';
 import MemberFormDialog from '@/components/members/MemberFormDialog';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
@@ -72,7 +72,7 @@ const Miembros: React.FC = () => {
   
   const confirmDeleteMember = async () => {
     if (!memberToDelete) return;
-    
+
     try {
       await deleteMemberMutation.mutateAsync(memberToDelete.id);
       toast.success('Membro eliminado com sucesso!');
@@ -82,6 +82,52 @@ const Miembros: React.FC = () => {
       console.error('Error deleting member:', error);
       toast.error('Erro ao eliminar membro');
     }
+  };
+
+  const handleExportCSV = async () => {
+    try {
+      const BUILDING_ID = 'fb0d83d3-fe04-47cb-ba48-f95538a2a7fc'; // Hardcoded for now
+      const csvBlob = await exportMembersCSV(BUILDING_ID);
+
+      // Create download link
+      const url = window.URL.createObjectURL(csvBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `membros_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('CSV exportado com sucesso!');
+    } catch (error) {
+      console.error('Error exporting CSV:', error);
+      toast.error('Erro ao exportar CSV');
+    }
+  };
+
+  const handleImportCSV = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const BUILDING_ID = 'fb0d83d3-fe04-47cb-ba48-f95538a2a7fc'; // Hardcoded for now
+      const result = await importMembersCSV(BUILDING_ID, file);
+
+      queryClient.invalidateQueries({ queryKey: ['members'] });
+
+      toast.success(
+        `Importação concluída! ${result.data.created} criados, ${result.data.updated} atualizados${
+          result.data.errors > 0 ? `, ${result.data.errors} erros` : ''
+        }`
+      );
+    } catch (error: any) {
+      console.error('Error importing CSV:', error);
+      toast.error(`Erro ao importar CSV: ${error.response?.data?.error || error.message}`);
+    }
+
+    // Reset input
+    event.target.value = '';
   };
 
   if (isLoading) {
@@ -112,10 +158,31 @@ const Miembros: React.FC = () => {
             Gestão de proprietários e residentes
           </p>
         </div>
-        <Button size="lg" variant="workflow" onClick={handleCreateMember}>
-          <UserPlus className="h-5 w-5 mr-2" />
-          Novo Membro
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button size="lg" variant="outline" onClick={handleExportCSV}>
+            <Download className="h-5 w-5 mr-2" />
+            Exportar CSV
+          </Button>
+          <Button
+            size="lg"
+            variant="outline"
+            onClick={() => document.getElementById('csv-upload')?.click()}
+          >
+            <Upload className="h-5 w-5 mr-2" />
+            Importar CSV
+          </Button>
+          <input
+            id="csv-upload"
+            type="file"
+            accept=".csv"
+            className="hidden"
+            onChange={handleImportCSV}
+          />
+          <Button size="lg" variant="workflow" onClick={handleCreateMember}>
+            <UserPlus className="h-5 w-5 mr-2" />
+            Novo Membro
+          </Button>
+        </div>
       </div>
 
       {membersData && membersData.length > 0 ? (
