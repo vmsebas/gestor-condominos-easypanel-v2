@@ -1,26 +1,36 @@
 version: '3.8'
 
 services:
-  app:
+  gestor-condominos:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "${PORT:-3002}:3002"
-    environment:
-      - NODE_ENV=production
-      - PORT=${PORT:-3002}
-      - DATABASE_URL=${DATABASE_URL}
-      - JWT_SECRET=${JWT_SECRET:-your-secret-key-here}
-      - VITE_API_URL=${VITE_API_URL:-http://localhost:3002}
-      - VITE_APP_URL=${VITE_APP_URL:-http://localhost:3002}
+    container_name: gestor-condominos
+    restart: unless-stopped
+    env_file:
+      - /Users/mini-server/server/.secrets/apps/gestor-condominos.env
     volumes:
       - ./uploads:/app/uploads
       - ./logs:/app/logs
-    restart: unless-stopped
+    networks:
+      - traefik-net
+    labels:
+      # Traefik
+      - "traefik.enable=true"
+      - "traefik.http.routers.gestor.rule=Host(`gestor.local`)"
+      - "traefik.http.services.gestor.loadbalancer.server.port=3002"
+      # Metadata
+      - "app.name=gestor-condominos"
+      - "app.environment=production"
+      - "app.description=Condominium Management System"
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3002/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    # NO exponer puerto - Traefik lo gestiona
+
+networks:
+  traefik-net:
+    external: true
