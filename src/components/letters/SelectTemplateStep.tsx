@@ -41,7 +41,9 @@ const SelectTemplateStep: React.FC<SelectTemplateStepProps> = ({
     try {
       setLoading(true);
       const result = await getLetterTemplates({ building_id: data.buildingId });
-      const templatesData = result.data?.templates || result.templates || [];
+      // API returns { success: true, data: [...] } where data is the array
+      const templatesData = Array.isArray(result.data) ? result.data : (result.data?.templates || result.templates || []);
+      console.log('Templates loaded:', templatesData.length, templatesData);
       setTemplates(templatesData);
     } catch (error: any) {
       console.error('Erro ao carregar templates:', error);
