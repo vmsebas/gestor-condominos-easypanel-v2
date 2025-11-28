@@ -23,8 +23,7 @@ const PORT = process.env.PORT || 3002;
 
 // Create database pool
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  connectionString: process.env.DATABASE_URL
 });
 
 // CORS configuration

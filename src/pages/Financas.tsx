@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import FinancialDashboard from '@/components/finance/displays/FinancialDashboard';
 import TransactionManagementDialog from '@/components/transactions/TransactionManagementDialog';
 import ArrearsOverview from '@/components/finance/ArrearsOverview';
+import FinancialPeriodsTab from '@/components/finance/FinancialPeriodsTab';
 import { useFinancialSummary, useTransactions } from '@/hooks/useNeonData';
 import { Calculator, Plus, TrendingUp, Euro, PieChart, BarChart, FileText, CreditCard, Edit3, Eye, MoreVertical } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -111,14 +112,19 @@ const Financas: React.FC = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="dashboard" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+      <Tabs defaultValue="periods" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="periods">Períodos</TabsTrigger>
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="transactions">Movimentos</TabsTrigger>
           <TabsTrigger value="arrears">Morosidade</TabsTrigger>
           <TabsTrigger value="budget">Orçamento</TabsTrigger>
           <TabsTrigger value="reports">Relatórios</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="periods">
+          <FinancialPeriodsTab />
+        </TabsContent>
 
         <TabsContent value="dashboard">
           <FinancialDashboard />

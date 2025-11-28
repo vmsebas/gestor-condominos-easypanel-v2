@@ -214,7 +214,7 @@ const ActaDetail: React.FC = () => {
                     const hasVotes = (item.votes_in_favor || 0) + (item.votes_against || 0) + (item.abstentions || 0) > 0;
 
                     return (
-                      <div key={index} className="border rounded-lg p-4 space-y-2">
+                      <div key={item.id || `agenda-item-${index}`} className="border rounded-lg p-4 space-y-2">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-2">

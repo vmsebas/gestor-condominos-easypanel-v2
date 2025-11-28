@@ -351,34 +351,9 @@ export const deleteConvocatoria = async (id: string) => {
   return response.data;
 };
 
-// Letters
-export const getSentLetters = async (params?: {
-  buildingId?: string;
-  memberId?: string;
-  letterType?: string;
-}) => {
-  const response = await api.get('/letters/sent', { params });
-  return response.data;
-};
-
-export const getLetterTemplates = async () => {
-  const response = await api.get('/letters/templates');
-  return response.data;
-};
-
-export const sendLetter = async (data: any) => {
-  const response = await api.post('/letters/send', data);
-  return response.data;
-};
-
-export const generateLetterPreview = async (data: any) => {
-  const response = await api.post('/letters/preview', data);
-  return response.data;
-};
-
 // Dashboard Stats
 export const getDashboardStats = async (buildingId: string) => {
-  const response = await api.get(`/stats/dashboard/${buildingId}`);
+  const response = await api.get(`/dashboard/stats/${buildingId}`);
   return response.data;
 };
 
@@ -546,6 +521,192 @@ export const deleteMinuteSignature = async (minuteId: string, signatureId: strin
  */
 export const getBuildingSignatureStats = async (buildingId: string) => {
   const response = await api.get(`/buildings/${buildingId}/signature-stats`);
+  return response.data;
+};
+
+// ============== LETTERS ==============
+
+/**
+ * Get letters with optional filters
+ */
+export const getLetters = async (params?: {
+  building_id?: string;
+  member_id?: string;
+  send_method?: string;
+  from_date?: string;
+  to_date?: string;
+  page?: number;
+  limit?: number;
+}) => {
+  const response = await api.get('/letters', { params });
+  return response.data;
+};
+
+/**
+ * Get letter by ID
+ */
+export const getLetterById = async (id: string) => {
+  const response = await api.get(`/letters/${id}`);
+  return response.data;
+};
+
+/**
+ * Create a new letter
+ */
+export const createLetter = async (data: any) => {
+  const response = await api.post('/letters', data);
+  return response.data;
+};
+
+/**
+ * Update an existing letter
+ */
+export const updateLetter = async (id: string, data: any) => {
+  const response = await api.put(`/letters/${id}`, data);
+  return response.data;
+};
+
+/**
+ * Delete a letter
+ */
+export const deleteLetter = async (id: string) => {
+  const response = await api.delete(`/letters/${id}`);
+  return response.data;
+};
+
+/**
+ * Get letter statistics for a building
+ */
+export const getLetterStats = async (buildingId: string) => {
+  const response = await api.get(`/letters/stats/${buildingId}`);
+  return response.data;
+};
+
+// ============== LETTER TEMPLATES ==============
+
+/**
+ * Get letter templates with optional filters
+ */
+export const getLetterTemplates = async (params?: {
+  building_id?: string;
+  type?: string;
+}) => {
+  const response = await api.get('/letters/templates', { params });
+  return response.data;
+};
+
+/**
+ * Get letter template by ID
+ */
+export const getLetterTemplateById = async (id: string) => {
+  const response = await api.get(`/letters/templates/${id}`);
+  return response.data;
+};
+
+/**
+ * Create a new letter template
+ */
+export const createLetterTemplate = async (data: any) => {
+  const response = await api.post('/letters/templates', data);
+  return response.data;
+};
+
+/**
+ * Update an existing letter template
+ */
+export const updateLetterTemplate = async (id: string, data: any) => {
+  const response = await api.put(`/letters/templates/${id}`, data);
+  return response.data;
+};
+
+/**
+ * Delete a letter template
+ */
+export const deleteLetterTemplate = async (id: string) => {
+  const response = await api.delete(`/letters/templates/${id}`);
+  return response.data;
+};
+
+/**
+ * Duplicate a letter template
+ */
+export const duplicateLetterTemplate = async (id: string, name?: string) => {
+  const response = await api.post(`/letters/templates/${id}/duplicate`, { name });
+  return response.data;
+};
+
+/**
+ * Toggle active status of a letter template
+ */
+export const toggleLetterTemplateActive = async (id: string) => {
+  const response = await api.patch(`/letters/templates/${id}/toggle-active`);
+  return response.data;
+};
+
+// ============== COMMUNICATION LOGS ==============
+
+/**
+ * Log a communication
+ */
+export const logCommunication = async (data: {
+  member_id: string;
+  building_id: string;
+  communication_type: string;
+  communication_subtype?: string;
+  channel: string;
+  status?: string;
+  subject?: string;
+  body_preview?: string;
+  full_content?: string;
+  pdf_url?: string;
+  pdf_filename?: string;
+  related_letter_id?: string;
+  related_convocatoria_id?: string;
+  related_minute_id?: string;
+  related_transaction_id?: string;
+  metadata?: any;
+}) => {
+  const response = await api.post('/communications/log', data);
+  return response.data;
+};
+
+/**
+ * Get communication logs with filters
+ */
+export const getCommunicationLogs = async (params?: {
+  building_id?: string;
+  member_id?: string;
+  communication_type?: string;
+  channel?: string;
+  status?: string;
+  limit?: number;
+  offset?: number;
+}) => {
+  const response = await api.get('/communications/logs', { params });
+  return response.data;
+};
+
+/**
+ * Update communication status
+ */
+export const updateCommunicationStatus = async (id: string, status: string, error_message?: string) => {
+  const response = await api.patch(`/communications/logs/${id}/status`, { status, error_message });
+  return response.data;
+};
+
+/**
+ * Get communication statistics for a building
+ */
+export const getCommunicationStats = async (buildingId: string) => {
+  const response = await api.get(`/communications/stats/${buildingId}`);
+  return response.data;
+};
+
+/**
+ * Delete a communication log
+ */
+export const deleteCommunicationLog = async (id: string) => {
+  const response = await api.delete(`/communications/logs/${id}`);
   return response.data;
 };
 

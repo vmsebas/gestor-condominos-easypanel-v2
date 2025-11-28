@@ -1,23 +1,57 @@
+# ============================================
+# Docker Compose - Gestor Condominios
+# Arquitectura: nginx (frontend) + backend + postgres-master
+# ============================================
 version: '3.8'
 
 services:
-  app:
+  # ============================================
+  # NGINX - Reverse Proxy + Frontend SPA
+  # ============================================
+  nginx:
     build:
       context: .
       dockerfile: Dockerfile
+      target: frontend
+    container_name: gestor-condominos-nginx
+    ports:
+      - "5173:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/nginx-health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ============================================
+  # BACKEND - Express API Server
+  # ============================================
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: backend
+    container_name: gestor-condominos-backend
     ports:
       - "${PORT:-3002}:3002"
-      - "5173:5173"
     environment:
       - NODE_ENV=production
       - PORT=${PORT:-3002}
       - DATABASE_URL=${DATABASE_URL}
-      - JWT_SECRET=${JWT_SECRET:-your-secret-key-here}
-      - VITE_API_URL=${VITE_API_URL:-http://localhost:3002}
-      - VITE_APP_URL=${VITE_APP_URL:-http://localhost:3002}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-15m}
+      - JWT_REFRESH_EXPIRES_IN=${JWT_REFRESH_EXPIRES_IN:-7d}
     volumes:
-      - ./uploads:/app/uploads
-      - ./logs:/app/logs
+      - uploads:/app/uploads
+      - logs:/app/logs
+    networks:
+      - app-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3002/api/health"]
@@ -25,3 +59,20 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+# ============================================
+# VOLUMES - Datos persistentes
+# ============================================
+volumes:
+  uploads:
+    name: gestor-condominos-uploads
+  logs:
+    name: gestor-condominos-logs
+
+# ============================================
+# NETWORKS - Red compartida con postgres-master
+# ============================================
+networks:
+  app-network:
+    external: true
+    name: docker-apps_app-network

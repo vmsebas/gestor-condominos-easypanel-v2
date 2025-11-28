@@ -1,50 +1,126 @@
-# Dependencies
-node_modules/
+# ============================================
+# .dockerignore - Gestor Condominios
+# Optimizado para builds rápidos y ligeros
+# ============================================
+
+# Dependencies (se instalan en Docker)
+node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Build output
-dist/
-build/
-*.log
-
-# Environment files
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
-
-# Git
-.git/
-.gitignore
-
-# Testing
-coverage/
-.nyc_output/
-
-# Documentation
-README.md
-CLAUDE.md
-docs/
-
-# Temporary files
-*.tmp
-*.temp
-.cache/
+# Build outputs (se generan en Docker)
+dist
+build
+.next
+out
 
 # Development files
-.eslintcache
-.parcel-cache/
+.env.local
+.env.development
+.env.test
+.env.development.local
+.env.test.local
+*.log
+logs
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE and editors
+.vscode
+.idea
+*.swp
+*.swo
+*.sublime-*
+.editorconfig
+
+# Tests
+coverage
+__tests__
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+playwright-report
+test-results
+jest.config.*
+
+# Documentation (excepto README)
+*.md
+!README.md
+docs
+CLAUDE.md
+LEGAL-SIGNATURES.md
+ARQUITECTURA-DATOS.md
 
 # OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
 Thumbs.db
+ehthumbs.db
+
+# Backups and SQL
+backups
+*.sql
+*.sql.gz
+backup_*.sql*
+
+# Migrations (se ejecutan por separado)
+migrations
+
+# Temporary files
+tmp
+temp
+*.tmp
+*.temp
+*.bak
+*.orig
+
+# Docker (evitar recursión)
+Dockerfile*
+docker-compose*.yml
+.docker
+
+# Scripts de desarrollo
+scripts/*.sh
+!scripts/backup-db.sh
+
+# Archivos de configuración de desarrollo (lint/prettier)
+.prettierrc*
+.eslintrc*
+.eslintignore
+vite.config.ts.timestamp*
+# NO excluir: tsconfig.*.json, vite.config.ts, tailwind.config.ts, postcss.config.js
+# Son necesarios para el build del frontend
+
+# Cache
+.cache
+.npm
+.yarn
+*.cache
+.eslintcache
+.parcel-cache
+
+# Playwright
+playwright.config.*
+e2e
+
+# Archivos grandes innecesarios
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# Certificados y secrets
+*.pem
+*.key
+*.crt
+*.p12
+secrets

@@ -3,72 +3,117 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mail, MessageSquare, Plus, Send, FileText, Users, Clock, CheckCircle } from 'lucide-react';
-
-interface Letter {
-  id: string;
-  type: 'incumprimento' | 'aviso' | 'informativa' | 'legal';
-  title: string;
-  recipient: string;
-  status: 'draft' | 'sent' | 'delivered' | 'read';
-  createdAt: string;
-  sentAt?: string;
-}
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import {
+  Mail,
+  MessageSquare,
+  Plus,
+  Send,
+  FileText,
+  Users,
+  Clock,
+  CheckCircle,
+  Loader2,
+  MoreVertical,
+  Edit2,
+  Trash2,
+  Eye,
+  Download
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { format } from 'date-fns';
+import { pt } from 'date-fns/locale';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { DataTablePagination } from '@/components/ui/data-table-pagination';
+import LetterWorkflow from '@/components/letters/LetterWorkflow';
+import TemplateManager from '@/components/letters/TemplateManager';
+import CommunicationHistory from '@/components/letters/CommunicationHistory';
+import { useLetters, useLetterTemplates } from '@/hooks/useLetters';
+import { useBuilding } from '@/hooks/useBuilding';
 
 const Comunicaciones: React.FC = () => {
-  // A implementar com dados reais da base de dados
-  const [letters] = useState<Letter[]>([]);
+  const { currentBuilding } = useBuilding();
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [letterToDelete, setLetterToDelete] = useState<any>(null);
+  const [editingLetter, setEditingLetter] = useState<any>(null);
 
-  // A implementar com dados reais da base de dados
-  const templates: any[] = [];
+  // Use hooks
+  const {
+    letters,
+    stats,
+    isLoading: loadingLetters,
+    pagination,
+    deleteLetter,
+    changePage,
+    changePageSize,
+    isDeleting
+  } = useLetters();
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'draft':
-        return <Badge variant="outline">Rascunho</Badge>;
-      case 'sent':
-        return <Badge variant="info">Enviada</Badge>;
-      case 'delivered':
-        return <Badge variant="success">Entregue</Badge>;
-      case 'read':
-        return <Badge variant="success">Lida</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
+  const {
+    templates,
+    isLoading: loadingTemplates
+  } = useLetterTemplates();
+
+  const buildingName = currentBuilding?.name || 'Edifício';
+
+  const handleLetterCreated = () => {
+    setShowCreateDialog(false);
+    setEditingLetter(null);
+  };
+
+  const handleDeleteLetter = async () => {
+    if (!letterToDelete) return;
+    try {
+      await deleteLetter(letterToDelete.id);
+      setLetterToDelete(null);
+    } catch (error) {
+      // Error already handled by hook with toast
     }
   };
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'incumprimento':
-        return 'text-red-600 bg-red-100 dark:bg-red-900/20';
-      case 'aviso':
-        return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/20';
-      case 'informativa':
-        return 'text-blue-600 bg-blue-100 dark:bg-blue-900/20';
-      case 'legal':
-        return 'text-purple-600 bg-purple-100 dark:bg-purple-900/20';
-      default:
-        return 'text-gray-600 bg-gray-100 dark:bg-gray-800';
+  const getStatusBadge = (letter: any) => {
+    if (letter.delivery_confirmation) {
+      return <Badge variant="default" className="bg-green-600">Entregue</Badge>;
+    } else if (letter.sent_date) {
+      return <Badge variant="default" className="bg-blue-600">Enviada</Badge>;
+    } else {
+      return <Badge variant="outline">Rascunho</Badge>;
     }
   };
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'incumprimento':
-        return <Mail className="h-4 w-4" />;
-      case 'aviso':
-        return <MessageSquare className="h-4 w-4" />;
-      case 'informativa':
-        return <FileText className="h-4 w-4" />;
-      case 'legal':
-        return <FileText className="h-4 w-4" />;
+  const getSendMethodBadge = (method: string) => {
+    switch (method) {
+      case 'email':
+        return <Badge variant="outline" className="bg-blue-100 text-blue-700 dark:bg-blue-900/20">Email</Badge>;
+      case 'correio_certificado':
+        return <Badge variant="outline" className="bg-purple-100 text-purple-700 dark:bg-purple-900/20">Correio Certificado</Badge>;
+      case 'whatsapp':
+        return <Badge variant="outline" className="bg-green-100 text-green-700 dark:bg-green-900/20">WhatsApp</Badge>;
       default:
-        return <Mail className="h-4 w-4" />;
+        return <Badge variant="outline">{method}</Badge>;
     }
   };
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Comunicações</h1>
@@ -76,7 +121,11 @@ const Comunicaciones: React.FC = () => {
             Gestão de cartas e comunicações oficiais
           </p>
         </div>
-        <Button size="lg" variant="workflow">
+        <Button
+          size="lg"
+          variant="workflow"
+          onClick={() => setShowCreateDialog(true)}
+        >
           <Plus className="h-5 w-5 mr-2" />
           Nova Carta
         </Button>
@@ -89,37 +138,37 @@ const Comunicaciones: React.FC = () => {
             <div className="flex items-center space-x-2">
               <Mail className="h-8 w-8 text-blue-600" />
               <div>
-                <p className="text-2xl font-bold">{letters.length}</p>
+                <p className="text-2xl font-bold">{stats.total || 0}</p>
                 <p className="text-sm text-muted-foreground">Cartas enviadas</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center space-x-2">
               <CheckCircle className="h-8 w-8 text-green-600" />
               <div>
-                <p className="text-2xl font-bold">{letters.filter(l => l.status === 'delivered').length}</p>
+                <p className="text-2xl font-bold">{stats.delivered || 0}</p>
                 <p className="text-sm text-muted-foreground">Entregues</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center space-x-2">
               <Clock className="h-8 w-8 text-orange-600" />
               <div>
-                <p className="text-2xl font-bold">{letters.filter(l => l.status === 'sent').length}</p>
+                <p className="text-2xl font-bold">{stats.pending || 0}</p>
                 <p className="text-sm text-muted-foreground">Pendentes</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center space-x-2">
@@ -133,11 +182,12 @@ const Comunicaciones: React.FC = () => {
         </Card>
       </div>
 
+      {/* Tabs */}
       <Tabs defaultValue="letters" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="letters">Cartas Enviadas</TabsTrigger>
           <TabsTrigger value="templates">Modelos</TabsTrigger>
-          <TabsTrigger value="bulk">Envio Massivo</TabsTrigger>
+          <TabsTrigger value="history">Histórico</TabsTrigger>
         </TabsList>
 
         <TabsContent value="letters">
@@ -149,122 +199,208 @@ const Comunicaciones: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {letters.map((letter) => (
-                  <div
-                    key={letter.id}
-                    className="flex items-center justify-between p-4 rounded-lg border"
-                  >
-                    <div className="flex items-center space-x-4">
-                      <div className={`p-2 rounded-full ${getTypeColor(letter.type)}`}>
-                        {getTypeIcon(letter.type)}
-                      </div>
-                      <div>
-                        <h3 className="font-medium">{letter.title}</h3>
-                        <div className="flex items-center space-x-4 text-sm text-muted-foreground mt-1">
-                          <span>Para: {letter.recipient}</span>
-                          <span>•</span>
-                          <span>Criada: {new Date(letter.createdAt).toLocaleDateString()}</span>
-                          {letter.sentAt && (
-                            <>
-                              <span>•</span>
-                              <span>Enviada: {new Date(letter.sentAt).toLocaleDateString()}</span>
-                            </>
-                          )}
+              {loadingLetters ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : letters.length === 0 ? (
+                <div className="text-center py-12">
+                  <Mail className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-muted-foreground mb-2">
+                    Nenhuma carta enviada
+                  </h3>
+                  <p className="text-muted-foreground max-w-md mx-auto mb-4">
+                    Comece por criar a sua primeira carta clicando no botão "Nova Carta"
+                  </p>
+                  <Button onClick={() => setShowCreateDialog(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Criar primeira carta
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Lista de cartas */}
+                  {letters.map((letter) => (
+                    <div
+                      key={letter.id}
+                      className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex items-center space-x-4 flex-1">
+                        <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/20">
+                          <Mail className="h-4 w-4 text-blue-600" />
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-semibold text-foreground truncate">
+                              {letter.subject}
+                            </h3>
+                            {getStatusBadge(letter)}
+                            {getSendMethodBadge(letter.send_method)}
+                          </div>
+
+                          <div className="text-sm text-muted-foreground space-y-1">
+                            <p>
+                              <strong>Para:</strong> {letter.recipient_name}
+                              {letter.recipient_email && ` (${letter.recipient_email})`}
+                            </p>
+                            {letter.member_name && (
+                              <p>
+                                <strong>Membro:</strong> {letter.member_name}
+                              </p>
+                            )}
+                            {letter.template_name && (
+                              <p>
+                                <strong>Modelo:</strong> {letter.template_name}
+                              </p>
+                            )}
+                            <p>
+                              <strong>Criada:</strong>{' '}
+                              {format(new Date(letter.created_at), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: pt })}
+                            </p>
+                            {letter.sent_date && (
+                              <p>
+                                <strong>Enviada:</strong>{' '}
+                                {format(new Date(letter.sent_date), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: pt })}
+                              </p>
+                            )}
+                          </div>
                         </div>
                       </div>
+
+                      {/* Dropdown menu de ações */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => {
+                              // TODO: Implementar visualização
+                              toast.info('Funcionalidade em desenvolvimento');
+                            }}
+                          >
+                            <Eye className="mr-2 h-4 w-4" />
+                            Ver Detalhes
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              // TODO: Implementar download
+                              toast.info('Funcionalidade em desenvolvimento');
+                            }}
+                          >
+                            <Download className="mr-2 h-4 w-4" />
+                            Download PDF
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setEditingLetter(letter);
+                              setShowCreateDialog(true);
+                            }}
+                          >
+                            <Edit2 className="mr-2 h-4 w-4" />
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-red-600"
+                            onClick={() => setLetterToDelete(letter)}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Eliminar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
-                    <div className="flex items-center space-x-3">
-                      <Badge className={`${getTypeColor(letter.type)} border-0`}>
-                        {letter.type === 'incumprimento' ? 'Incumprimento' :
-                         letter.type === 'aviso' ? 'Aviso' :
-                         letter.type === 'informativa' ? 'Informativa' :
-                         letter.type === 'legal' ? 'Legal' : letter.type}
-                      </Badge>
-                      {getStatusBadge(letter.status)}
-                      <Button variant="ghost" size="sm">
-                        Ver carta
-                      </Button>
+                  ))}
+
+                  {/* Paginação */}
+                  {pagination.totalPages > 1 && (
+                    <div className="mt-6">
+                      <DataTablePagination
+                        currentPage={pagination.page}
+                        totalPages={pagination.totalPages}
+                        pageSize={pagination.pageSize}
+                        totalItems={pagination.total}
+                        onPageChange={changePage}
+                        onPageSizeChange={changePageSize}
+                      />
                     </div>
-                  </div>
-                ))}
-              </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="templates">
-          <Card>
-            <CardHeader>
-              <CardTitle>Modelos de Cartas</CardTitle>
-              <CardDescription>
-                Modelos predefinidos para diferentes tipos de comunicação
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-2 gap-4">
-                {templates.map((template) => (
-                  <Card key={template.id} className="cursor-pointer hover:shadow-md transition-all">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">{template.name}</CardTitle>
-                        <Badge variant="outline">
-                          {template.usage} utilizações
-                        </Badge>
-                      </div>
-                      <CardDescription>{template.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center justify-between">
-                        <Badge className={`${getTypeColor(template.category)} border-0`}>
-                          {template.category === 'incumprimento' ? 'Incumprimento' :
-                           template.category === 'aviso' ? 'Aviso' :
-                           template.category === 'informativa' ? 'Informativa' :
-                           template.category === 'legal' ? 'Legal' : template.category}
-                        </Badge>
-                        <div className="flex space-x-2">
-                          <Button variant="outline" size="sm">
-                            Pré-visualizar
-                          </Button>
-                          <Button variant="default" size="sm">
-                            Usar modelo
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <TemplateManager
+            templates={templates}
+            isLoading={loadingTemplates}
+            onUseTemplate={(template) => {
+              // TODO: Abrir workflow com template selecionado
+              toast.info('Funcionalidade em desenvolvimento');
+            }}
+          />
         </TabsContent>
 
-        <TabsContent value="bulk">
-          <Card>
-            <CardHeader>
-              <CardTitle>Envio Massivo</CardTitle>
-              <CardDescription>
-                Enviar comunicações a múltiplos proprietários simultaneamente
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12">
-                <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <h2 className="text-xl font-semibold text-muted-foreground mb-2">
-                  Função de Envio Massivo
-                </h2>
-                <p className="text-muted-foreground max-w-md mx-auto">
-                  Brevemente disponível - Envio simultâneo a múltiplos destinatários com personalização automática
-                </p>
-                <Button className="mt-4" variant="outline">
-                  <Send className="h-4 w-4 mr-2" />
-                  Brevemente
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="history">
+          <CommunicationHistory />
         </TabsContent>
       </Tabs>
+
+      {/* Dialog - Workflow */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto p-0">
+          <LetterWorkflow
+            buildingId={currentBuilding?.id}
+            buildingName={buildingName}
+            buildingAddress={currentBuilding?.address || ''}
+            onComplete={handleLetterCreated}
+            onCancel={() => {
+              setShowCreateDialog(false);
+              setEditingLetter(null);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* AlertDialog - Delete Confirmation */}
+      <AlertDialog open={!!letterToDelete} onOpenChange={() => setLetterToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar Carta?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem a certeza que deseja eliminar a carta "{letterToDelete?.subject}"?
+              <br /><br />
+              <span className="text-red-600 font-medium">
+                Esta ação é irreversível e todos os dados da carta serão permanentemente eliminados.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteLetter}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  A eliminar...
+                </>
+              ) : 'Eliminar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

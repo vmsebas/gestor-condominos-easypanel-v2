@@ -102,9 +102,9 @@ export const CONVOCATORIA_WORKFLOW: WorkflowDefinition = {
       component: 'FechaLugarStep',
       estimatedTime: 7,
       validation: [
-        { field: 'meetingDate', type: 'date', message: 'Data da reunião obrigatória' },
-        { field: 'meetingTime', type: 'required', message: 'Hora da reunião obrigatória' },
-        { field: 'meetingLocation', type: 'required', message: 'Local da reunião obrigatório' }
+        { field: 'meeting_date', type: 'date', message: 'Data da reunião obrigatória' },
+        { field: 'meeting_time', type: 'required', message: 'Hora da reunião obrigatória' },
+        { field: 'location', type: 'required', message: 'Local da reunião obrigatório' }
       ],
       legalRequirement: {
         article: 'Art. 1430.º e 1431.º CC',
@@ -119,7 +119,7 @@ export const CONVOCATORIA_WORKFLOW: WorkflowDefinition = {
       component: 'OrdenDiaStep',
       estimatedTime: 15,
       validation: [
-        { field: 'agendaItems', type: 'required', message: 'Deve incluir pelo menos um ponto na ordem do dia' }
+        { field: 'agenda_items', type: 'required', message: 'Deve incluir pelo menos um ponto na ordem do dia' }
       ],
       legalRequirement: {
         article: 'Art. 1430.º CC',
@@ -364,6 +364,72 @@ export const GESTION_MOROSOS_WORKFLOW: WorkflowDefinition = {
   ]
 };
 
+export const LETTER_WORKFLOW: WorkflowDefinition = {
+  id: 'criacao-carta',
+  name: 'Criação e Envio de Cartas',
+  description: 'Processo guiado para criar cartas profissionais com templates e envio multi-canal',
+  category: 'comunicacao',
+  icon: 'Mail',
+  estimatedTotalTime: 15,
+  requiredDocuments: [],
+  outputDocuments: ['carta_pdf', 'registo_envio'],
+  legalContext: {
+    framework: 'CC_PT',
+    applicableArticles: ['Art. 1430.º CC', 'Dec-Lei n.º 268/94 (LPH)'],
+    complianceNotes: [
+      'Comunicações formais aos condóminos',
+      'Registo de envios obrigatório',
+      'Opção de correio registado para avisos legais',
+      'Cumprimento RGPD para dados pessoais'
+    ]
+  },
+  steps: [
+    {
+      id: 'selecao-template',
+      title: 'Selecção de Template',
+      description: 'Escolher template profissional (11 opções disponíveis)',
+      component: 'SelectTemplateStep',
+      estimatedTime: 2,
+      validation: [
+        { field: 'template_id', type: 'required', message: 'Deve seleccionar um template' }
+      ]
+    },
+    {
+      id: 'edicao-conteudo',
+      title: 'Edição do Conteúdo',
+      description: 'Personalizar conteúdo com dados dinâmicos',
+      component: 'EditContentStep',
+      estimatedTime: 8,
+      validation: [
+        { field: 'subject', type: 'required', message: 'Assunto obrigatório' },
+        { field: 'content', type: 'required', message: 'Conteúdo obrigatório' }
+      ]
+    },
+    {
+      id: 'preview-carta',
+      title: 'Preview e Destinatários',
+      description: 'Verificar preview do PDF e seleccionar destinatários',
+      component: 'PreviewStep',
+      estimatedTime: 3,
+      validation: [
+        { field: 'recipients', type: 'required', message: 'Deve seleccionar pelo menos um destinatário' }
+      ]
+    },
+    {
+      id: 'envio-carta',
+      title: 'Envio Multi-Canal',
+      description: 'Enviar por email, WhatsApp ou preparar para correio registado',
+      component: 'SendStep',
+      estimatedTime: 2,
+      legalRequirement: {
+        article: 'RGPD (Lei n.º 8/2022)',
+        description: 'Verificar consentimento para email e WhatsApp antes de enviar',
+        mandatory: true
+      }
+    }
+  ]
+};
+
 // Clase principal del motor de workflows
 export class WorkflowEngine {
   private workflows: Map<string, WorkflowDefinition> = new Map();
@@ -374,6 +440,7 @@ export class WorkflowEngine {
     this.registerWorkflow(ACTA_WORKFLOW);
     this.registerWorkflow(GESTION_FINANCIERA_WORKFLOW);
     this.registerWorkflow(GESTION_MOROSOS_WORKFLOW);
+    this.registerWorkflow(LETTER_WORKFLOW);
   }
 
   registerWorkflow(workflow: WorkflowDefinition): void {

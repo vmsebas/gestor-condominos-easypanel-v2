@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import api, { getActas, getMembers, getBuildings, getTransactions, getFinancialSummary, getSentLetters, getConvocatorias, createConvocatoria, createMinute, createMember, updateMember, deleteMember, createBuilding, updateBuilding, deleteBuilding, createTransaction, updateTransaction, deleteTransaction, updateConvocatoria, deleteConvocatoria, updateMinute, deleteMinute, getDashboardStats, getMaintenanceTasks, getMaintenanceProviders, getMaintenanceAlerts, createMaintenanceTask } from '@/lib/api';
+import api, { getActas, getMembers, getBuildings, getTransactions, getFinancialSummary, getLetters, getConvocatorias, createConvocatoria, createMinute, createMember, updateMember, deleteMember, createBuilding, updateBuilding, deleteBuilding, createTransaction, updateTransaction, deleteTransaction, updateConvocatoria, deleteConvocatoria, updateMinute, deleteMinute, getDashboardStats, getMaintenanceTasks, getMaintenanceProviders, getMaintenanceAlerts, createMaintenanceTask } from '@/lib/api';
 import { apiCache, cacheUtils } from '@/lib/cache';
 
 // Helper function to format file size
@@ -97,7 +97,7 @@ export function useLetters(buildingId?: string) {
   return useQuery({
     queryKey: ['letters', buildingId],
     queryFn: async () => {
-      const result = await getSentLetters({ buildingId });
+      const result = await getLetters({ building_id: buildingId });
       if (!result.success) throw new Error(result.error || 'Failed to fetch letters');
       return result.data || [];
     },
