@@ -55,13 +55,15 @@ const SelectTemplateStep: React.FC<SelectTemplateStepProps> = ({
 
   const handleSelectTemplate = (template: Template) => {
     setSelectedTemplate(template.id);
+    console.log('Template selected:', template.name, 'Subject:', template.subject);
     onUpdate({
       template_id: template.id,
       template_name: template.name,
       template_type: template.type,
       template_content: template.content,
       template_variables: template.variables || [],
-      subject: template.subject || '',
+      subject: template.subject || '',           // Keep for backwards compatibility
+      template_subject: template.subject || '',  // Explicit template subject
       category: template.category
     });
   };

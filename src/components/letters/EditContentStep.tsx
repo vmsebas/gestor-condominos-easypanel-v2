@@ -27,9 +27,25 @@ const EditContentStep: React.FC<EditContentStepProps> = ({
   onNext,
   onPrevious
 }) => {
-  const [subject, setSubject] = useState(data.subject || '');
-  const [content, setContent] = useState(data.content || data.template_content || '');
+  // Initialize with template data - subject comes from template.subject
+  const [subject, setSubject] = useState('');
+  const [content, setContent] = useState('');
   const [customVariables, setCustomVariables] = useState(data.customVariables || {});
+
+  // Sync state when data changes (e.g., coming back from next step)
+  useEffect(() => {
+    const newSubject = data.subject || data.template_subject || '';
+    const newContent = data.content || data.template_content || '';
+
+    console.log('EditContentStep initializing with:', {
+      subject: newSubject,
+      content_length: newContent?.length,
+      template_name: data.template_name
+    });
+
+    setSubject(newSubject);
+    setContent(newContent);
+  }, [data.template_id]); // Re-run when template changes
 
   // Variáveis disponíveis organizadas por categoria
   const availableVariables = {
@@ -114,6 +130,12 @@ const EditContentStep: React.FC<EditContentStepProps> = ({
     onNext();
   };
 
+  // Extract template-specific variables that need values
+  const templateVariables = data.template_variables || [];
+  const requiredVariableInputs = templateVariables.filter((v: string) =>
+    !v.includes('member.') && !v.includes('building.') && !v.includes('current.') && !v.includes('admin.')
+  );
+
   return (
     <div className="space-y-6">
       {/* Template Info */}
@@ -130,6 +152,48 @@ const EditContentStep: React.FC<EditContentStepProps> = ({
           </div>
         </CardHeader>
       </Card>
+
+      {/* Template-specific Variables that need input */}
+      {requiredVariableInputs.length > 0 && (
+        <Card className="bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base text-amber-900 dark:text-amber-100">
+              ⚡ Variáveis do Template
+            </CardTitle>
+            <CardDescription className="text-amber-700 dark:text-amber-200">
+              Este template requer as seguintes informações específicas
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {requiredVariableInputs.slice(0, 6).map((variable: string) => {
+                const key = variable.replace('{{', '').replace('}}', '');
+                const label = key.split('.').pop()?.replace(/([A-Z])/g, ' $1').trim() || key;
+                return (
+                  <div key={variable} className="space-y-1">
+                    <Label className="text-xs capitalize">{label}</Label>
+                    <Input
+                      placeholder={`Ex: valor para ${label}`}
+                      value={customVariables[key] || ''}
+                      onChange={(e) => {
+                        const newVars = { ...customVariables, [key]: e.target.value };
+                        setCustomVariables(newVars);
+                        onUpdate({ customVariables: newVars });
+                      }}
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            {requiredVariableInputs.length > 6 && (
+              <p className="text-xs text-amber-600 mt-2">
+                +{requiredVariableInputs.length - 6} variáveis adicionais disponíveis no conteúdo
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Editor Panel (2/3) */}
